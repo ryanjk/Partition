@@ -1,6 +1,10 @@
 #include <Graphics\Window.h>
+#include <Graphics\DirectX.h>
+#include <Utilities\Logging.h>
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+#include <chrono>
+
+pn::window_long CALLBACK WindowProc(pn::window_handle hwnd, unsigned int uMsg, pn::window_uint wParam, pn::window_long lParam) {
 	/*if (ImGui_ImplDX11_WndProcHandler(hwnd, uMsg, wParam, lParam)) {
 		return true;
 	} */
@@ -26,7 +30,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		return 0;
 	case WM_CLOSE:
 	{
-		HMENU hMenu;
+		pn::menu_handle hMenu;
 		hMenu = GetMenu(hwnd);
 		if (hMenu != NULL) {
 			DestroyMenu(hMenu);
@@ -46,12 +50,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
+using pn::dx_ptr;
+static dx_ptr<ID3D11Device> device;
+static dx_ptr<IDXGISwapChain> swap_chain;
+static dx_ptr<ID3D11RenderTargetView> render_target_view;
+static dx_ptr<ID3D11DepthStencilView> depth_stencil_view;
+
+int PARTITION_MAIN(command_line_args) {
+	
+	// INIT ENVIRONMENT
+
 	pn::CreateConsole();
+	pn::InitLogger();
 
 	if (hInstance == NULL) {
-		hInstance = (HINSTANCE) GetModuleHandle(NULL);
+		hInstance = (pn::instance_handle) GetModuleHandle(NULL);
 	}
+
+	// INIT WINDOW
 
 	pn::application_window_desc awd;
 	awd.h_instance = hInstance;
@@ -60,6 +76,66 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	awd.fullscreen = false;
 	auto h_wnd = pn::CreateApplicationWindow(awd, WindowProc);
 	
-	//ShowWindow(h_wnd, nCmdShow);
-	while (true);
+	// INIT DIRECTX
+
+	device = pn::CreateDevice();
+	swap_chain = pn::CreateMainWindowSwapChain(device, h_wnd, awd);
+
+	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(device, swap_chain, render_target_view, depth_stencil_view);
+
+	auto context = pn::GetContext(device);
+	pn::SetViewport(context, awd.width, awd.height);
+
+	ShowWindow(h_wnd, nCmdShow);
+
+	// MAIN LOOP
+
+	bool bGotMsg;
+	MSG  msg;
+	msg.message = WM_NULL;
+	PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
+	
+	auto prev_time = std::chrono::system_clock::now();
+	double time_to_process = 0;
+	double total_time = 0;
+	const double FPS = 60.0;
+	const double FIXED_DT = 1 / FPS;
+	while (WM_QUIT != msg.message) {
+
+		// Get and handle input
+		bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
+		if (bGotMsg) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+			continue;
+		}
+
+		// Update the game
+		auto current_time = std::chrono::system_clock::now();
+		auto dt = std::chrono::duration<double>(current_time - prev_time).count();
+		time_to_process += dt;
+		total_time += dt;
+		prev_time = current_time;
+
+		int u = 0;
+		while (time_to_process >= FIXED_DT) {
+			// update(FIXED_DT)
+			time_to_process -= FIXED_DT;
+		}
+
+		// Render
+
+		float color[] = { (cos(total_time) + 1)*0.5, (cos(3*total_time) + 1)*0.5, 0.439f, 1.000f };
+		context->ClearRenderTargetView(render_target_view.Get(), color);
+		context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
+
+		auto hr = swap_chain->Present(1, 0);
+		if (FAILED(hr)) {
+			LogError("Swap chain present error: ", pn::ErrMsg(hr));
+		}
+	}
+
+	// Shutdown
+	pn::CloseLogger();
 }

@@ -6,6 +6,7 @@
 # Added by me (Ryan)
 lib/
 Win32/
+Test/log.txt
 
 # User-specific files
 *.suo

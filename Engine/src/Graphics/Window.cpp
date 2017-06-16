@@ -13,7 +13,7 @@ auto CreateRect(const int x, const int y, const int width, const int height, con
 
 namespace pn {
 
-WNDCLASS CreateWindowClass(const pn::string& class_name, const HINSTANCE h_instance, const WNDPROC window_proc) {
+window_class CreateWindowClass(const pn::string& class_name, const instance_handle h_instance, const window_procedure window_proc) {
 	auto GetIcon = []() {
 		HICON h_icon = NULL;
 		// TODO: load icon
@@ -31,7 +31,7 @@ WNDCLASS CreateWindowClass(const pn::string& class_name, const HINSTANCE h_insta
 	};
 
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms633576(v=vs.85).aspx
-	WNDCLASS wc = {};
+	window_class wc = {};
 	wc.style = GetClassStyle();
 	wc.lpfnWndProc = window_proc;
 	wc.cbClsExtra = 0; // The number of extra bytes to allocate following the window-class structure. 
@@ -47,15 +47,15 @@ WNDCLASS CreateWindowClass(const pn::string& class_name, const HINSTANCE h_insta
 	return wc;
 }
 
-void RegisterWindowClass(const WNDCLASS& window_class) {
-	auto success = RegisterClass(&window_class);
+void RegisterWindowClass(const window_class& wc) {
+	auto success = RegisterClass(&wc);
 	if (!success) {
 		// TODO: Log error message
 		exit(1);
 	}
 }
 
-HWND CreateWindowHandle(const HINSTANCE h_instance, const pn::string& window_class, const application_window_desc& awd) {
+window_handle CreateWindowHandle(const instance_handle h_instance, const pn::string& window_class, const application_window_desc& awd) {
 	int x = 0;
 	int y = 0;
 
@@ -80,9 +80,9 @@ HWND CreateWindowHandle(const HINSTANCE h_instance, const pn::string& window_cla
 	return hwnd;
 }
 
-HWND CreateApplicationWindow(const application_window_desc& awd, const WNDPROC window_proc) {
+window_handle CreateApplicationWindow(const application_window_desc& awd, const window_procedure window_proc) {
 	// Create and register window class
-	const pn::string class_name = "My Class";
+	const pn::string class_name = "ParitionEngine";
 	auto wc = CreateWindowClass(class_name, awd.h_instance, window_proc);
 	RegisterWindowClass(wc);
 

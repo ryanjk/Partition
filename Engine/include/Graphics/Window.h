@@ -6,7 +6,22 @@
 
 namespace pn {
 
+// ---------- MACRO DEFINITIONS -----------
+
+#define PARTITION_MAIN(command_line_args) WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInstance, pn::window_pwstr command_line_args, int nCmdShow)
+
 // ------------- TYPEDEFS ------------------
+
+using instance_handle	= HINSTANCE;
+using window_handle		= HWND;
+using menu_handle		= HMENU;
+
+using window_class		= WNDCLASS;
+using window_procedure	= WNDPROC;
+
+using window_long		= LONG_PTR;
+using window_uint		= UINT_PTR;
+using window_pwstr		= PWSTR;
 
 // --------- CLASS DEFINITIONS -------------
 
@@ -19,13 +34,13 @@ struct application_window_desc {
 
 // ------------- FUNCTIONS -----------------
 
-WNDCLASS	CreateWindowClass(const pn::string& class_name, const HINSTANCE h_instance, const WNDPROC window_proc);
-void		RegisterWindowClass(const WNDCLASS& window_class);
+window_class	CreateWindowClass(const pn::string& class_name, const instance_handle h_instance, const window_procedure window_proc);
+void			RegisterWindowClass(const window_class& wc);
 
-HWND		CreateWindowHandle(const HINSTANCE h_instance, const pn::string& window_class, const application_window_desc& awd);
-HWND		CreateApplicationWindow(const application_window_desc& awd, const WNDPROC window_proc);
+window_handle	CreateWindowHandle(const instance_handle h_instance, const pn::string& window_class, const application_window_desc& awd);
+window_handle	CreateApplicationWindow(const application_window_desc& awd, const window_procedure window_proc);
 
-void		CreateConsole();
+void			CreateConsole();
 
 // TODO:
 // LoadApplicationWindowDescFromFile

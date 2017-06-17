@@ -1,5 +1,7 @@
 #include <Graphics\Window.h>
 
+#include <Utilities\Logging.h>
+
 namespace {
 
 auto CreateRect(const int x, const int y, const int width, const int height, const DWORD window_style) {
@@ -50,7 +52,7 @@ window_class CreateWindowClass(const pn::string& class_name, const instance_hand
 void RegisterWindowClass(const window_class& wc) {
 	auto success = RegisterClass(&wc);
 	if (!success) {
-		// TODO: Log error message
+		LogError("Couldn't register window class");
 		exit(1);
 	}
 }
@@ -74,7 +76,7 @@ window_handle CreateWindowHandle(const instance_handle h_instance, const pn::str
 		0
 	);
 	if (hwnd == NULL) {
-		// TODO: Log error message
+		LogError("Couldn't create window handle");
 		exit(1);
 	}
 	return hwnd;

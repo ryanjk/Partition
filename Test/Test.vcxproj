@@ -70,26 +70,26 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)Engine\dependencies\;$(SolutionDir)Engine\include\;$(ProjectDir)include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)dependencies\;$(SolutionDir)Engine\include\;$(ProjectDir)include\;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(VC_SourcePath);</SourcePath>
     <LibraryPath>$(SolutionDir)lib\$(Platform)\$(Configuration)\;$(ProjectDir)lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)Engine\dependencies\;$(SolutionDir)Engine\include\;$(ProjectDir)include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)dependencies\;$(SolutionDir)Engine\include\;$(ProjectDir)include\;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(VC_SourcePath);</SourcePath>
     <LibraryPath>$(SolutionDir)lib\$(Platform)\$(Configuration)\;$(ProjectDir)lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Engine\dependencies\;$(SolutionDir)Engine\include\;$(ProjectDir)include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)dependencies\;$(SolutionDir)Engine\include\;$(ProjectDir)include\;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(VC_SourcePath);</SourcePath>
     <LibraryPath>$(SolutionDir)lib\$(Platform)\$(Configuration)\;$(ProjectDir)lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Engine\dependencies\;$(SolutionDir)Engine\include\;$(ProjectDir)include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)dependencies\;$(SolutionDir)Engine\include\;$(ProjectDir)include\;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(VC_SourcePath);</SourcePath>
     <LibraryPath>$(SolutionDir)lib\$(Platform)\$(Configuration)\;$(ProjectDir)lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>

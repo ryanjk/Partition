@@ -70,27 +70,27 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir)dependencies\;$(ProjectDir)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)dependencies\;$(SolutionDir)dependencies\;$(ProjectDir)include;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(VC_SourcePath);</SourcePath>
     <LibraryPath>$(ProjectDir)lib\$(Platform)\$(Configuration)\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
     <OutDir>$(SolutionDir)lib\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir)dependencies\;$(ProjectDir)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)dependencies\;$(SolutionDir)dependencies\;$(ProjectDir)include;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(VC_SourcePath);</SourcePath>
     <LibraryPath>$(ProjectDir)lib\$(Platform)\$(Configuration)\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
     <OutDir>$(SolutionDir)lib\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)dependencies\;$(ProjectDir)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)dependencies\;$(SolutionDir)dependencies\;$(ProjectDir)include;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(VC_SourcePath);</SourcePath>
     <LibraryPath>$(ProjectDir)lib\$(Platform)\$(Configuration)\;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
     <OutDir>$(SolutionDir)lib\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)dependencies\;$(ProjectDir)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)dependencies\;$(SolutionDir)dependencies\;$(ProjectDir)include;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(VC_SourcePath);</SourcePath>
     <LibraryPath>$(ProjectDir)lib\$(Platform)\$(Configuration)\;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
     <OutDir>$(SolutionDir)lib\$(Platform)\$(Configuration)\</OutDir>
@@ -103,7 +103,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Lib>
-      <AdditionalDependencies>dxguid.lib;d3dcompiler.lib;Dxgi.lib;d3d11.lib;</AdditionalDependencies>
+      <AdditionalDependencies>assimp.lib;dxguid.lib;d3dcompiler.lib;Dxgi.lib;d3d11.lib;</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -114,7 +114,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Lib>
-      <AdditionalDependencies>dxguid.lib;d3dcompiler.lib;Dxgi.lib;d3d11.lib;</AdditionalDependencies>
+      <AdditionalDependencies>assimp.lib;dxguid.lib;d3dcompiler.lib;Dxgi.lib;d3d11.lib;</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -131,7 +131,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>dxguid.lib;d3dcompiler.lib;Dxgi.lib;d3d11.lib;</AdditionalDependencies>
+      <AdditionalDependencies>assimp.lib;dxguid.lib;d3dcompiler.lib;Dxgi.lib;d3d11.lib;</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -148,20 +148,25 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>dxguid.lib;d3dcompiler.lib;Dxgi.lib;d3d11.lib;</AdditionalDependencies>
+      <AdditionalDependencies>assimp.lib;dxguid.lib;d3dcompiler.lib;Dxgi.lib;d3d11.lib;</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\Graphics\DirectX.h" />
+    <ClInclude Include="include\Graphics\MeshLoadUtil.h" />
     <ClInclude Include="include\Graphics\Window.h" />
     <ClInclude Include="include\IO\FileUtil.h" />
+    <ClInclude Include="include\IO\PathUtil.h" />
     <ClInclude Include="include\Utilities\Logging.h" />
+    <ClInclude Include="include\Utilities\Math.h" />
     <ClInclude Include="include\Utilities\UtilityTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Graphics\DirectX.cpp" />
+    <ClCompile Include="src\Graphics\MeshLoadUtil.cpp" />
     <ClCompile Include="src\Graphics\Window.cpp" />
     <ClCompile Include="src\IO\FileUtil.cpp" />
+    <ClCompile Include="src\IO\PathUtil.cpp" />
     <ClCompile Include="src\Utilities\Logging.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

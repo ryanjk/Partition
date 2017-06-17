@@ -69,10 +69,23 @@ dx_device CreateDevice() {
 
 	dx_ptr<IDXGIDevice> gi_device;
 	dx_ptr<IDXGIAdapter> adapter;
-	device->QueryInterface(__uuidof(IDXGIDevice), (void**) gi_device.GetAddressOf());
-	gi_device->GetAdapter(adapter.GetAddressOf());
+	
+	hr = device->QueryInterface(__uuidof(IDXGIDevice), (void**) gi_device.GetAddressOf());
+	if (FAILED(hr)) {
+		LogError("Couldn't query DXGIDevice interface: {}", ErrMsg(hr));
+	}
+	
+	hr = gi_device->GetAdapter(adapter.GetAddressOf());
+	if (FAILED(hr)) {
+		LogError("Couldn't get DXGIAdapter: {}", ErrMsg(hr));
+	}
+
 	DXGI_ADAPTER_DESC desc;
-	adapter->GetDesc(&desc);
+	hr = adapter->GetDesc(&desc);
+	if (FAILED(hr)) {
+		LogError("Couldn't get DXGI_ADAPTER_DESC: {}", ErrMsg(hr));
+	}
+
 	char description[256];
 	wcstombs(description, desc.Description, 256);
 	Log("Graphics Card: {}", description);

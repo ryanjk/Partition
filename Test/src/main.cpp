@@ -1,6 +1,11 @@
 #include <Graphics\Window.h>
 #include <Graphics\DirectX.h>
+#include <Graphics\MeshLoadUtil.h>
+
 #include <Utilities\Logging.h>
+
+#include <IO\FileUtil.h>
+#include <IO\PathUtil.h>
 
 #include <chrono>
 
@@ -62,6 +67,10 @@ int PARTITION_MAIN(command_line_args) {
 
 	pn::CreateConsole();
 	pn::InitLogger();
+	pn::InitPathUtil();
+
+	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/Test/");
+	pn::SetResourceDirectoryName("resource");
 
 	if (hInstance == NULL) {
 		hInstance = (pn::instance_handle) GetModuleHandle(NULL);
@@ -86,9 +95,13 @@ int PARTITION_MAIN(command_line_args) {
 	auto context = pn::GetContext(device);
 	pn::SetViewport(context, awd.width, awd.height);
 
-	ShowWindow(h_wnd, nCmdShow);
+	// LOAD RESOURCES
+
+	auto mesh = pn::LoadMesh(pn::GetResourcePath("torus.fbx"));
 
 	// MAIN LOOP
+
+	ShowWindow(h_wnd, nCmdShow);
 
 	bool bGotMsg;
 	MSG  msg;

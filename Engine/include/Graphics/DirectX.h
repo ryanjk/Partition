@@ -9,6 +9,7 @@
 #include <Graphics\Window.h>
 #include <Utilities\UtilityTypes.h>
 #include <Utilities\Logging.h>
+#include <Utilities\Math.h>
 
 namespace pn {
 
@@ -71,17 +72,34 @@ struct input_layout_desc {
 	vertex_input_desc desc;
 };
 
-struct MeshBuffer {
-	dx_buffer positions;
-	dx_buffer colors;
-	dx_buffer normals;
-	dx_buffer tangents;
-	dx_buffer bitangents;
-	dx_buffer uvs;
-	dx_buffer uv2s;
+struct Mesh {
+	pn::vector<pn::vec3f>		positions;
+	pn::vector<pn::vec4f>		colors;
+	pn::vector<pn::vec3f>		normals;
+	pn::vector<pn::vec3f>		tangents;
+	pn::vector<pn::vec3f>		bitangents;
+	pn::vector<pn::vec2f>		uvs;
+	pn::vector<pn::vec2f>		uv2s;
 
-	dx_buffer indices;
-	D3D_PRIMITIVE_TOPOLOGY topology;
+	pn::vector<unsigned int>	indices;
+	D3D_PRIMITIVE_TOPOLOGY		topology;
+
+	Mesh() : 
+		positions(), colors(), normals(), tangents(), bitangents(), uvs(), uv2s(), indices(), topology()
+	{}
+};
+
+struct MeshBuffer {
+	dx_buffer				positions;
+	dx_buffer				colors;
+	dx_buffer				normals;
+	dx_buffer				tangents;
+	dx_buffer				bitangents;
+	dx_buffer				uvs;
+	dx_buffer				uv2s;
+
+	dx_buffer				indices;
+	D3D_PRIMITIVE_TOPOLOGY	topology;
 };
 
 // ------------------- FUNCTIONS ----------------------
@@ -99,7 +117,7 @@ dx_depth_stencil_view	CreateDepthStencilView(dx_device device, dx_texture2d& dep
 // -------------- SHADER CREATION -------------
 
 template<typename ID3D11ShaderType, typename DeviceShaderFunc>
-auto CreateShader(dx_device device, const pn::bytes& bytes, DeviceShaderFunc CreateShader) {
+auto					CreateShader(dx_device device, const pn::bytes& bytes, DeviceShaderFunc CreateShader) {
 
 	dx_ptr<ID3D11ShaderType> shader;
 	if (bytes.empty()) {
@@ -121,26 +139,30 @@ auto CreateShader(dx_device device, const pn::bytes& bytes, DeviceShaderFunc Cre
 	return shader;
 }
 
-dx_vertex_shader CreateVertexShader(dx_device device, const pn::bytes& bytes);
-dx_vertex_shader CreateVertexShader(dx_device device, const std::string& filename);
+dx_vertex_shader		CreateVertexShader(dx_device device, const pn::bytes& bytes);
+dx_vertex_shader		CreateVertexShader(dx_device device, const std::string& filename);
 
-dx_pixel_shader CreatePixelShader(dx_device device, const pn::bytes& ps_data);
-dx_pixel_shader CreatePixelShader(dx_device device, const std::string& filename);
+dx_pixel_shader			CreatePixelShader(dx_device device, const pn::bytes& ps_data);
+dx_pixel_shader			CreatePixelShader(dx_device device, const std::string& filename);
 
-input_layout_desc CreateInputLayout(dx_device device, const pn::bytes& bytes, const vertex_input_desc& desc);
-input_layout_desc CreateInputLayout(dx_device device, const pn::bytes& bytes);
+input_layout_desc		CreateInputLayout(dx_device device, const pn::bytes& bytes, const vertex_input_desc& desc);
+input_layout_desc		CreateInputLayout(dx_device device, const pn::bytes& bytes);
 
-std::pair<dx_vertex_shader, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename, const vertex_input_desc& desc);
-std::pair<dx_vertex_shader, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const pn::bytes& vs_byte_code, const vertex_input_desc& desc);
-std::pair<dx_vertex_shader, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename);
+std::pair<dx_vertex_shader, input_layout_desc> 
+						CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename, const vertex_input_desc& desc);
 
-// Update the render target and depth stencil views to the size of the back buffer
-void SetRenderTargetViewAndDepthStencilFromSwapChain(dx_device device, dx_swap_chain swap_chain, dx_render_target_view& render_target_view, dx_depth_stencil_view& depth_stencil_view);
+std::pair<dx_vertex_shader, input_layout_desc> 
+						CreateVertexShaderAndInputLayout(dx_device device, const pn::bytes& vs_byte_code, const vertex_input_desc& desc);
+
+std::pair<dx_vertex_shader, input_layout_desc> 
+						CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename);
+
+
 
 // -------------- BUFFER CREATION -------------------
 
 template<typename BufferDataType>
-auto CreateBufferDataDesc(BufferDataType* data) {
+auto					CreateBufferDataDesc(BufferDataType* data) {
 	D3D11_SUBRESOURCE_DATA data_desc;
 	ZeroMemory(&data_desc, sizeof(decltype(data_desc)));
 	data_desc.pSysMem = data;
@@ -150,7 +172,7 @@ auto CreateBufferDataDesc(BufferDataType* data) {
 }
 
 template<typename BufferDataType>
-auto CreateBuffer(dx_device device, BufferDataType* v_data, const unsigned int n, const D3D11_BIND_FLAG bind_target) {
+auto					CreateBuffer(dx_device device, BufferDataType* v_data, const unsigned int n, const D3D11_BIND_FLAG bind_target) {
 	// Create buffer description
 	CD3D11_BUFFER_DESC buffer_desc(n * sizeof(BufferDataType), bind_target);
 
@@ -167,45 +189,46 @@ auto CreateBuffer(dx_device device, BufferDataType* v_data, const unsigned int n
 }
 
 template<typename VertexDataType>
-auto CreateVertexBuffer(dx_device device, const VertexDataType* v_data, const unsigned int n) {
+auto					CreateVertexBuffer(dx_device device, const VertexDataType* v_data, const unsigned int n) {
 	return CreateBuffer(device, v_data, n, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER);
 }
 
 template<typename VertexDataType>
-auto CreateVertexBuffer(dx_device device, const pn::vector<VertexDataType>& v_data) {
+auto					CreateVertexBuffer(dx_device device, const pn::vector<VertexDataType>& v_data) {
 	return CreateVertexBuffer(device, v_data.data(), v_data.size());
 }
 
 template<typename ConstantDataType>
-auto CreateConstantBuffer(dx_device device, const ConstantDataType* c_data, const unsigned int n) {
+auto					CreateConstantBuffer(dx_device device, const ConstantDataType* c_data, const unsigned int n) {
 	static_assert((sizeof(ConstantDataType) % 16) == 0, "Constant Buffer size must be 16-byte aligned");
 	return CreateBuffer(device, c_data, n, D3D11_BIND_FLAG::D3D11_BIND_CONSTANT_BUFFER);
 }
 
 template<typename ConstantDataType>
-auto CreateConstantBuffer(dx_device device, const pn::vector<ConstantDataType>& c_data) {
+auto					CreateConstantBuffer(dx_device device, const pn::vector<ConstantDataType>& c_data) {
 	return CreateConstantBuffer(device, c_data.data(), c_data.size());
 }
 
 template<typename IndexDataType>
-auto CreateIndexBuffer(dx_device device, const IndexDataType* i_data, const unsigned int n) {
+auto					CreateIndexBuffer(dx_device device, const IndexDataType* i_data, const unsigned int n) {
 	return CreateBuffer(device, i_data, n, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER);
 }
 
 template<typename IndexDataType>
-auto CreateIndexBuffer(dx_device device, const pn::vector<IndexDataType>& i_data) {
+auto					CreateIndexBuffer(dx_device device, const pn::vector<IndexDataType>& i_data) {
 	return CreateIndexBuffer(device, i_data.data(), i_data.size());
 }
 
 // ------------ UTILITY FUNCTIONS -------------
 
-dx_texture2d GetSwapChainBackBuffer(dx_swap_chain swap_chain);
-dx_context GetContext(dx_device device);
-CD3D11_TEXTURE2D_DESC GetTextureDesc(dx_texture2d texture);
+dx_texture2d			GetSwapChainBackBuffer(dx_swap_chain swap_chain);
+dx_context				GetContext(dx_device device);
+CD3D11_TEXTURE2D_DESC	GetTextureDesc(dx_texture2d texture);
 
-dx_shader_reflection GetShaderReflector(const pn::bytes& shader_byte_code);
-vertex_input_desc GetVertexInputDescFromShader(const pn::bytes& vs_byte_code);
+dx_shader_reflection	GetShaderReflector(const pn::bytes& shader_byte_code);
+vertex_input_desc		GetVertexInputDescFromShader(const pn::bytes& vs_byte_code);
 
-void SetViewport(dx_context context, const int width, const int height);
+void					SetViewport(dx_context context, const int width, const int height);
+void					SetRenderTargetViewAndDepthStencilFromSwapChain(dx_device device, dx_swap_chain swap_chain, dx_render_target_view& render_target_view, dx_depth_stencil_view& depth_stencil_view);
 
 } // namespace pn

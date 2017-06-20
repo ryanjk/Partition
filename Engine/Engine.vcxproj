@@ -156,8 +156,16 @@
     <ClInclude Include="include\Graphics\MeshLoadUtil.h" />
     <ClInclude Include="include\Graphics\ProjectionMatrix.h" />
     <ClInclude Include="include\Graphics\Window.h" />
+    <ClInclude Include="include\imgui\imconfig.h" />
+    <ClInclude Include="include\imgui\imgui.h" />
+    <ClInclude Include="include\imgui\imgui_impl_dx11.h" />
+    <ClInclude Include="include\imgui\imgui_internal.h" />
+    <ClInclude Include="include\imgui\stb_rect_pack.h" />
+    <ClInclude Include="include\imgui\stb_textedit.h" />
+    <ClInclude Include="include\imgui\stb_truetype.h" />
     <ClInclude Include="include\IO\FileUtil.h" />
     <ClInclude Include="include\IO\PathUtil.h" />
+    <ClInclude Include="include\UI\UIUtil.h" />
     <ClInclude Include="include\Utilities\Logging.h" />
     <ClInclude Include="include\Utilities\Math.h" />
     <ClInclude Include="include\Utilities\UtilityTypes.h" />
@@ -166,8 +174,13 @@
     <ClCompile Include="src\Graphics\DirectX.cpp" />
     <ClCompile Include="src\Graphics\MeshLoadUtil.cpp" />
     <ClCompile Include="src\Graphics\Window.cpp" />
+    <ClCompile Include="src\imgui\imgui.cpp" />
+    <ClCompile Include="src\imgui\imgui_demo.cpp" />
+    <ClCompile Include="src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_dx11.cpp" />
     <ClCompile Include="src\IO\FileUtil.cpp" />
     <ClCompile Include="src\IO\PathUtil.cpp" />
+    <ClCompile Include="src\UI\UIUtil.cpp" />
     <ClCompile Include="src\Utilities\Logging.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

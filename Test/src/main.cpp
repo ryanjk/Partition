@@ -8,6 +8,8 @@
 #include <IO\FileUtil.h>
 #include <IO\PathUtil.h>
 
+#include <UI\UIUtil.h>
+
 #include <chrono>
 
 static pn::dx_device device;
@@ -16,10 +18,12 @@ static pn::dx_render_target_view render_target_view;
 static pn::dx_depth_stencil_view depth_stencil_view;
 static pn::ProjectionMatrix camera;
 
+extern IMGUI_API LRESULT   ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 pn::window_long CALLBACK WindowProc(pn::window_handle hwnd, unsigned int uMsg, pn::window_uint wParam, pn::window_long lParam) {
-	/*if (ImGui_ImplDX11_WndProcHandler(hwnd, uMsg, wParam, lParam)) {
+	if (ImGui_ImplDX11_WndProcHandler(hwnd, uMsg, wParam, lParam)) {
 		return true;
-	} */
+	}
 
 	switch (uMsg) {
 	case WM_SIZE:
@@ -28,7 +32,7 @@ pn::window_long CALLBACK WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 			auto height = (unsigned int) HIWORD(lParam);
 			LogDebug("Resizing window to width: {}, height: {}", width, height);
 
-			//ImGui_ImplDX11_InvalidateDeviceObjects();
+			ImGui_ImplDX11_InvalidateDeviceObjects();
 			if (render_target_view.Get() != nullptr) {
 				render_target_view.ReleaseAndGetAddressOf();
 				render_target_view = nullptr;
@@ -37,7 +41,7 @@ pn::window_long CALLBACK WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 			swap_chain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
 			pn::ResizeRenderTargetViewportCamera(device, width, height, swap_chain, render_target_view, depth_stencil_view, camera);
 
-			//ImGui_ImplDX11_CreateDeviceObjects(); 
+			ImGui_ImplDX11_CreateDeviceObjects(); 
 		}
 		return 0;
 	case WM_CLOSE:
@@ -138,9 +142,18 @@ int PARTITION_MAIN(command_line_args) {
 	};
 	ic.proj = camera.GetMatrix();
 	
+	// ------ SET UP IMGUI ------------------------------
+
+	ImGui_ImplDX11_Init(h_wnd, device.Get(), context.Get());
+
 	// MAIN LOOP
 
 	ShowWindow(h_wnd, nCmdShow);
+
+	bool show_test_window = true;
+	bool show_another_window = false;
+	ImVec4 clear_col = ImColor(114, 144, 154);
+	bool show_edit_matrix = true;
 
 	bool bGotMsg;
 	MSG  msg;
@@ -177,6 +190,8 @@ int PARTITION_MAIN(command_line_args) {
 
 		// Render
 
+		ImGui_ImplDX11_NewFrame();
+
 		float color[] = { (cos(total_time) + 1)*0.5, (cos(3*total_time) + 1)*0.5, 0.439f, 1.000f };
 		context->ClearRenderTargetView(render_target_view.Get(), color);
 		context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -196,6 +211,66 @@ int PARTITION_MAIN(command_line_args) {
 		context->IASetIndexBuffer(cmesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
 		context->IASetPrimitiveTopology(cmesh_buffer.topology);
 
+		// set shader
+		context->VSSetShader(vertex_shader.Get(), nullptr, 0);
+		context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+		// update instance uniforms
+		auto create_transform_edit = [](const std::string& name, pn::mat4f& matrix, float min, float max) {
+			DirectX::XMVECTOR translation, scale, rotation;
+			DirectX::XMMatrixDecompose(&scale, &rotation, &translation, matrix);
+
+			ImGui::SliderFloat3((name + " position").c_str(), (float*) &translation, min, max);
+			ImGui::SliderFloat3((name + " scale").c_str(), (float*) &scale, 0, max);
+			ImGui::SliderFloat4((name + " rotation").c_str(), (float*) &rotation, min, max);
+			matrix = DirectX::XMMatrixScalingFromVector(scale) * DirectX::XMMatrixRotationQuaternion(rotation) * DirectX::XMMatrixTranslationFromVector(translation);
+		};
+
+		// update world and view
+		{
+			ImGui::Begin("Edit Cube Matrix", &show_edit_matrix);
+			ImGui::Text("Cube");
+			create_transform_edit("world", ic.model, -10.0f, 10.0f);
+			ImGui::Separator();
+			create_transform_edit("view", ic.view, -10.0f, 10.0f);
+			ImGui::End();
+		}
+
+		// update projection
+		float width = camera.GetViewWidth();
+		float height = camera.GetViewHeight();
+		float fov = camera.GetFov();
+		float size = camera.GetOrthographicSize();
+
+		VDBM(&width, 1.0f, 3000.0f);
+		VDBM(&height, 1.0f, 3000.0f);
+		VDBM(&fov, 1.0f, 180.0f);
+		ImGui::SliderFloat("size", &size, 0.001f, 1.0f, "%.3f", 2.0f);
+		//VDBM(&size, 0.001f, 1.0f);
+
+		camera.SetOrthographicSize(size);
+		camera.SetFov(fov);
+		camera.SetViewWidth(width);
+		camera.SetViewHeight(height);
+
+		bool toggle_proj = ImGui::Button("Toggle");
+		if (toggle_proj) {
+			auto cur = camera.GetProjectionType();
+			camera.SetProjectionType(cur == pn::ProjectionType::ORTHOGRAPHIC ? pn::ProjectionType::PERSPECTIVE : pn::ProjectionType::ORTHOGRAPHIC);
+		}
+
+		ic.proj = camera.GetMatrix();
+
+		// send updates to constant buffer
+		context->UpdateSubresource(instance_constant_buffer.Get(), 0, nullptr, &ic, 0, 0);
+
+		// set constant buffers in shaders
+		context->VSSetConstantBuffers(0, 1, global_constant_buffer.GetAddressOf());
+		context->VSSetConstantBuffers(1, 1, instance_constant_buffer.GetAddressOf());
+
+		context->PSSetConstantBuffers(0, 1, global_constant_buffer.GetAddressOf());
+
+		context->DrawIndexed(mesh[0].indices.size(), 0, 0);
+		ImGui::Render();
 		auto hr = swap_chain->Present(1, 0);
 		if (FAILED(hr)) {
 			LogError("Swap chain present error: ", pn::ErrMsg(hr));

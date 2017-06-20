@@ -17,7 +17,7 @@ struct MeshLoadData {
 
 // ---------- FUNCTIONS --------------------
 
-pn::vector<Mesh>	LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data);
-pn::vector<Mesh>	LoadMesh(const std::string& filename);
+pn::vector<mesh_t>	LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data);
+pn::vector<mesh_t>	LoadMesh(const std::string& filename);
 
 } // namespace pn

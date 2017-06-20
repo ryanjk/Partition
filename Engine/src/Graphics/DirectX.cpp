@@ -123,7 +123,7 @@ dx_swap_chain CreateSwapChain(dx_device device, DXGI_SWAP_CHAIN_DESC swap_chain_
 	return swap_chain;
 }
 
-dx_swap_chain CreateMainWindowSwapChain(dx_device device, const HWND hwnd, const application_window_desc awd) {
+dx_swap_chain CreateMainWindowSwapChain(dx_device device, const window_handle hwnd, const application_window_desc awd) {
 	DXGI_SWAP_CHAIN_DESC desc;
 	ZeroMemory(&desc, sizeof(DXGI_SWAP_CHAIN_DESC));
 	desc.Windowed = !awd.fullscreen;
@@ -141,8 +141,8 @@ dx_swap_chain CreateMainWindowSwapChain(dx_device device, const HWND hwnd, const
 	return CreateSwapChain(device, desc);
 }
 
-dx_ptr<ID3D11RenderTargetView> CreateRenderTargetViewOfTexture(dx_device device, dx_ptr<ID3D11Texture2D> texture) {
-	dx_ptr<ID3D11RenderTargetView> render_target_view;
+dx_render_target_view CreateRenderTargetViewFromTexture(dx_device device, dx_texture2d texture) {
+	dx_render_target_view render_target_view;
 	auto hr = device->CreateRenderTargetView(
 		texture.Get(),
 		nullptr,
@@ -156,8 +156,8 @@ dx_ptr<ID3D11RenderTargetView> CreateRenderTargetViewOfTexture(dx_device device,
 	return render_target_view;
 }
 
-dx_ptr<ID3D11DepthStencilView> CreateDepthStencilView(dx_device device, dx_ptr<ID3D11Texture2D>& depth_stencil_texture) {
-	dx_ptr<ID3D11DepthStencilView> depth_stencil_view;
+dx_depth_stencil_view CreateDepthStencilView(dx_device device, dx_texture2d& depth_stencil_texture) {
+	dx_depth_stencil_view depth_stencil_view;
 	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2D);
 	auto hr = device->CreateDepthStencilView(
 		depth_stencil_texture.Get(),
@@ -172,8 +172,8 @@ dx_ptr<ID3D11DepthStencilView> CreateDepthStencilView(dx_device device, dx_ptr<I
 	return depth_stencil_view;
 }
 
-dx_ptr<ID3D11Texture2D> CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data = nullptr) {
-	dx_ptr<ID3D11Texture2D> texture;
+dx_texture2d CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data = nullptr) {
+	dx_texture2d texture;
 	auto hr = device->CreateTexture2D(
 		&texture_desc,
 		initial_data,
@@ -187,28 +187,72 @@ dx_ptr<ID3D11Texture2D> CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC 
 	return texture;
 }
 
+mesh_buffer_t CreateMeshBuffer(dx_ptr<ID3D11Device> device, const mesh_t& mesh) {
+	mesh_buffer_t mesh_buffer;
+
+	if (mesh.positions.empty()) {
+		LogError("Mesh has no vertices");
+		return mesh_buffer;
+	}
+
+	mesh_buffer.positions = CreateVertexBuffer(device, mesh.positions);
+	mesh_buffer.indices = CreateIndexBuffer(device, mesh.indices);
+	mesh_buffer.topology = mesh.topology;
+
+	if (!mesh.normals.empty()) {
+		mesh_buffer.normals = CreateVertexBuffer(device, mesh.normals);
+	}
+
+	if (!mesh.tangents.empty()) {
+		mesh_buffer.tangents = CreateVertexBuffer(device, mesh.tangents);
+		mesh_buffer.bitangents = CreateVertexBuffer(device, mesh.bitangents);
+	}
+
+	if (!mesh.colors.empty()) {
+		mesh_buffer.colors = CreateVertexBuffer(device, mesh.colors);
+	}
+
+	if (!mesh.uvs.empty()) {
+		mesh_buffer.uvs = CreateVertexBuffer(device, mesh.uvs);
+	}
+
+	if (!mesh.uv2s.empty()) {
+		mesh_buffer.uv2s = CreateVertexBuffer(device, mesh.uv2s);
+	}
+
+	return mesh_buffer;
+}
+
+pn::vector<mesh_buffer_t> CreateMeshBuffer(dx_ptr<ID3D11Device> device, const pn::vector<mesh_t>& meshs) {
+	pn::vector<mesh_buffer_t> mesh_buffers;
+	for (const auto& mesh : meshs) {
+		mesh_buffers.emplace_back(CreateMeshBuffer(device, mesh));
+	}
+	return mesh_buffers;
+}
+
 // -------------- SHADER CREATION -------------
 
-dx_ptr<ID3D11VertexShader> CreateVertexShader(dx_ptr <ID3D11Device> device, const pn::bytes& bytes) {
+dx_vertex_shader CreateVertexShader(dx_device device, const pn::bytes& bytes) {
 	return CreateShader<ID3D11VertexShader>(device, bytes, std::bind(&ID3D11Device::CreateVertexShader, device.Get(), _1, _2, _3, _4));
 }
 
-dx_ptr<ID3D11VertexShader> CreateVertexShader(dx_ptr <ID3D11Device> device, const std::string& filename) {
+dx_vertex_shader CreateVertexShader(dx_device device, const std::string& filename) {
 	auto vs_data = pn::ReadFile(filename);
 	return CreateVertexShader(device, vs_data);
 }
 
-dx_ptr<ID3D11PixelShader> CreatePixelShader(dx_ptr <ID3D11Device> device, const pn::bytes& ps_data) {
+dx_pixel_shader CreatePixelShader(dx_device device, const pn::bytes& ps_data) {
 	return CreateShader<ID3D11PixelShader>(device, ps_data, std::bind(&ID3D11Device::CreatePixelShader, device.Get(), _1, _2, _3, _4));
 }
 
-dx_ptr<ID3D11PixelShader> CreatePixelShader(dx_ptr <ID3D11Device> device, const std::string& filename) {
+dx_pixel_shader CreatePixelShader(dx_device device, const std::string& filename) {
 	auto ps_data = pn::ReadFile(filename);
 	return CreatePixelShader(device, ps_data);
 }
 
 
-input_layout_desc CreateInputLayout(dx_ptr <ID3D11Device> device, const pn::bytes& vs_byte_code, const vertex_input_desc& desc) {
+input_layout_desc CreateInputLayout(dx_device device, const pn::bytes& vs_byte_code, const vertex_input_desc& desc) {
 
 	dx_ptr<ID3D11InputLayout> ptr;
 	auto hr = device->CreateInputLayout(
@@ -227,64 +271,32 @@ input_layout_desc CreateInputLayout(dx_ptr <ID3D11Device> device, const pn::byte
 	return layout;
 }
 
-input_layout_desc CreateInputLayout(dx_ptr <ID3D11Device> device, const pn::bytes& vs_byte_code) {
+input_layout_desc CreateInputLayout(dx_device device, const pn::bytes& vs_byte_code) {
 	auto desc = GetVertexInputDescFromShader(vs_byte_code);
 	return CreateInputLayout(device, vs_byte_code, desc);
 }
 
-std::pair<dx_ptr<ID3D11VertexShader>, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const pn::bytes& vs_data, const vertex_input_desc& desc) {
+std::pair<dx_vertex_shader, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const pn::bytes& vs_data, const vertex_input_desc& desc) {
 	auto vertex_shader = CreateVertexShader(device, vs_data);
 	auto input_layout = CreateInputLayout(device, vs_data, desc);
 	return std::make_pair(vertex_shader, input_layout);
 }
 
-std::pair<dx_ptr<ID3D11VertexShader>, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename, const vertex_input_desc& desc) {
+std::pair<dx_vertex_shader, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename, const vertex_input_desc& desc) {
 	auto vs_data = pn::ReadFile(filename);
 	return CreateVertexShaderAndInputLayout(device, vs_data, desc);
 }
 
-std::pair<dx_ptr<ID3D11VertexShader>, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename) {
+std::pair<dx_vertex_shader, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename) {
 	auto vs_data = pn::ReadFile(filename);
 	vertex_input_desc desc = GetVertexInputDescFromShader(vs_data);
 	return CreateVertexShaderAndInputLayout(device, vs_data, desc);
 }
 
-CD3D11_TEXTURE2D_DESC GetTextureDesc(dx_ptr<ID3D11Texture2D> texture) {
-	CD3D11_TEXTURE2D_DESC desc;
-	texture->GetDesc(&desc);
-	return desc;
-}
-
-void SetRenderTargetViewAndDepthStencilFromSwapChain(
-	dx_device device,
-	dx_swap_chain swap_chain,
-	dx_ptr<ID3D11RenderTargetView>& render_target_view,
-	dx_ptr<ID3D11DepthStencilView>& depth_stencil_view) {
-	auto back_buffer = pn::GetSwapChainBackBuffer(swap_chain);
-	render_target_view = pn::CreateRenderTargetViewOfTexture(device, back_buffer);
-
-	CD3D11_TEXTURE2D_DESC back_buffer_desc = pn::GetTextureDesc(back_buffer);
-
-	CD3D11_TEXTURE2D_DESC depthStencilDesc(
-		DXGI_FORMAT_D24_UNORM_S8_UINT,
-		static_cast<UINT> (back_buffer_desc.Width),
-		static_cast<UINT> (back_buffer_desc.Height),
-		1, // This depth stencil view has only one texture.
-		1, // Use a single mipmap level.
-		D3D11_BIND_DEPTH_STENCIL
-	);
-
-	auto depth_stencil = pn::CreateTexture2D(device, depthStencilDesc);
-	depth_stencil_view = pn::CreateDepthStencilView(device, depth_stencil);
-
-	auto context = pn::GetContext(device);
-	context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
-}
-
 // ------------ UTILITY FUNCTIONS -------------
 
-dx_ptr<ID3D11Texture2D> GetSwapChainBackBuffer(dx_swap_chain swap_chain) {
-	dx_ptr<ID3D11Texture2D> back_buffer;
+dx_texture2d GetSwapChainBackBuffer(dx_swap_chain swap_chain) {
+	dx_texture2d back_buffer;
 	auto hr = swap_chain->GetBuffer(
 		0,
 		__uuidof(ID3D11Texture2D),
@@ -309,22 +321,24 @@ dx_context GetContext(dx_device device) {
 	return context;
 }
 
-void SetViewport(dx_context context, const int width, const int height) {
-	D3D11_VIEWPORT m_viewport;
-	ZeroMemory(&m_viewport, sizeof(D3D11_VIEWPORT));
-	m_viewport.Height = (float) height;
-	m_viewport.Width = (float) width;
-	m_viewport.MinDepth = 0;
-	m_viewport.MaxDepth = 1;
+CD3D11_TEXTURE2D_DESC GetTextureDesc(dx_texture2d texture) {
+	CD3D11_TEXTURE2D_DESC desc;
+	texture->GetDesc(&desc);
+	return desc;
+}
 
-	context->RSSetViewports(
-		1,
-		&m_viewport
-	);
+dx_shader_reflection GetShaderReflector(const pn::bytes& shader_byte_code) {
+	dx_shader_reflection reflector = nullptr;
+	auto hr = D3DReflect(shader_byte_code.data(), shader_byte_code.size(), IID_ID3D11ShaderReflection, (void**) reflector.GetAddressOf());
+	if (FAILED(hr)) {
+		LogError("Couldn't get reflector from shader");
+		return nullptr;
+	}
+	return reflector;
 }
 
 vertex_input_desc GetVertexInputDescFromShader(const pn::bytes& vs_byte_code) {
-	dx_ptr<ID3D11ShaderReflection> reflector = GetShaderReflector(vs_byte_code);
+	dx_shader_reflection reflector = GetShaderReflector(vs_byte_code);
 	D3D11_SHADER_DESC shader_desc;
 	auto hr = reflector->GetDesc(&shader_desc);
 	if (FAILED(hr)) {
@@ -340,37 +354,8 @@ vertex_input_desc GetVertexInputDescFromShader(const pn::bytes& vs_byte_code) {
 		if (FAILED(hr)) {
 			LogError("Couldn't get input parameter description from reflector");
 		}
-		D3D11_INPUT_ELEMENT_DESC element_desc{};
-		//char* name = const_cast<LPSTR>(element_desc.SemanticName);
 		LogDebug("Creating element description");
-		element_desc.SemanticName = new char[16];
-		strcpy(const_cast<LPSTR>(element_desc.SemanticName), param_desc.SemanticName);
-		element_desc.SemanticIndex = param_desc.SemanticIndex;
-		element_desc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-		element_desc.InputSlot = i;
-		element_desc.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-		element_desc.InstanceDataStepRate = 0;
-
-		if (param_desc.Mask == 1) {
-			if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) element_desc.Format = DXGI_FORMAT_R32_UINT;
-			else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) element_desc.Format = DXGI_FORMAT_R32_SINT;
-			else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) element_desc.Format = DXGI_FORMAT_R32_FLOAT;
-		}
-		else if (param_desc.Mask <= 3) {
-			if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) element_desc.Format = DXGI_FORMAT_R32G32_UINT;
-			else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) element_desc.Format = DXGI_FORMAT_R32G32_SINT;
-			else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) element_desc.Format = DXGI_FORMAT_R32G32_FLOAT;
-		}
-		else if (param_desc.Mask <= 7) {
-			if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) element_desc.Format = DXGI_FORMAT_R32G32B32_UINT;
-			else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) element_desc.Format = DXGI_FORMAT_R32G32B32_SINT;
-			else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) element_desc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		}
-		else if (param_desc.Mask <= 15) {
-			if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) element_desc.Format = DXGI_FORMAT_R32G32B32A32_UINT;
-			else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) element_desc.Format = DXGI_FORMAT_R32G32B32A32_SINT;
-			else if (param_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) element_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-		}
+		input_element_desc element_desc(param_desc, i);
 
 		vertex_desc.push_back(element_desc);
 	}
@@ -378,14 +363,121 @@ vertex_input_desc GetVertexInputDescFromShader(const pn::bytes& vs_byte_code) {
 	return vertex_desc;
 }
 
-dx_ptr<ID3D11ShaderReflection> GetShaderReflector(const pn::bytes& shader_byte_code) {
-	dx_ptr<ID3D11ShaderReflection> reflector = nullptr;
-	auto hr = D3DReflect(shader_byte_code.data(), shader_byte_code.size(), IID_ID3D11ShaderReflection, (void**) reflector.GetAddressOf());
-	if (FAILED(hr)) {
-		LogError("Couldn't get reflector from shader");
-		return nullptr;
-	}
-	return reflector;
+void SetViewport(dx_context context, const int width, const int height) {
+	D3D11_VIEWPORT m_viewport;
+	ZeroMemory(&m_viewport, sizeof(D3D11_VIEWPORT));
+	m_viewport.Height = (float) height;
+	m_viewport.Width = (float) width;
+	m_viewport.MinDepth = 0;
+	m_viewport.MaxDepth = 1;
+
+	context->RSSetViewports(
+		1,
+		&m_viewport
+	);
 }
+
+void SetRenderTargetViewAndDepthStencilFromSwapChain(
+	dx_device device,
+	dx_swap_chain swap_chain,
+	dx_render_target_view& render_target_view,
+	dx_depth_stencil_view& depth_stencil_view) {
+	auto back_buffer = pn::GetSwapChainBackBuffer(swap_chain);
+	render_target_view = pn::CreateRenderTargetViewFromTexture(device, back_buffer);
+
+	CD3D11_TEXTURE2D_DESC back_buffer_desc = pn::GetTextureDesc(back_buffer);
+
+	CD3D11_TEXTURE2D_DESC depthStencilDesc(
+		DXGI_FORMAT_D24_UNORM_S8_UINT,
+		static_cast<UINT> (back_buffer_desc.Width),
+		static_cast<UINT> (back_buffer_desc.Height),
+		1, // This depth stencil view has only one texture.
+		1, // Use a single mipmap level.
+		D3D11_BIND_DEPTH_STENCIL
+	);
+
+	auto depth_stencil = pn::CreateTexture2D(device, depthStencilDesc);
+	depth_stencil_view = pn::CreateDepthStencilView(device, depth_stencil);
+
+	auto context = pn::GetContext(device);
+	context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
+}
+
+void ResizeRenderTargetViewportCamera(
+	dx_device device,
+	unsigned int width, unsigned int height,
+	dx_swap_chain& swap_chain,
+	dx_render_target_view& render_target_view,
+	dx_depth_stencil_view& depth_stencil_view,
+	ProjectionMatrix& camera
+) {
+	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(device, swap_chain, render_target_view, depth_stencil_view);
+	pn::SetViewport(pn::GetContext(device), width, height);
+	camera.SetViewWidth(width);
+	camera.SetViewHeight(height);
+}
+
+void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout, const mesh_buffer_t& cmesh_buffer) {
+	const auto NUM_PARAMETERS = layout.desc.size();
+
+	pn::vector<ID3D11Buffer*> vertex_buffers;
+	vertex_buffers.reserve(NUM_PARAMETERS);
+
+	pn::vector<unsigned int> strides;
+	strides.reserve(NUM_PARAMETERS);
+
+	pn::vector<unsigned int> offsets;
+	offsets.reserve(NUM_PARAMETERS);
+
+	for (int i = 0; i < layout.desc.size(); ++i) {
+		const auto& el = layout.desc[i];
+
+		std::string type = el.SemanticName;
+		if (type == "POSITION") {
+			vertex_buffers.push_back(cmesh_buffer.positions.Get());
+			strides.push_back(sizeof(pn::vec3f));
+			offsets.push_back(0);
+		}
+		else if (type == "NORMAL") {
+			vertex_buffers.push_back(cmesh_buffer.normals.Get());
+			strides.push_back(sizeof(pn::vec3f));
+			offsets.push_back(0);
+		}
+		else if ((type == "TEXCOORD") || (type == "TEXCOORD0")) {
+			vertex_buffers.push_back(cmesh_buffer.uvs.Get());
+			strides.push_back(sizeof(pn::vec2f));
+			offsets.push_back(0);
+		}
+		else if ((type == "TANGENT") || (type == "TANGENT0")) {
+			vertex_buffers.push_back(cmesh_buffer.tangents.Get());
+			strides.push_back(sizeof(pn::vec3f));
+			offsets.push_back(0);
+		}
+		else if (type == "TANGENT1") {
+			vertex_buffers.push_back(cmesh_buffer.bitangents.Get());
+			strides.push_back(sizeof(pn::vec3f));
+			offsets.push_back(0);
+		}
+		else if (type == "TEXCOORD1") {
+			vertex_buffers.push_back(cmesh_buffer.uv2s.Get());
+			strides.push_back(sizeof(pn::vec2f));
+			offsets.push_back(0);
+		}
+		else if (type == "COLOR") {
+			vertex_buffers.push_back(cmesh_buffer.colors.Get());
+			strides.push_back(sizeof(pn::vec4f));
+			offsets.push_back(0);
+		}
+		else {
+			LogError("Unknown parameter type '{}' in CMeshBuffer", type);
+		}
+	}
+
+	context->IASetVertexBuffers(0, vertex_buffers.size(), const_cast<const pn::vector<ID3D11Buffer*>&>(vertex_buffers).data(), strides.data(), offsets.data());
+}
+
+
+
+
 
 } // namespace dx

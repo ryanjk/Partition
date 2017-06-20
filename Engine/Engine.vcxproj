@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="include\Graphics\DirectX.h" />
     <ClInclude Include="include\Graphics\MeshLoadUtil.h" />
+    <ClInclude Include="include\Graphics\ProjectionMatrix.h" />
     <ClInclude Include="include\Graphics\Window.h" />
     <ClInclude Include="include\IO\FileUtil.h" />
     <ClInclude Include="include\IO\PathUtil.h" />

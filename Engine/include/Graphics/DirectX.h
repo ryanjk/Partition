@@ -7,6 +7,8 @@
 #include <wrl.h> // ComPtr
 
 #include <Graphics\Window.h>
+#include <Graphics\ProjectionMatrix.h>
+
 #include <Utilities\UtilityTypes.h>
 #include <Utilities\Logging.h>
 #include <Utilities\Math.h>
@@ -47,7 +49,8 @@ struct input_element_desc {
 	UINT                       InstanceDataStepRate;
 	static const int NAME_SIZE = 16;
 	
-	input_element_desc(const D3D11_INPUT_ELEMENT_DESC& d3d_desc) {
+	input_element_desc(const input_element_desc& d3d_desc) {
+		Log("copy constructor");
 		SemanticName = new char[NAME_SIZE];
 		strcpy(const_cast<char*>(SemanticName), d3d_desc.SemanticName);
 
@@ -59,7 +62,39 @@ struct input_element_desc {
 		InstanceDataStepRate = d3d_desc.InstanceDataStepRate;
 	}
 
+	input_element_desc(const D3D11_SIGNATURE_PARAMETER_DESC& d3d_parameter_desc, int input_slot) {
+		this->SemanticName = new char[16];
+		strcpy(const_cast<LPSTR>(this->SemanticName), d3d_parameter_desc.SemanticName);
+		this->SemanticIndex = d3d_parameter_desc.SemanticIndex;
+		this->InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+		this->InputSlot = input_slot;
+		this->AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+		this->InstanceDataStepRate = 0;
+
+		if (d3d_parameter_desc.Mask == 1) {
+			if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) this->Format = DXGI_FORMAT_R32_UINT;
+			else if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) this->Format = DXGI_FORMAT_R32_SINT;
+			else if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) this->Format = DXGI_FORMAT_R32_FLOAT;
+		}
+		else if (d3d_parameter_desc.Mask <= 3) {
+			if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) this->Format = DXGI_FORMAT_R32G32_UINT;
+			else if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) this->Format = DXGI_FORMAT_R32G32_SINT;
+			else if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) this->Format = DXGI_FORMAT_R32G32_FLOAT;
+		}
+		else if (d3d_parameter_desc.Mask <= 7) {
+			if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) this->Format = DXGI_FORMAT_R32G32B32_UINT;
+			else if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) this->Format = DXGI_FORMAT_R32G32B32_SINT;
+			else if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) this->Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		}
+		else if (d3d_parameter_desc.Mask <= 15) {
+			if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) this->Format = DXGI_FORMAT_R32G32B32A32_UINT;
+			else if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) this->Format = DXGI_FORMAT_R32G32B32A32_SINT;
+			else if (d3d_parameter_desc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) this->Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		}
+	}
+
 	~input_element_desc() {
+		Log("destructor");
 		delete[] SemanticName;
 	}
 };
@@ -72,7 +107,7 @@ struct input_layout_desc {
 	vertex_input_desc desc;
 };
 
-struct Mesh {
+struct mesh_t {
 	pn::vector<pn::vec3f>		positions;
 	pn::vector<pn::vec4f>		colors;
 	pn::vector<pn::vec3f>		normals;
@@ -84,12 +119,12 @@ struct Mesh {
 	pn::vector<unsigned int>	indices;
 	D3D_PRIMITIVE_TOPOLOGY		topology;
 
-	Mesh() : 
+	mesh_t() : 
 		positions(), colors(), normals(), tangents(), bitangents(), uvs(), uv2s(), indices(), topology()
 	{}
 };
 
-struct MeshBuffer {
+struct mesh_buffer_t {
 	dx_buffer				positions;
 	dx_buffer				colors;
 	dx_buffer				normals;
@@ -113,6 +148,9 @@ dx_swap_chain			CreateMainWindowSwapChain(dx_device device, const window_handle 
 dx_texture2d			CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data);
 dx_render_target_view	CreateRenderTargetViewFromTexture(dx_device device, dx_texture2d texture);
 dx_depth_stencil_view	CreateDepthStencilView(dx_device device, dx_texture2d& depth_stencil_texture);
+
+vector<mesh_buffer_t>	CreateMeshBuffer(dx_device device, const pn::vector<mesh_t>& mesh);
+mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh);
 
 // -------------- SHADER CREATION -------------
 
@@ -156,8 +194,6 @@ std::pair<dx_vertex_shader, input_layout_desc>
 
 std::pair<dx_vertex_shader, input_layout_desc> 
 						CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename);
-
-
 
 // -------------- BUFFER CREATION -------------------
 
@@ -229,6 +265,17 @@ dx_shader_reflection	GetShaderReflector(const pn::bytes& shader_byte_code);
 vertex_input_desc		GetVertexInputDescFromShader(const pn::bytes& vs_byte_code);
 
 void					SetViewport(dx_context context, const int width, const int height);
-void					SetRenderTargetViewAndDepthStencilFromSwapChain(dx_device device, dx_swap_chain swap_chain, dx_render_target_view& render_target_view, dx_depth_stencil_view& depth_stencil_view);
+void					SetRenderTargetViewAndDepthStencilFromSwapChain(dx_device device, 
+																		dx_swap_chain swap_chain, 
+																		dx_render_target_view& render_target_view, 
+																		dx_depth_stencil_view& depth_stencil_view);
+void					ResizeRenderTargetViewportCamera(dx_device device, 
+														 unsigned int width, unsigned int height, 
+														 dx_swap_chain& swap_chain, 
+														 dx_render_target_view& render_target_view, 
+														 dx_depth_stencil_view& depth_stencil_view, 
+														 ProjectionMatrix& camera);
+
+void					SetContextVertexBuffers(dx_context context, const input_layout_desc& input_layout, const mesh_buffer_t& mesh_buffer);
 
 } // namespace pn

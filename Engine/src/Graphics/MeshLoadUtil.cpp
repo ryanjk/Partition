@@ -18,9 +18,9 @@ unsigned int MeshLoadDataToAssimp(const MeshLoadData& mesh_load_data) {
 	return assimp_post_process;
 }
 
-Mesh ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
+pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 	LogDebug("Loading mesh {}", mesh->mName.C_Str());
-	Mesh result_mesh;
+	pn::mesh_t result_mesh;
 
 	const unsigned int VERTEX_COUNT = mesh->mNumVertices;
 	result_mesh.positions.resize(VERTEX_COUNT);
@@ -70,7 +70,7 @@ Mesh ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 	return result_mesh;
 }
 
-void ProcessAINode(aiNode* node, const aiScene* scene, pn::vector<Mesh>& meshes) {
+void ProcessAINode(aiNode* node, const aiScene* scene, pn::vector<mesh_t>& meshes) {
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
 		auto* ai_mesh = scene->mMeshes[node->mMeshes[i]];
 		auto mesh = ConvertAIMeshToMesh(ai_mesh, scene);
@@ -82,11 +82,11 @@ void ProcessAINode(aiNode* node, const aiScene* scene, pn::vector<Mesh>& meshes)
 	}
 }
 
-auto ConvertAISceneToMeshes(const aiScene* ai_scene, pn::vector<Mesh>& meshes) {
+auto ConvertAISceneToMeshes(const aiScene* ai_scene, pn::vector<mesh_t>& meshes) {
 	ProcessAINode(ai_scene->mRootNode, ai_scene, meshes);
 }
 
-pn::vector<Mesh> LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data) {
+pn::vector<mesh_t> LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data) {
 	Assimp::Importer importer;
 	auto file_data = pn::ReadFile(filename);
 	if (file_data.empty()) {
@@ -98,12 +98,12 @@ pn::vector<Mesh> LoadMesh(const std::string& filename, const MeshLoadData& mesh_
 		MeshLoadDataToAssimp(mesh_load_data),
 		nullptr
 	);
-	pn::vector<Mesh> meshes;
+	pn::vector<mesh_t> meshes;
 	ConvertAISceneToMeshes(ai_scene, meshes);
 	return meshes;
 }
 
-pn::vector<Mesh> LoadMesh(const std::string& filename) {
+pn::vector<mesh_t> LoadMesh(const std::string& filename) {
 	MeshLoadData default_load_data;
 	default_load_data.convert_left = true;
 	default_load_data.triangulate = true;

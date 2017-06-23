@@ -36,6 +36,8 @@ using dx_vertex_shader		= dx_ptr<ID3D11VertexShader>;
 using dx_pixel_shader		= dx_ptr<ID3D11PixelShader>;
 
 using dx_texture2d			= dx_ptr<ID3D11Texture2D>;
+using dx_resource			= dx_ptr<ID3D11Resource>;
+using dx_resource_view		= dx_ptr<ID3D11ShaderResourceView>;
 
 // ------------- CLASS DEFINITIONS ---------------
 
@@ -50,7 +52,6 @@ struct input_element_desc {
 	static const int NAME_SIZE = 16;
 	
 	input_element_desc(const input_element_desc& d3d_desc) {
-		Log("copy constructor");
 		SemanticName = new char[NAME_SIZE];
 		strcpy(const_cast<char*>(SemanticName), d3d_desc.SemanticName);
 
@@ -94,8 +95,21 @@ struct input_element_desc {
 	}
 
 	~input_element_desc() {
-		Log("destructor");
 		delete[] SemanticName;
+	}
+
+	input_element_desc& operator=(const input_element_desc& d3d_desc) {
+		SemanticName = new char[NAME_SIZE];
+		strcpy(const_cast<char*>(SemanticName), d3d_desc.SemanticName);
+
+		SemanticIndex = d3d_desc.SemanticIndex;
+		Format = d3d_desc.Format;
+		InputSlot = d3d_desc.InputSlot;
+		AlignedByteOffset = d3d_desc.AlignedByteOffset;
+		InputSlotClass = d3d_desc.InputSlotClass;
+		InstanceDataStepRate = d3d_desc.InstanceDataStepRate;
+
+		return *this;
 	}
 };
 
@@ -135,6 +149,13 @@ struct mesh_buffer_t {
 
 	dx_buffer				indices;
 	D3D_PRIMITIVE_TOPOLOGY	topology;
+};
+
+struct texture_t {
+	dx_resource resource;
+	dx_resource_view resource_view;
+
+	texture_t() : resource(nullptr), resource_view(nullptr) {}
 };
 
 // ------------------- FUNCTIONS ----------------------

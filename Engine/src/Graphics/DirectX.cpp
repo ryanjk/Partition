@@ -187,7 +187,7 @@ dx_texture2d CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_des
 	return texture;
 }
 
-mesh_buffer_t CreateMeshBuffer(dx_ptr<ID3D11Device> device, const mesh_t& mesh) {
+mesh_buffer_t CreateMeshBuffer(dx_device device, const mesh_t& mesh) {
 	mesh_buffer_t mesh_buffer;
 
 	if (mesh.positions.empty()) {
@@ -223,7 +223,7 @@ mesh_buffer_t CreateMeshBuffer(dx_ptr<ID3D11Device> device, const mesh_t& mesh) 
 	return mesh_buffer;
 }
 
-pn::vector<mesh_buffer_t> CreateMeshBuffer(dx_ptr<ID3D11Device> device, const pn::vector<mesh_t>& meshs) {
+pn::vector<mesh_buffer_t> CreateMeshBuffer(dx_device device, const pn::vector<mesh_t>& meshs) {
 	pn::vector<mesh_buffer_t> mesh_buffers;
 	for (const auto& mesh : meshs) {
 		mesh_buffers.emplace_back(CreateMeshBuffer(device, mesh));

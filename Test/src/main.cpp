@@ -1,6 +1,7 @@
 #include <Graphics\Window.h>
 #include <Graphics\DirectX.h>
 #include <Graphics\MeshLoadUtil.h>
+#include <Graphics\TextureLoadUtil.h>
 #include <Graphics\ProjectionMatrix.h>
 
 #include <Utilities\Logging.h>
@@ -66,7 +67,7 @@ pn::window_long CALLBACK WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-int PARTITION_MAIN(command_line_args) {
+int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInstance, pn::window_pwstr command_line_args, int nCmdShow) {
 	
 	// INIT ENVIRONMENT
 
@@ -81,7 +82,12 @@ int PARTITION_MAIN(command_line_args) {
 		hInstance = (pn::instance_handle) GetModuleHandle(NULL);
 	}
 
-	// INIT WINDOW
+	auto hr = CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
+	if (FAILED(hr)) {
+		LogError("Couldn't initialize COM: {}", pn::ErrMsg(hr));
+	}
+
+	// INIT WINDOWS
 
 	pn::application_window_desc awd;
 	awd.h_instance = hInstance;
@@ -89,21 +95,40 @@ int PARTITION_MAIN(command_line_args) {
 	awd.height = 768;
 	awd.fullscreen = false;
 	auto h_wnd = pn::CreateApplicationWindow(awd, WindowProc);
+
 	
 	// INIT DIRECTX
 
 	device = pn::CreateDevice();
 	swap_chain = pn::CreateMainWindowSwapChain(device, h_wnd, awd);
 
+	pn::InitTextureFactory(device);
+
 	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(device, swap_chain, render_target_view, depth_stencil_view);
 
 	auto context = pn::GetContext(device);
 	pn::SetViewport(context, awd.width, awd.height);
 
-	// LOAD RESOURCES
+	// ---------- LOAD RESOURCES ----------------
 
-	auto mesh = pn::LoadMesh(pn::GetResourcePath("torus.fbx"));
+	auto mesh = pn::LoadMesh(pn::GetResourcePath("plane.fbx"));
 	auto mesh_buffer = pn::CreateMeshBuffer(device, mesh);
+
+	auto tex = pn::LoadTexture2D(pn::GetResourcePath("image.png"));
+
+	D3D11_SAMPLER_DESC sampler_desc;
+	sampler_desc.Filter = D3D11_FILTER::D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.MipLODBias = 0.0f;
+	sampler_desc.MaxAnisotropy = 1;
+	sampler_desc.ComparisonFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_NEVER;
+	sampler_desc.MinLOD = -FLT_MAX;
+	sampler_desc.MaxLOD = FLT_MAX;
+	//sampler_desc.BorderColor = pn::vec4f(1.0f, 1.0f, 1.0f, 1.0f);
+	pn::dx_ptr<ID3D11SamplerState> sampler_state;
+	auto shr = device->CreateSamplerState(&sampler_desc, sampler_state.GetAddressOf());
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -214,6 +239,7 @@ int PARTITION_MAIN(command_line_args) {
 		// set shader
 		context->VSSetShader(vertex_shader.Get(), nullptr, 0);
 		context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+
 		// update instance uniforms
 		auto create_transform_edit = [](const std::string& name, pn::mat4f& matrix, float min, float max) {
 			DirectX::XMVECTOR translation, scale, rotation;
@@ -268,6 +294,10 @@ int PARTITION_MAIN(command_line_args) {
 		context->VSSetConstantBuffers(1, 1, instance_constant_buffer.GetAddressOf());
 
 		context->PSSetConstantBuffers(0, 1, global_constant_buffer.GetAddressOf());
+
+		// update shader textures
+		context->PSSetShaderResources(0, 1, tex.resource_view.GetAddressOf());
+		context->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
 
 		context->DrawIndexed(mesh[0].indices.size(), 0, 0);
 		ImGui::Render();

@@ -50,7 +50,7 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 		}
 	}
 
-	for (unsigned int i = 0; i > VERTEX_COUNT; ++i) {
+	for (unsigned int i = 0; i < VERTEX_COUNT; ++i) {
 		std::memcpy(&result_mesh.uvs[i], &(mesh->mTextureCoords[0][i]), sizeof(pn::vec2f));
 
 		if (mesh->GetNumUVChannels() >= 2) {

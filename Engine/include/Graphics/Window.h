@@ -6,10 +6,6 @@
 
 namespace pn {
 
-// ---------- MACRO DEFINITIONS -----------
-
-#define PARTITION_MAIN(command_line_args) WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInstance, pn::window_pwstr command_line_args, int nCmdShow)
-
 // ------------- TYPEDEFS ------------------
 
 using instance_handle	= HINSTANCE;

@@ -9,6 +9,11 @@ namespace pn {
 
 const float EPSILON = 0.00001f;
 
+const float PI = 3.14159265359f;
+const float TWOPI = 2*PI;
+const float PIDIV2 = PI/2;
+const float PIDIV4 = PI/4;
+
 const vec2f vec2f::Zero		= vec2f( 0.0f, 0.0f );
 const vec2f vec2f::One		= vec2f(1.0f, 1.0f);
 const vec2f vec2f::UnitX	= vec2f(1.0f, 0.0f);
@@ -26,6 +31,9 @@ const vec4f vec4f::UnitX	= vec4f(1.0f, 0.0f, 0.0f, 0.0f);
 const vec4f vec4f::UnitY	= vec4f(0.0f, 1.0f, 0.0f, 0.0f);
 const vec4f vec4f::UnitZ	= vec4f(0.0f, 0.0f, 1.0f, 0.0f);
 const vec4f vec4f::UnitW	= vec4f(0.0f, 0.0f, 0.0f, 1.0f);
+
+const quaternion quaternion::Zero		= quaternion(0.0f, 0.0f, 0.0f, 0.0f);
+const quaternion quaternion::Identity	= quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 
 const mat4f mat4f::Identity = mat4f(1.0f, 0.0f, 0.0f, 0.0f,
 									0.0f, 1.0f, 0.0f, 0.0f,
@@ -54,6 +62,12 @@ bool IsEqual(const vec3f& v1, const vec3f& v2, const float eps = EPSILON) {
 		(abs(v1.z - v2.z) <= EPSILON);
 }
 bool IsEqual(const vec4f& v1, const vec4f& v2, const float eps = EPSILON) {
+	return (abs(v1.x - v2.x) <= EPSILON) &&
+		(abs(v1.y - v2.y) <= EPSILON) &&
+		(abs(v1.z - v2.z) <= EPSILON) &&
+		(abs(v1.w - v2.w) <= EPSILON);
+}
+bool IsEqual(const quaternion& v1, const quaternion& v2, const float eps = EPSILON) {
 	return (abs(v1.x - v2.x) <= EPSILON) &&
 		(abs(v1.y - v2.y) <= EPSILON) &&
 		(abs(v1.z - v2.z) <= EPSILON) &&
@@ -171,6 +185,66 @@ float			SmoothStep(const float& edge0, const float& edge1, const float& v) {
 	return t*t*(3.0f - 2.0f*t);
 }
 
+// --------- QUATERNION FUNCTIONS ---------
+
+mat4f				QuaternionToRotationMatrix(const quaternion& q) {
+	const float sx = q.x*q.x;
+	const float sy = q.y*q.y;
+	const float sz = q.z*q.z;
+
+	const float x_z = q.x*q.z;
+	const float x_y = q.x*q.y;
+	const float x_w = q.x*q.w;
+
+	const float y_z = q.y*q.z;
+	const float y_w = q.y*q.w;
+
+	const float z_w = q.z*q.w;
+
+	return mat4f(
+		1 - 2 * (sy - sz), 2 * (x_y + z_w), 2 * (x_z - y_w), 0.0f,
+		2 * (x_y - z_w), 1 - 2 * (sx - sz), 2 * (y_z + x_w), 0.0f,
+		2 * (x_z + y_w), 2 * (y_z - x_w), 1 - 2 * (sx - sy), 0.0f,
+		           0.0f,            0.0f,              0.0f, 1.0f
+	);
+}
+
+quaternion			RotationMatrixToQuaternion(const mat4f& m) {
+	const float trace = m._00 + m._11 + m._22;
+	quaternion q;
+	if (trace > 0) {
+		float s = 0.5f / sqrtf(trace + 1.0f);
+		q.w = 0.25f / s;
+		q.x = (m._21 - m._12) * s;
+		q.y = (m._02 - m._20) * s;
+		q.z = (m._10 - m._01) * s;
+	}
+	else {
+		if (m._00 > m._11 && m._00 > m._22) {
+			float s = 2.0f * sqrtf(1.0f + m._00 - m._11 - m._22);
+			q.w = (m._21 - m._12) / s;
+			q.x = 0.25f * s;
+			q.y = (m._01 + m._10) / s;
+			q.z = (m._02 + m._20) / s;
+		}
+		else if (m._11 > m._22) {
+			float s = 2.0f * sqrtf(1.0f + m._11 - m._00 - m._22);
+			q.w = (m._02 - m._20) / s;
+			q.x = (m._01 + m._10) / s;
+			q.y = 0.25f * s;
+			q.z = (m._12 + m._21) / s;
+		}
+		else {
+			float s = 2.0f * sqrtf(1.0f + m._22 - m._00 - m._11);
+			q.w = (m._10 - m._01) / s;
+			q.x = (m._02 + m._20) / s;
+			q.y = (m._12 + m._21) / s;
+			q.z = 0.25f * s;
+		}
+	}
+	return Normalize(q);
+}
+
 // ------- MATRIX FUNCTIONS ----------
 
 mat4f Transpose(const mat4f& m) {
@@ -181,7 +255,6 @@ mat4f Transpose(const mat4f& m) {
 		m._03, m._13, m._23, m._33
 	);
 }
-
 mat4f Inverse(const mat4f& in) {
 	// from https://stackoverflow.com/questions/2624422/efficient-4x4-matrix-inverse-affine-transform
 	mat4f m;
@@ -253,9 +326,69 @@ mat4f Scale(const float xs, const float ys, const float zs) {
 	);
 }
 
+mat4f RotationX(const float rad) {
+	const float cos_t = cosf(rad);
+	const float sin_t = sinf(rad);
+	return mat4f(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, cos_t, sin_t, 0.0f,
+		0.0f, -sin_t, cos_t, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+mat4f RotationY(const float rad) {
+	const float cos_t = cosf(rad);
+	const float sin_t = sinf(rad);
+	return mat4f(
+		cos_t, 0.0f, -sin_t, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		sin_t, 0.0f, cos_t, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+mat4f RotationZ(const float rad) {
+	const float cos_t = cosf(rad);
+	const float sin_t = sinf(rad);
+	return mat4f(
+		cos_t, sin_t, 0.0f, 0.0f,
+		-sin_t, cos_t, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+
+mat4f RotationMatrixFromEulerAngles(const vec3f& euler) {
+	return RotationMatrixFromYawPitchRoll(euler.y, euler.x, euler.z);
+}
+mat4f RotationMatrixFromYawPitchRoll(const float yaw, const float pitch, const float roll) {
+	/*const float cy = cosf(yaw);
+	const float sy = sinf(yaw);
+
+	const float cp = cosf(pitch);
+	const float sp = sinf(pitch);
+
+	const float cr = cosf(roll);
+	const float sr = sinf(roll);
+
+	const float sy_sp = sy*sp;
+	const float sy_cp = sy*cp;
+	const float sr_cp = sr*cp;
+	const float cr_cp = cr*cp;
+
+	return mat4f(
+		cr*cy, cr*sy_sp - sr_cp, cr*sy_cp + sr_cp, 0.0f,
+		sr*cy, sr*sy_sp + cr_cp, sr*sy_cp - cr_cp, 0.0f,
+		  -sy,            cy*sp,            cy*cp, 0.0f,
+		 0.0f,             0.0f,             0.0f, 1.0f
+	);*/
+	return Transpose(RotationZ(roll) * RotationX(pitch) * RotationY(yaw));
+}
+mat4f AxisAngleToRotationMatrix(const vec3f& axis, const float angle) {
+	return QuaternionToRotationMatrix(AxisAngleToQuaternion(axis, angle));
+}
+
 vec3f AxisAngleToEuler(const vec3f& p_axis, float angle) {
-	auto axis = p_axis;
-	//axis.Normalize();
+	auto axis = Normalize(p_axis);
 	float s = sinf(angle);
 	float t = 1 - cosf(angle);
 	float z_comp = (axis.x * axis.y * t) + (axis.z * s);

@@ -110,6 +110,19 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 	pn::SetViewport(context, awd.width, awd.height);
 
 	//pn::TestAngleToEuler();
+	auto v = DirectX::XMVECTOR();
+	v.m128_f32[0] = 1.0f;
+	v.m128_f32[1] = 0.0f;
+	v.m128_f32[2] = 0.0f;
+	v.m128_f32[3] = 1.0f;
+
+	auto v2 = pn::vec4f(1.0f, 0.0f, 0.0f, 1.0f);
+
+	auto mx = DirectX::XMMatrixRotationRollPitchYaw(pn::PIDIV2, 0.0f, pn::PIDIV2);
+	auto mx2 = pn::RotationMatrixFromYawPitchRoll(pn::PIDIV2, 0.0f, pn::PIDIV2);
+
+	auto rx = DirectX::XMVector4Transform(v, mx);
+	auto rx2 = v2 * mx2;
 
 	// ---------- LOAD RESOURCES ----------------
 

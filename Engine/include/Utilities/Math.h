@@ -91,6 +91,8 @@ struct vec4f {
 	vec4f(float x, const vec2f& yz, float w) noexcept : x(x), y(yz.x), z(yz.y), w(w) {}
 	vec4f(float x, float y, const vec2f& zw) noexcept : x(x), y(y), z(zw.x), w(zw.y) {}
 
+	vec3f xyz() const { return vec3f(x, y, z); }
+
 	vec4f operator+(const vec4f& rhs) const { return vec4f(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w); }
 	vec4f operator-(const vec4f& rhs) const { return vec4f(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w); }
 	vec4f operator*(const vec4f& rhs) const { return vec4f(x * rhs.x, y * rhs.y, z * rhs.z, w * rhs.w); }
@@ -117,7 +119,53 @@ struct vec4f {
 
 // --------- QUATERNION ------------
 
-using quaternion = vec4f;
+struct quaternion	Inverse(const struct quaternion& q);
+struct quaternion {
+	float x;
+	float y;
+	float z;
+	float w;
+
+	quaternion() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
+	quaternion(const float x, const float y, const float z, const float w) : x(x), y(y), z(z), w(w) {}
+	explicit quaternion(const vec4f& vec) : x(vec.x), y(vec.y), z(vec.z), w(vec.w) {}
+	quaternion(const vec3f& vec, const float s) : x(vec.x), y(vec.y), z(vec.z), w(s) {}
+	quaternion(const quaternion& q) : x(q.x), y(q.y), z(q.z), w(q.w) {}
+
+	quaternion operator+(const quaternion& rhs) const { return quaternion(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w); }
+	quaternion operator-(const quaternion& rhs) const { return quaternion(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w); }
+	quaternion operator*(const quaternion& rhs) const { 
+		return quaternion(
+			w*rhs.x + x*rhs.w - y*rhs.z + z*rhs.y,
+			w*rhs.y + x*rhs.z + y*rhs.w - z*rhs.x,
+			w*rhs.z - x*rhs.y + y*rhs.x + z*rhs.w,
+			w*rhs.w - x*rhs.x - y*rhs.y - z*rhs.z
+		);
+	}
+	quaternion operator/(const quaternion& rhs) const { 
+		return (*this) * Inverse(rhs);
+	}
+
+	quaternion& operator+=(const quaternion& rhs) { x += rhs.x; y += rhs.y; z += rhs.z; w += rhs.w; return *this; }
+	quaternion& operator-=(const quaternion& rhs) { x -= rhs.x; y -= rhs.y; z -= rhs.z; w -= rhs.w; return *this; }
+	quaternion& operator*=(const quaternion& rhs) { 
+		*this = (*this) * rhs;
+		return *this;
+	}
+	quaternion& operator/=(const quaternion& rhs) { 
+		*this = (*this) / rhs;
+		return *this; 
+	}
+
+	quaternion operator*(const float c) const { return quaternion(c*x, c*y, c*z, c*w); }
+	quaternion operator/(const float c) const { return quaternion(x / c, y / c, z / c, w / c); }
+
+	quaternion& operator*=(const float c) { x *= c; y *= c; z *= c; w *= c; return *this; }
+	quaternion& operator/=(const float c) { x /= c; y /= c; z /= c; w /= c; return *this; }
+
+	static const quaternion Zero;
+	static const quaternion Identity;
+};
 
 // ---------- MATRIX ---------------
 
@@ -275,47 +323,19 @@ struct mat4f {
 // ------- CONSTANTS -------------
 
 extern const float EPSILON;
+extern const float PI;
+extern const float TWOPI;
+extern const float PIDIV2;
+extern const float PIDIV4;
 
 // ------- FUNCTIONS -------------
-
-// ------ OPERATORS ---------------
-
-template<typename Vec>
-inline Vec		operator*(const float c, const Vec& v) {
-	return v * c;
-}
-
-inline vec4f	operator*(const vec4f& v, const mat4f& m) {
-	return vec4f(
-		v.x*m._00 + v.y*m._10 + v.z*m._20 + v.w*m._30,
-		v.x*m._01 + v.y*m._11 + v.z*m._21 + v.w*m._31,
-		v.x*m._02 + v.y*m._12 + v.z*m._22 + v.w*m._32,
-		v.x*m._03 + v.y*m._13 + v.z*m._23 + v.w*m._33
-	);
-}
-
-// ------- EQUALITY TESTING ----------
-
-bool IsEqual(const vec2f& v1, const vec2f& v2, const float eps);
-bool IsEqual(const vec3f& v1, const vec3f& v2, const float eps);
-bool IsEqual(const vec4f& v1, const vec4f& v2, const float eps);
-bool IsEqual(const mat4f& v1, const mat4f& v2, const float eps);
-
-template<typename Vec>
-bool operator==(const Vec& lhs, const Vec& rhs) {
-	return IsEqual(lhs, rhs, EPSILON);
-}
-
-template<typename Vec>
-bool operator!=(const Vec& lhs, const Vec& rhs) {
-	return !IsEqual(lhs, rhs, EPSILON);
-}
 
 // ------- LENGTH FUNCTIONS --------------
 
 inline float	LengthSqr(const vec2f& v) { return v.x*v.x + v.y*v.y; }
 inline float	LengthSqr(const vec3f& v) { return v.x*v.x + v.y*v.y + v.z*v.z; }
 inline float	LengthSqr(const vec4f& v) { return v.x*v.x + v.y*v.y + v.z*v.z + v.w*v.w; }
+inline float	LengthSqr(const quaternion& v) { return v.x*v.x + v.y*v.y + v.z*v.z + v.w*v.w; }
 
 template<typename Vec>
 inline float	Length(const Vec& v) { return sqrt(LengthSqr(v)); }
@@ -330,6 +350,112 @@ inline float	DistanceSqr(const Vec& v1, const Vec& v2) { Vec diff = v1 - v2; ret
 
 template<typename Vec>
 inline float	Distance(const Vec& v1, const Vec& v2) { return sqrt(DistanceSqr(v1, v2)); }
+
+// --------- MATRIX FUNCTIONS -------------
+
+mat4f Transpose(const mat4f& m);
+mat4f Inverse(const mat4f& in);
+
+mat4f Translation(const vec3f& translation);
+mat4f Translation(const float xt, const float yt, const float zt);
+
+mat4f Scale(const float scale);
+mat4f Scale(const vec3f& scale);
+mat4f Scale(const float xs, const float ys, const float zs);
+
+mat4f RotationX(const float rad);
+mat4f RotationY(const float rad);
+mat4f RotationZ(const float rad);
+
+mat4f RotationMatrixFromEulerAngles(const vec3f& euler);
+mat4f RotationMatrixFromYawPitchRoll(const float yaw, const float pitch, const float roll);
+mat4f AxisAngleToRotationMatrix(const vec3f& axis, const float angle);
+
+// --------- QUATERNION FUNCTIONS ---------
+
+inline quaternion	Conjugate(const quaternion& q) {
+	return quaternion(
+		-q.x, -q.y, -q.z, q.w
+	);
+}
+inline quaternion	Inverse(const quaternion& q) {
+	return Conjugate(q) / LengthSqr(q);
+}
+
+inline vec4f		QuaternionToAxisAngle(const quaternion& q) {
+	const float angle = 2.0f*acosf(q.w);
+	const vec3f axis = vec3f(q.x, q.y, q.z) / (sqrt(1 - q.w*q.w));
+	return vec4f(axis, angle);
+}
+mat4f				QuaternionToRotationMatrix(const quaternion& q);
+
+quaternion			RotationMatrixToQuaternion(const mat4f& pm);
+inline quaternion	AxisAngleToQuaternion(const vec3f& axis, const float angle) {
+	const float w = cosf(angle / 2);
+	return quaternion(axis * sinf(angle / 2), w);
+}
+inline quaternion	AxisAngleToQuaternion(const vec4f& axis_angle) {
+	return AxisAngleToQuaternion(axis_angle.xyz(), axis_angle.w);
+}
+
+// ------ OPERATORS ---------------
+
+template<typename Vec>
+inline Vec		operator*(const float c, const Vec& v) {
+	return v * c;
+}
+inline vec4f	operator*(const vec4f& v, const mat4f& m) {
+	return vec4f(
+		v.x*m._00 + v.y*m._10 + v.z*m._20 + v.w*m._30,
+		v.x*m._01 + v.y*m._11 + v.z*m._21 + v.w*m._31,
+		v.x*m._02 + v.y*m._12 + v.z*m._22 + v.w*m._32,
+		v.x*m._03 + v.y*m._13 + v.z*m._23 + v.w*m._33
+	);
+}
+
+// ------ ANGLE FUNCTIONS -------------
+
+inline constexpr float Rad(const float angles) {
+	return angles * (PI / 180.0f);
+}
+inline constexpr float Angle(const float rad) {
+	return rad * (180.0f / PI);
+}
+inline float DeltaAngle(const float a1, const float a2) {
+	static auto cmod = [](const float x, const float y) {
+		return x - floorf(x / y) * y;
+	};
+	float a = a2 - a1;
+	a = cmod(a + 180, 360) - 180;
+	return a;
+}
+inline bool IsAngleEqual(const float r1, const float r2, const float eps = EPSILON) {
+	return abs(DeltaAngle(r1, r2)) <= eps;
+}
+inline bool IsRadianEqual(const float r1, const float r2, const float eps = EPSILON) {
+	return IsAngleEqual(Angle(r1), Angle(r2), eps);
+}
+
+
+// ------- EQUALITY TESTING ----------
+
+bool IsEqual(const vec2f& v1, const vec2f& v2, const float eps);
+bool IsEqual(const vec3f& v1, const vec3f& v2, const float eps);
+bool IsEqual(const vec4f& v1, const vec4f& v2, const float eps);
+bool IsEqual(const quaternion& v1, const quaternion& v2, const float eps);
+bool IsEqual(const mat4f& v1, const mat4f& v2, const float eps);
+
+template<typename Vec>
+bool operator==(const Vec& lhs, const Vec& rhs) {
+	return IsEqual(lhs, rhs, EPSILON);
+}
+
+template<typename Vec>
+bool operator!=(const Vec& lhs, const Vec& rhs) {
+	return !IsEqual(lhs, rhs, EPSILON);
+}
+
+
 
 // -------- OTHER FUNCTIONS -----------------
 
@@ -374,17 +500,27 @@ Vec				SmoothStep(const Vec& edge0, const Vec& edge1, const Vec& v) {
 template<>
 float			SmoothStep(const float& edge0, const float& edge1, const float& v);
 
-// --------- MATRIX FUNCTIONS -------------
 
-mat4f Transpose(const mat4f& m);
-mat4f Inverse(const mat4f& in);
 
-mat4f Translation(const vec3f& translation);
-mat4f Translation(const float xt, const float yt, const float zt);
 
-mat4f Scale(const float scale);
-mat4f Scale(const vec3f& scale);
-mat4f Scale(const float xs, const float ys, const float zs);
+// ----------- TRANSFORMATIONS ---------------
+
+inline vec3f	RotatePoint(const vec3f& v, const quaternion& q) {
+	quaternion p = Conjugate(q) * (quaternion(v, 0.0f) * q);
+	return vec3f(p.x, p.y, p.z);
+}
+inline vec3f	RotateVector(const vec3f& v, const quaternion& q) {
+	return RotatePoint(v, q);
+}
+inline vec4f	RotatePoint(const vec4f& v, const quaternion& q) {
+	auto p = RotatePoint(v.xyz(), q);
+	return vec4f(p, 1.0f);
+}
+inline vec4f	RotateVector(const vec4f& v, const quaternion& q) {
+	auto p = RotatePoint(v.xyz(), q);
+	return vec4f(p, 0.0f);
+}
+
 
 vec3f AxisAngleToEuler(const vec3f& axis, float angle);
 

@@ -87,6 +87,34 @@ public:
 		vec4f v(1.0f, 2.0f, 3.0f, 1.0f);
 		Assert::IsTrue(v * Scale(2.0f, 3.0f, 5.0f) == vec4f(2.0f, 6.0f, 15.0f, 1.0f));
 	}
+
+	TEST_METHOD(AxisRotationTest) { 
+		{
+			vec4f v(1.0f, 0.0f, 0.0f, 1.0f);
+
+			Assert::IsTrue(v * RotationX(PIDIV2) == v);
+			Assert::IsTrue(v * RotationY(PIDIV2) == vec4f(0.0f, 0.0f, -1.0f, 1.0f));
+			Assert::IsTrue(v * RotationZ(PIDIV2) == vec4f(0.0f, 1.0f, 0.0f, 1.0f));		
+		}
+
+		{
+			vec4f v(-1.0f, 0.0f, 0.0f, 1.0f);
+			Assert::IsTrue(v * RotationX(PIDIV2) == v);
+			Assert::IsTrue(v * RotationY(PIDIV2) == vec4f(0.0f, 0.0f, 1.0f, 1.0f));
+			Assert::IsTrue(v * RotationZ(PIDIV2) == vec4f(0.0f, -1.0f, 0.0f, 1.0f));
+		}
+
+		{
+			vec4f v(0.0f, 1.0f, 0.0f, 1.0f);
+			Assert::IsTrue(v * RotationX(PIDIV2) == vec4f(0.0f, 0.0f, 1.0f, 1.0f));
+			Assert::IsTrue(v * RotationY(PIDIV2) == v);
+			Assert::IsTrue(v * RotationZ(PIDIV2) == vec4f(-1.0f, 0.0f, 0.0f, 1.0f));
+		}
+	}
+
+	TEST_METHOD(EulerRotationTest) {
+
+	}
 	
 };
 }

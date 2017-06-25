@@ -35,6 +35,7 @@ using dx_shader_reflection	= dx_ptr<ID3D11ShaderReflection>;
 using dx_vertex_shader		= dx_ptr<ID3D11VertexShader>;
 using dx_pixel_shader		= dx_ptr<ID3D11PixelShader>;
 
+using dx_sampler_state		= dx_ptr<ID3D11SamplerState>;
 using dx_texture2d			= dx_ptr<ID3D11Texture2D>;
 using dx_resource			= dx_ptr<ID3D11Resource>;
 using dx_resource_view		= dx_ptr<ID3D11ShaderResourceView>;
@@ -167,6 +168,9 @@ dx_swap_chain			CreateSwapChain(dx_device device, DXGI_SWAP_CHAIN_DESC swap_chai
 dx_swap_chain			CreateMainWindowSwapChain(dx_device device, const window_handle hwnd, const application_window_desc awd);
 
 dx_texture2d			CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data);
+dx_sampler_state		CreateSamplerState(dx_device device, CD3D11_SAMPLER_DESC sampler_desc);
+dx_sampler_state		CreateSamplerState(dx_device device);
+
 dx_render_target_view	CreateRenderTargetViewFromTexture(dx_device device, dx_texture2d texture);
 dx_depth_stencil_view	CreateDepthStencilView(dx_device device, dx_texture2d& depth_stencil_texture);
 

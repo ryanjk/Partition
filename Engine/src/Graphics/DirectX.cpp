@@ -30,7 +30,7 @@ static const D3D_FEATURE_LEVEL BAD_LEVELS[] = {
 
 // ------------ CREATION FUNCTIONS -------------
 
-dx_device CreateDevice() {
+dx_device				CreateDevice() {
 
 	auto GetDeviceFlags = []() {
 		UINT deviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
@@ -93,7 +93,7 @@ dx_device CreateDevice() {
 
 }
 
-dx_swap_chain CreateSwapChain(dx_device device, DXGI_SWAP_CHAIN_DESC swap_chain_desc) {
+dx_swap_chain			CreateSwapChain(dx_device device, DXGI_SWAP_CHAIN_DESC swap_chain_desc) {
 	// Create the DXGI device object to use in other factories, such as Direct2D.
 	dx_ptr<IDXGIDevice3> dxgiDevice;
 	device.As(&dxgiDevice);
@@ -123,7 +123,7 @@ dx_swap_chain CreateSwapChain(dx_device device, DXGI_SWAP_CHAIN_DESC swap_chain_
 	return swap_chain;
 }
 
-dx_swap_chain CreateMainWindowSwapChain(dx_device device, const window_handle hwnd, const application_window_desc awd) {
+dx_swap_chain			CreateMainWindowSwapChain(dx_device device, const window_handle hwnd, const application_window_desc awd) {
 	DXGI_SWAP_CHAIN_DESC desc;
 	ZeroMemory(&desc, sizeof(DXGI_SWAP_CHAIN_DESC));
 	desc.Windowed = !awd.fullscreen;
@@ -141,7 +141,7 @@ dx_swap_chain CreateMainWindowSwapChain(dx_device device, const window_handle hw
 	return CreateSwapChain(device, desc);
 }
 
-dx_render_target_view CreateRenderTargetViewFromTexture(dx_device device, dx_texture2d texture) {
+dx_render_target_view	CreateRenderTargetViewFromTexture(dx_device device, dx_texture2d texture) {
 	dx_render_target_view render_target_view;
 	auto hr = device->CreateRenderTargetView(
 		texture.Get(),
@@ -156,7 +156,7 @@ dx_render_target_view CreateRenderTargetViewFromTexture(dx_device device, dx_tex
 	return render_target_view;
 }
 
-dx_depth_stencil_view CreateDepthStencilView(dx_device device, dx_texture2d& depth_stencil_texture) {
+dx_depth_stencil_view	CreateDepthStencilView(dx_device device, dx_texture2d& depth_stencil_texture) {
 	dx_depth_stencil_view depth_stencil_view;
 	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2D);
 	auto hr = device->CreateDepthStencilView(
@@ -172,7 +172,7 @@ dx_depth_stencil_view CreateDepthStencilView(dx_device device, dx_texture2d& dep
 	return depth_stencil_view;
 }
 
-dx_texture2d CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data = nullptr) {
+dx_texture2d			CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data = nullptr) {
 	dx_texture2d texture;
 	auto hr = device->CreateTexture2D(
 		&texture_desc,
@@ -187,7 +187,32 @@ dx_texture2d CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_des
 	return texture;
 }
 
-mesh_buffer_t CreateMeshBuffer(dx_device device, const mesh_t& mesh) {
+dx_sampler_state		CreateSamplerState(dx_device device, CD3D11_SAMPLER_DESC sampler_desc) {
+	dx_sampler_state sampler_state;
+	auto hr = device->CreateSamplerState(&sampler_desc, sampler_state.GetAddressOf());
+	if (FAILED(hr)) {
+		LogError("Coudln't create sampler state: {}", ErrMsg(hr));
+	}
+	return sampler_state;
+}
+
+dx_sampler_state		CreateSamplerState(dx_device device) {
+	CD3D11_SAMPLER_DESC sampler_desc;
+	sampler_desc.Filter = D3D11_FILTER::D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.MipLODBias = 0.0f;
+	sampler_desc.MaxAnisotropy = 1;
+	sampler_desc.ComparisonFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_NEVER;
+	sampler_desc.MinLOD = -FLT_MAX;
+	sampler_desc.MaxLOD = FLT_MAX;
+	//sampler_desc.BorderColor = pn::vec4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+	return CreateSamplerState(device, sampler_desc);
+}
+
+mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh) {
 	mesh_buffer_t mesh_buffer;
 
 	if (mesh.positions.empty()) {
@@ -223,7 +248,7 @@ mesh_buffer_t CreateMeshBuffer(dx_device device, const mesh_t& mesh) {
 	return mesh_buffer;
 }
 
-pn::vector<mesh_buffer_t> CreateMeshBuffer(dx_device device, const pn::vector<mesh_t>& meshs) {
+vector<mesh_buffer_t>	CreateMeshBuffer(dx_device device, const pn::vector<mesh_t>& meshs) {
 	pn::vector<mesh_buffer_t> mesh_buffers;
 	for (const auto& mesh : meshs) {
 		mesh_buffers.emplace_back(CreateMeshBuffer(device, mesh));
@@ -413,8 +438,8 @@ void ResizeRenderTargetViewportCamera(
 ) {
 	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(device, swap_chain, render_target_view, depth_stencil_view);
 	pn::SetViewport(pn::GetContext(device), width, height);
-	camera.SetViewWidth(width);
-	camera.SetViewHeight(height);
+	camera.SetViewWidth(static_cast<float>(width));
+	camera.SetViewHeight(static_cast<float>(height));
 }
 
 void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout, const mesh_buffer_t& cmesh_buffer) {
@@ -429,7 +454,7 @@ void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout
 	pn::vector<unsigned int> offsets;
 	offsets.reserve(NUM_PARAMETERS);
 
-	for (int i = 0; i < layout.desc.size(); ++i) {
+	for (size_t i = 0; i < layout.desc.size(); ++i) {
 		const auto& el = layout.desc[i];
 
 		std::string type = el.SemanticName;

@@ -99,8 +99,8 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 	
 	// INIT DIRECTX
 
-	device = pn::CreateDevice();
-	swap_chain = pn::CreateMainWindowSwapChain(device, h_wnd, awd);
+	device		= pn::CreateDevice();
+	swap_chain	= pn::CreateMainWindowSwapChain(device, h_wnd, awd);
 
 	pn::InitTextureFactory(device);
 
@@ -109,34 +109,25 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 	auto context = pn::GetContext(device);
 	pn::SetViewport(context, awd.width, awd.height);
 
+	//pn::TestAngleToEuler();
+
 	// ---------- LOAD RESOURCES ----------------
 
-	auto mesh = pn::LoadMesh(pn::GetResourcePath("plane.fbx"));
-	auto mesh_buffer = pn::CreateMeshBuffer(device, mesh);
+	auto mesh			= pn::LoadMesh(pn::GetResourcePath("plane.fbx"));
+	auto mesh_buffer	= pn::CreateMeshBuffer(device, mesh);
 
-	auto tex = pn::LoadTexture2D(pn::GetResourcePath("image.png"));
+	auto tex			= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
 
-	D3D11_SAMPLER_DESC sampler_desc;
-	sampler_desc.Filter = D3D11_FILTER::D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
-	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
-	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
-	sampler_desc.MipLODBias = 0.0f;
-	sampler_desc.MaxAnisotropy = 1;
-	sampler_desc.ComparisonFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_NEVER;
-	sampler_desc.MinLOD = -FLT_MAX;
-	sampler_desc.MaxLOD = FLT_MAX;
-	//sampler_desc.BorderColor = pn::vec4f(1.0f, 1.0f, 1.0f, 1.0f);
-	pn::dx_ptr<ID3D11SamplerState> sampler_state;
-	auto shr = device->CreateSamplerState(&sampler_desc, sampler_state.GetAddressOf());
+	auto sampler_state	= pn::CreateSamplerState(device);
+
 
 	// --------- CREATE SHADER DATA ---------------
 
-	auto vs_byte_code = pn::ReadFile(pn::GetResourcePath("vs.cso"));
-	auto vertex_shader = pn::CreateVertexShader(device, vs_byte_code);
-	auto input_layout = pn::CreateInputLayout(device, vs_byte_code);
+	auto vs_byte_code	= pn::ReadFile(pn::GetResourcePath("vs.cso"));
+	auto vertex_shader	= pn::CreateVertexShader(device, vs_byte_code);
+	auto input_layout	= pn::CreateInputLayout(device, vs_byte_code);
 
-	auto pixel_shader = pn::CreatePixelShader(device, pn::GetResourcePath("ps.cso"));
+	auto pixel_shader	= pn::CreatePixelShader(device, pn::GetResourcePath("ps.cso"));
 
 	struct GlobalConstantBufferData {
 		float t = 0.0f;
@@ -145,8 +136,9 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 		float padding[1];
 	};
 	GlobalConstantBufferData c;
-	c.screen_width = static_cast<float>(awd.width);
-	c.screen_height = static_cast<float>(awd.height);
+	c.screen_width	= static_cast<float>(awd.width);
+	c.screen_height	= static_cast<float>(awd.height);
+
 	auto global_constant_buffer = pn::CreateConstantBuffer(device, &c, 1);
 
 	struct InstanceConstantBufferData {
@@ -157,8 +149,8 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 	InstanceConstantBufferData ic;
 	auto instance_constant_buffer = pn::CreateConstantBuffer(device, &ic, 1);
 
-	ic.model = DirectX::XMMatrixTranslation(0.0, 0.0, 4.0);
-	ic.view = DirectX::XMMatrixIdentity();
+	//ic.model = DirectX::XMMatrixTranslation(0.0, 0.0, 4.0);
+	ic.view = pn::mat4f::Identity;
 
 	camera = pn::ProjectionMatrix{ pn::ProjectionType::PERSPECTIVE,
 		static_cast<float>(awd.width), static_cast<float>(awd.height),
@@ -175,21 +167,21 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 
 	ShowWindow(h_wnd, nCmdShow);
 
-	bool show_test_window = true;
-	bool show_another_window = false;
-	ImVec4 clear_col = ImColor(114, 144, 154);
-	bool show_edit_matrix = true;
+	bool show_test_window		= true;
+	bool show_another_window	= false;
+	ImVec4 clear_col			= ImColor(114, 144, 154);
+	bool show_edit_matrix		= true;
 
 	bool bGotMsg;
 	MSG  msg;
 	msg.message = WM_NULL;
 	PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
 	
-	auto prev_time = std::chrono::system_clock::now();
-	double time_to_process = 0;
-	double total_time = 0;
-	const double FPS = 60.0;
-	const double FIXED_DT = 1 / FPS;
+	auto prev_time			= std::chrono::system_clock::now();
+	double time_to_process	= 0;
+	double total_time		= 0;
+	const double FPS		= 60.0;
+	const double FIXED_DT	= 1 / FPS;
 	while (WM_QUIT != msg.message) {
 
 		// Get and handle input
@@ -241,31 +233,15 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 		context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 
 		// update instance uniforms
-		auto create_transform_edit = [](const std::string& name, pn::mat4f& matrix, float min, float max) {
-			DirectX::XMVECTOR translation, scale, rotation;
-			DirectX::XMMatrixDecompose(&scale, &rotation, &translation, matrix);
-
-			ImGui::SliderFloat3((name + " position").c_str(), (float*) &translation, min, max);
-			ImGui::SliderFloat3((name + " scale").c_str(), (float*) &scale, 0, max);
-			ImGui::SliderFloat4((name + " rotation").c_str(), (float*) &rotation, min, max);
-			matrix = DirectX::XMMatrixScalingFromVector(scale) * DirectX::XMMatrixRotationQuaternion(rotation) * DirectX::XMMatrixTranslationFromVector(translation);
-		};
 
 		// update world and view
-		{
-			ImGui::Begin("Edit Cube Matrix", &show_edit_matrix);
-			ImGui::Text("Cube");
-			create_transform_edit("world", ic.model, -10.0f, 10.0f);
-			ImGui::Separator();
-			create_transform_edit("view", ic.view, -10.0f, 10.0f);
-			ImGui::End();
-		}
+		//VDBMS(&ic.model, -10.0f, 10.0f, ui::transform_t());
 
 		// update projection
-		float width = camera.GetViewWidth();
-		float height = camera.GetViewHeight();
-		float fov = camera.GetFov();
-		float size = camera.GetOrthographicSize();
+		float width		= camera.GetViewWidth();
+		float height	= camera.GetViewHeight();
+		float fov		= camera.GetFov();
+		float size		= camera.GetOrthographicSize();
 
 		VDBM(&width, 1.0f, 3000.0f);
 		VDBM(&height, 1.0f, 3000.0f);

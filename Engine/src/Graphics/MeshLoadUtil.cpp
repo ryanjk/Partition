@@ -88,7 +88,7 @@ auto ConvertAISceneToMeshes(const aiScene* ai_scene, pn::vector<mesh_t>& meshes)
 
 pn::vector<mesh_t> LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data) {
 	Assimp::Importer importer;
-	auto file_data = pn::ReadFile(filename);
+	auto file_data = pn::ReadResource(filename);
 	if (file_data.empty()) {
 		LogError("MeshLoad: Couldn't load file {}", filename);
 		return {};

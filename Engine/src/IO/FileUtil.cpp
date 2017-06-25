@@ -6,7 +6,7 @@
 
 namespace pn {
 
-bytes ReadFile(const std::string& filename) {
+bytes ReadFile(const string& filename) {
 	std::ifstream input_file(filename, std::ios::binary | std::ios::ate);
 
 	if (input_file.fail()) {
@@ -26,6 +26,10 @@ bytes ReadFile(const std::string& filename) {
 	input_file.read(&file_bytes[0], size);
 
 	return file_bytes;
+}
+
+bytes ReadResource(const string& resource_path) {
+	return ReadFile(resource_path);
 }
 
 } // namespace pn

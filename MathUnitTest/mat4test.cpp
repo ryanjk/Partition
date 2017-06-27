@@ -3,6 +3,10 @@
 
 #include <Utilities\Math.h>
 
+#include <string>
+
+#include <DirectXMath.h>
+
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 using namespace pn;
@@ -48,18 +52,36 @@ public:
 				9.0f, 10.0f, -11.0f, 12.0f,
 				13.0f, -14.0f, 15.0f, 16.0f);
 
+		mat4f m2(
+			2.0f, 1.0f, 3.0f, 1.0f,
+			5.0f, -2.0f, 6.0f, 10.0f,
+			-12.0f, 13.0f, 4.0f, 5,
+			1, -1, 2, 9
+		);
+
+		mat4f result(
+			-28, 40, 19, 0,
+			-36, 76, 95, 172,
+			212, -166, 67, 162,
+			-208, 220, 47, 92
+		);
+
 		Assert::IsTrue(m*mat4f::Identity == m);
 		Assert::IsTrue(m*mat4f::Zero == mat4f::Zero);
+		Assert::IsTrue((m * m2) == result);
 	}
 
 	TEST_METHOD(InverseTest) {
+		Assert::IsTrue(Inverse(mat4f::Identity) == mat4f::Identity);
+
 		mat4f m(1.0f, 2.0f, 3.0f, -4.0f,
 			  5.0f, 6.0f, 7.0f, 8.0f,
 			  9.0f, 10.0f, -11.0f, 12.0f,
 			  13.0f, -14.0f, 15.0f, 16.0f);
 
-		Assert::IsTrue(Inverse(mat4f::Identity) == mat4f::Identity);
 		auto i = Inverse(m);
+		Assert::IsTrue(m * i == mat4f::Identity);
+		Assert::IsTrue(i * m == mat4f::Identity);
 		auto j = Inverse(i);
 		Assert::IsTrue(j == m);
 	}
@@ -114,6 +136,61 @@ public:
 
 	TEST_METHOD(EulerRotationTest) {
 
+		{
+			mat4f m = RotationMatrixFromEulerAngles(0.0f, 0.0f, 0.0f);
+			Assert::IsTrue(m == mat4f::Identity);
+		}
+
+		for (float t = -TWOPI; t <= TWOPI; t += 0.1f) {
+			mat4f m = RotationMatrixFromEulerAngles(t, 0.0f, 0.0f);
+			auto xm = RotationX(t);
+			auto diff = m - xm;
+			Assert::IsTrue(IsEqual(diff, mat4f::Zero));
+		}
+
+		for (float t = -TWOPI; t <= TWOPI; t += 0.1f) {
+			mat4f m = RotationMatrixFromEulerAngles(0, t, 0.0f);
+			auto xm = RotationY(t);
+			auto diff = m - xm;
+			Assert::IsTrue(IsEqual(diff, mat4f::Zero));
+		}
+
+		for (float t = -TWOPI; t <= TWOPI; t += 0.1f) {
+			mat4f m = RotationMatrixFromEulerAngles(0, 0, t);
+			auto xm = RotationZ(t);
+			auto diff = m - xm;
+			Assert::IsTrue(IsEqual(diff, mat4f::Zero));
+		}
+
+#ifdef NDEBUG
+		for (float t = -TWOPI; t <= TWOPI; t += 0.1f) {
+			for (float u = -TWOPI; u <= TWOPI; u += 0.1f) {
+				for (float v = -TWOPI; v <= TWOPI; v += 0.1f) {
+					mat4f m = RotationMatrixFromEulerAngles(t, u, v);
+					auto xm = RotationZ(v) * RotationY(u) * RotationX(t);
+					Assert::IsTrue(m == xm);
+				}
+			}
+		}
+#endif
+	}
+
+	TEST_METHOD(PerspectiveFovTest) {
+		mat4f m = PerspectiveFov(Rad(60.0f), 1.3f, 0.01f, 1000.0f);
+		auto m2 = DirectX::XMMatrixPerspectiveFovLH(Rad(60.0f), 1.3f, 0.01f, 1000.0f);
+		Assert::IsTrue(m == m2);
+
+/*#ifdef NDEBUG
+		for (float t = 0.1f; t <= TWOPI; t += 0.1f) {
+			for (float ar = 0.5f; ar <= 2.5f; ar += 0.1f) {
+				for (float n = 0.00001f; n <= 1.0f; n += 0.00001f) {
+					mat4f m = PerspectiveFov(t, ar, n, 1000.0f);
+					auto xm = DirectX::XMMatrixPerspectiveFovLH(t, ar, n, 1000.0f);
+					Assert::IsTrue(IsEqual(m, xm, 0.001f));
+				}
+			}
+		}
+#endif */
 	}
 	
 };

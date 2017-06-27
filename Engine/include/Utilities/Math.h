@@ -338,7 +338,7 @@ inline float	LengthSqr(const vec4f& v) { return v.x*v.x + v.y*v.y + v.z*v.z + v.
 inline float	LengthSqr(const quaternion& v) { return v.x*v.x + v.y*v.y + v.z*v.z + v.w*v.w; }
 
 template<typename Vec>
-inline float	Length(const Vec& v) { return sqrt(LengthSqr(v)); }
+inline float	Length(const Vec& v) { return sqrtf(LengthSqr(v)); }
 
 template<typename Vec>
 Vec				Normalize(const Vec& v) {
@@ -349,7 +349,7 @@ template<typename Vec>
 inline float	DistanceSqr(const Vec& v1, const Vec& v2) { Vec diff = v1 - v2; return LengthSqr(diff); }
 
 template<typename Vec>
-inline float	Distance(const Vec& v1, const Vec& v2) { return sqrt(DistanceSqr(v1, v2)); }
+inline float	Distance(const Vec& v1, const Vec& v2) { return sqrtf(DistanceSqr(v1, v2)); }
 
 // --------- MATRIX FUNCTIONS -------------
 
@@ -368,8 +368,11 @@ mat4f RotationY(const float rad);
 mat4f RotationZ(const float rad);
 
 mat4f RotationMatrixFromEulerAngles(const vec3f& euler);
-mat4f RotationMatrixFromYawPitchRoll(const float yaw, const float pitch, const float roll);
+mat4f RotationMatrixFromEulerAngles(const float xr, const float yr, const float zr);
 mat4f AxisAngleToRotationMatrix(const vec3f& axis, const float angle);
+
+mat4f PerspectiveFov(const float fov, const float aspect_ratio, const float near_z, const float far_z);
+mat4f Orthographic(const float width, const float height, const float near_z, const float far_z);
 
 // --------- QUATERNION FUNCTIONS ---------
 
@@ -415,13 +418,13 @@ inline vec4f	operator*(const vec4f& v, const mat4f& m) {
 
 // ------ ANGLE FUNCTIONS -------------
 
-inline constexpr float Rad(const float angles) {
+inline constexpr float	Rad(const float angles) {
 	return angles * (PI / 180.0f);
 }
-inline constexpr float Angle(const float rad) {
+inline constexpr float	Angle(const float rad) {
 	return rad * (180.0f / PI);
 }
-inline float DeltaAngle(const float a1, const float a2) {
+inline float			DeltaAngle(const float a1, const float a2) {
 	static auto cmod = [](const float x, const float y) {
 		return x - floorf(x / y) * y;
 	};
@@ -429,35 +432,36 @@ inline float DeltaAngle(const float a1, const float a2) {
 	a = cmod(a + 180, 360) - 180;
 	return a;
 }
-inline bool IsAngleEqual(const float r1, const float r2, const float eps = EPSILON) {
+inline bool				IsAngleEqual(const float r1, const float r2, const float eps = EPSILON) {
 	return abs(DeltaAngle(r1, r2)) <= eps;
 }
-inline bool IsRadianEqual(const float r1, const float r2, const float eps = EPSILON) {
+inline bool				IsRadianEqual(const float r1, const float r2, const float eps = EPSILON) {
 	return IsAngleEqual(Angle(r1), Angle(r2), eps);
 }
 
 
 // ------- EQUALITY TESTING ----------
 
-bool IsEqual(const vec2f& v1, const vec2f& v2, const float eps);
-bool IsEqual(const vec3f& v1, const vec3f& v2, const float eps);
-bool IsEqual(const vec4f& v1, const vec4f& v2, const float eps);
-bool IsEqual(const quaternion& v1, const quaternion& v2, const float eps);
-bool IsEqual(const mat4f& v1, const mat4f& v2, const float eps);
+bool IsEqual(const vec2f& v1, const vec2f& v2, const float eps = EPSILON);
+bool IsEqual(const vec3f& v1, const vec3f& v2, const float eps = EPSILON);
+bool IsEqual(const vec4f& v1, const vec4f& v2, const float eps = EPSILON);
+bool IsEqual(const quaternion& v1, const quaternion& v2, const float eps = EPSILON);
+bool IsEqual(const mat4f& v1, const mat4f& v2, const float eps = EPSILON);
+bool IsEqual(const mat4f& v1, const DirectX::XMMATRIX& v2, const float eps = EPSILON);
 
-template<typename Vec>
-bool operator==(const Vec& lhs, const Vec& rhs) {
+template<typename V1, typename V2>
+bool operator==(const V1& lhs, const V2& rhs) {
 	return IsEqual(lhs, rhs, EPSILON);
 }
 
-template<typename Vec>
-bool operator!=(const Vec& lhs, const Vec& rhs) {
+template<typename V1, typename V2>
+bool operator!=(const V1& lhs, const V2& rhs) {
 	return !IsEqual(lhs, rhs, EPSILON);
 }
 
 
 
-// -------- OTHER FUNCTIONS -----------------
+// -------- VECTOR FUNCTIONS -----------------
 
 inline float	Dot(const vec2f& u, const vec2f& v) {
 	return u.x*v.x + u.y*v.y;
@@ -471,17 +475,24 @@ inline float	Dot(const vec4f& u, const vec4f& v) {
 
 vec3f			Cross(const vec3f& u, const vec3f& v);
 
+template<typename Vec>
+inline float	AngleBetween(const Vec& u, const Vec& v) {
+	return acosf(Dot(u, v)) * (1 / (Length(u)*Length(v)));
+}
+
+// ---------- UTILITY FUNCTIONS ----------------
+
 float			Clamp(const float u, const float min, const float max);
 vec2f			Clamp(const vec2f& u, const vec2f& min, const vec2f& max);
 vec3f			Clamp(const vec3f& u, const vec3f& min, const vec3f& max);
 vec4f			Clamp(const vec4f& u, const vec4f& min, const vec4f& max);
 
-inline float	Min(const float u, const float v) { return (u < v) ? u : v; }
+inline float	Min(const float u, const float v) { return (u <= v) ? u : v; }
 vec2f			Min(const vec2f& u, const vec2f& v);
 vec3f			Min(const vec3f& u, const vec3f& v);
 vec4f			Min(const vec4f& u, const vec4f& v);
 
-inline float	Max(const float u, const float v) { return (u > v) ? u : v; }
+inline float	Max(const float u, const float v) { return (u >= v) ? u : v; }
 vec2f			Max(const vec2f& u, const vec2f& v);
 vec3f			Max(const vec3f& u, const vec3f& v);
 vec4f			Max(const vec4f& u, const vec4f& v);
@@ -500,18 +511,13 @@ Vec				SmoothStep(const Vec& edge0, const Vec& edge1, const Vec& v) {
 template<>
 float			SmoothStep(const float& edge0, const float& edge1, const float& v);
 
-
-
-
 // ----------- TRANSFORMATIONS ---------------
 
 inline vec3f	RotatePoint(const vec3f& v, const quaternion& q) {
 	quaternion p = Conjugate(q) * (quaternion(v, 0.0f) * q);
 	return vec3f(p.x, p.y, p.z);
 }
-inline vec3f	RotateVector(const vec3f& v, const quaternion& q) {
-	return RotatePoint(v, q);
-}
+
 inline vec4f	RotatePoint(const vec4f& v, const quaternion& q) {
 	auto p = RotatePoint(v.xyz(), q);
 	return vec4f(p, 1.0f);
@@ -521,6 +527,18 @@ inline vec4f	RotateVector(const vec4f& v, const quaternion& q) {
 	return vec4f(p, 0.0f);
 }
 
+inline vec4f	RotatePoint(const vec4f& v, const vec3f& axis, const float angle) {
+	return RotatePoint(v, AxisAngleToQuaternion(axis, angle));
+}
+inline vec4f	RotatePoint(const vec4f& v, const vec4f& axis_angle) {
+	return RotatePoint(v, AxisAngleToQuaternion(axis_angle));
+}
+inline vec4f	RotateVector(const vec4f& v, const vec3f& axis, const float angle) {
+	return RotateVector(v, AxisAngleToQuaternion(axis, angle));
+}
+inline vec4f	RotateVector(const vec4f& v, const vec4f& axis_angle) {
+	return RotateVector(v, AxisAngleToQuaternion(axis_angle));
+}
 
 vec3f AxisAngleToEuler(const vec3f& axis, float angle);
 

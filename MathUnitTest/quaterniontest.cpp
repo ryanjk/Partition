@@ -23,9 +23,11 @@ public:
 
 	TEST_METHOD(AxisAngleTest) {
 		quaternion q(0.003f, 0.931f, -0.310f, 0.193f);
-		auto axis_angle = QuaternionToAxisAngle(q);
-		Assert::IsTrue(axis_angle == vec4f(0.003057f, 0.948839f, -0.315940, 2.75315f));
+		q = Normalize(q);
 
+		auto axis_angle = QuaternionToAxisAngle(q);
+		Assert::IsTrue(axis_angle == vec4f(0.003057f, 0.94878f, -0.315920, 2.75317f));
+		Assert::IsTrue(AxisAngleToQuaternion(axis_angle) == q);
 	}
 
 	TEST_METHOD(RotateVectorTest) {
@@ -35,14 +37,55 @@ public:
 		Assert::IsTrue(r2 == vec3f(0.0f, 0.0f, 1.0f));
 	}
 
-	TEST_METHOD(RotationMatrixTest) {
-		quaternion q(0.003f, 0.931f, -0.310f, 0.193f);
-		q = Normalize(q);
-		Assert::AreEqual(1.0f, Length(q), 0.0001f);
+	TEST_METHOD(QuaternionToRotationMatrixTest) {
 
-		auto to_mat = QuaternionToRotationMatrix(q);
-		auto to_q = RotationMatrixToQuaternion(to_mat);
-		Assert::IsTrue(to_q == q);
+		{
+			const float t = PIDIV2;
+			quaternion q(AxisAngleToQuaternion(vec4f(1.0f, 0.0f, 0.0f, t)));
+			q = Normalize(q);
+			mat4f m = QuaternionToRotationMatrix(q);
+			Assert::IsTrue(m == RotationX(t));
+		}
+
+		{
+			const float t = PIDIV2;
+			quaternion q(AxisAngleToQuaternion(vec4f(0.0f, 1.0f, 0.0f, t)));
+			q = Normalize(q);
+			mat4f m = QuaternionToRotationMatrix(q);
+			Assert::IsTrue(m == RotationY(t));
+		}
+
+		{
+			const float t = PIDIV2;
+			quaternion q(AxisAngleToQuaternion(vec4f(0.0f, 0.0f, 1.0f, t)));
+			q = Normalize(q);
+			mat4f m = QuaternionToRotationMatrix(q);
+			Assert::IsTrue(m == RotationZ(t));
+		}
+
+		{
+			const float t = 0.13f;
+			quaternion q(AxisAngleToQuaternion(vec4f(1.0f, 0.0f, 0.0f, t)));
+			q = Normalize(q);
+			mat4f m = QuaternionToRotationMatrix(q);
+			Assert::IsTrue(m == RotationX(t));
+		}
+
+		{
+			const float t = -1.1f;
+			quaternion q(AxisAngleToQuaternion(vec4f(0.0f, 1.0f, 0.0f, t)));
+			q = Normalize(q);
+			mat4f m = QuaternionToRotationMatrix(q);
+			Assert::IsTrue(m == RotationY(t));
+		}
+
+		{
+			const float t = 3.9f;
+			quaternion q(AxisAngleToQuaternion(vec4f(0.0f, 0.0f, 1.0f, t)));
+			q = Normalize(q);
+			mat4f m = QuaternionToRotationMatrix(q);
+			Assert::IsTrue(m == RotationZ(t));
+		}
 	}
 };
 }

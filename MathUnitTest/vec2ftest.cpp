@@ -259,5 +259,21 @@ namespace MathUnitTest
 			vec2f result = SmoothStep(edge0, edge1, t);
 			Assert::IsTrue(vec2f::One*(7.0f/27.0f) == result);
 		}
+
+		TEST_METHOD(AngleBetweenTest) {
+			{
+				vec2f u(1.0f, 0.0f);
+				vec2f v(0.0f, 1.0f);
+				Assert::IsTrue(IsRadianEqual(PIDIV2, AngleBetween(u, v)));
+				Assert::IsTrue(IsRadianEqual(PIDIV2, AngleBetween(v, u)));
+			}
+
+			{
+				vec2f u(-1.0f, 0.0f);
+				vec2f v(0.0f, 1.0f);
+				Assert::IsTrue(IsRadianEqual(PIDIV2, AngleBetween(u, v)));
+				Assert::IsTrue(IsRadianEqual(PIDIV2, AngleBetween(v, u)));
+			}
+		}
 	};
 }

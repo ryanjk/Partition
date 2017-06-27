@@ -50,31 +50,271 @@ const mat4f mat4f::One		= mat4f(1.0f, 1.0f, 1.0f, 1.0f,
 
 // ------ FUNCTIONS --------
 
+// ------- MATRIX FUNCTIONS ----------
+
+mat4f Transpose(const mat4f& m) {
+	return mat4f(
+		m._00, m._10, m._20, m._30,
+		m._01, m._11, m._21, m._31,
+		m._02, m._12, m._22, m._32,
+		m._03, m._13, m._23, m._33
+	);
+}
+mat4f Inverse(const mat4f& in) {
+	// from https://stackoverflow.com/questions/2624422/efficient-4x4-matrix-inverse-affine-transform
+	mat4f m;
+	float s0 = in._00 * in._11 - in._10 * in._01;
+	float s1 = in._00 * in._12 - in._10 * in._02;
+	float s2 = in._00 * in._13 - in._10 * in._03;
+	float s3 = in._01 * in._12 - in._11 * in._02;
+	float s4 = in._01 * in._13 - in._11 * in._03;
+	float s5 = in._02 * in._13 - in._12 * in._03;
+
+	float c5 = in._22 * in._33 - in._32 * in._23;
+	float c4 = in._21 * in._33 - in._31 * in._23;
+	float c3 = in._21 * in._32 - in._31 * in._22;
+	float c2 = in._20 * in._33 - in._30 * in._23;
+	float c1 = in._20 * in._32 - in._30 * in._22;
+	float c0 = in._20 * in._31 - in._30 * in._21;
+
+	// Should check for 0 determinant
+
+	float invdet = 1 / (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
+
+	m._00 = (in._11 * c5 - in._12 * c4 + in._13 * c3) * invdet;
+	m._01 = (-in._01 * c5 + in._02 * c4 - in._03 * c3) * invdet;
+	m._02 = (in._31 * s5 - in._32 * s4 + in._33 * s3) * invdet;
+	m._03 = (-in._21 * s5 + in._22 * s4 - in._23 * s3) * invdet;
+
+	m._10 = (-in._10 * c5 + in._12 * c2 - in._13 * c1) * invdet;
+	m._11 = (in._00 * c5 - in._02 * c2 + in._03 * c1) * invdet;
+	m._12 = (-in._30 * s5 + in._32 * s2 - in._33 * s1) * invdet;
+	m._13 = (in._20 * s5 - in._22 * s2 + in._23 * s1) * invdet;
+
+	m._20 = (in._10 * c4 - in._11 * c2 + in._13 * c0) * invdet;
+	m._21 = (-in._00 * c4 + in._01 * c2 - in._03 * c0) * invdet;
+	m._22 = (in._30 * s4 - in._31 * s2 + in._33 * s0) * invdet;
+	m._23 = (-in._20 * s4 + in._21 * s2 - in._23 * s0) * invdet;
+
+	m._30 = (-in._10 * c3 + in._11 * c1 - in._12 * c0) * invdet;
+	m._31 = (in._00 * c3 - in._01 * c1 + in._02 * c0) * invdet;
+	m._32 = (-in._30 * s3 + in._31 * s1 - in._32 * s0) * invdet;
+	m._33 = (in._20 * s3 - in._21 * s1 + in._22 * s0) * invdet;
+
+	return m;
+}
+
+mat4f Translation(const vec3f& translation) {
+	return Translation(translation.x, translation.y, translation.z);
+}
+mat4f Translation(const float xt, const float yt, const float zt) {
+	return mat4f(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		xt, yt, zt, 1.0f
+	);
+}
+
+mat4f Scale(const float scale) {
+	return Scale(scale, scale, scale);
+}
+mat4f Scale(const vec3f& scale) {
+	return Scale(scale.x, scale.y, scale.z);
+}
+mat4f Scale(const float xs, const float ys, const float zs) {
+	return mat4f(
+		xs, 0.0f, 0.0f, 0.0f,
+		0.0f, ys, 0.0f, 0.0f,
+		0.0f, 0.0f, zs, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+
+mat4f RotationX(const float rad) {
+	const float cos_t = cosf(rad);
+	const float sin_t = sinf(rad);
+	return mat4f(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, cos_t, sin_t, 0.0f,
+		0.0f, -sin_t, cos_t, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+mat4f RotationY(const float rad) {
+	const float cos_t = cosf(rad);
+	const float sin_t = sinf(rad);
+	return mat4f(
+		cos_t, 0.0f, -sin_t, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		sin_t, 0.0f, cos_t, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+mat4f RotationZ(const float rad) {
+	const float cos_t = cosf(rad);
+	const float sin_t = sinf(rad);
+	return mat4f(
+		cos_t, sin_t, 0.0f, 0.0f,
+		-sin_t, cos_t, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+
+mat4f RotationMatrixFromEulerAngles(const vec3f& euler) {
+	return RotationMatrixFromEulerAngles(euler.x, euler.y, euler.z);
+}
+mat4f RotationMatrixFromEulerAngles(const float pitch, const float yaw, const float roll) {
+	const float cy = cosf(yaw);
+	const float sy = sinf(yaw);
+
+	const float cp = cosf(pitch);
+	const float sp = sinf(pitch);
+
+	const float cr = cosf(roll);
+	const float sr = sinf(roll);
+
+	const float sy_sp = sy*sp;
+	const float sy_cp = sy*cp;
+	const float sr_cp = sr*cp;
+	const float cr_cp = cr*cp;
+
+	return mat4f(
+		cr*cy, cr*sy_sp + sr_cp, -cr*sy_cp + sr*sp, 0.0f,
+		-sr*cy, -sr*sy_sp + cr_cp, sr*sy_cp + cr*sp, 0.0f,
+		sy, -cy*sp, cy*cp, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+mat4f AxisAngleToRotationMatrix(const vec3f& axis, const float angle) {
+	return QuaternionToRotationMatrix(AxisAngleToQuaternion(axis, angle));
+}
+
+mat4f PerspectiveFov(const float fov, const float aspect_ratio, const float near_z, const float far_z) {
+	const float a1 = 1 / tanf(fov / 2.0f);
+	const float d = far_z - near_z;
+	return mat4f(
+		a1 / aspect_ratio, 0.0, 0.0, 0.0,
+		0.0, a1, 0.0, 0.0,
+		0.0, 0.0, far_z/d, 1.0,
+		0.0, 0.0, -(far_z*near_z) / d, 0.0
+	);
+}
+mat4f Orthographic(const float width, const float height, const float near_z, const float far_z) {
+	const float d = far_z - near_z;
+	return mat4f(
+		2.0f / width, 0.0f, 0.0f, 0.0f,
+		0.0f, 2.0f / height, 0.0f, 0.0f,
+		0.0f, 0.0f, 1 / d, 0.0f,
+		0.0f, 0.0f, -near_z / d, 1.0f
+	);
+}
+
+vec3f AxisAngleToEuler(const vec3f& p_axis, float angle) {
+	auto axis = Normalize(p_axis);
+	float s = sinf(angle);
+	float t = 1 - cosf(angle);
+	float z_comp = (axis.x * axis.y * t) + (axis.z * s);
+	float bank, heading, attitude;
+	if (abs(z_comp) > 0.999) {
+		float sign = z_comp < 0.0f ? -1.0f : 1.0f;
+		bank = 0;
+		heading = sign * 2 * atan2(axis.x*sinf(angle / 2), cosf(angle / 2));
+		attitude = sign*DirectX::XM_PIDIV2;
+	}
+	else {
+		bank = atan2(axis.x*s - axis.y*axis.z*t, 1 - (powf(axis.z, 2) + powf(axis.x, 2))*t);
+		heading = atan2(axis.y*s - axis.x*axis.z*t, 1 - (powf(axis.y, 2) + powf(axis.z, 2))*t);
+		attitude = asinf(z_comp);
+	}
+	return vec3f(bank, heading, attitude);
+}
+
+// --------- QUATERNION FUNCTIONS ---------
+
+mat4f				QuaternionToRotationMatrix(const quaternion& q) {
+	const float sx = q.x*q.x;
+	const float sy = q.y*q.y;
+	const float sz = q.z*q.z;
+
+	const float x_z = q.x*q.z;
+	const float x_y = q.x*q.y;
+	const float x_w = q.x*q.w;
+
+	const float y_z = q.y*q.z;
+	const float y_w = q.y*q.w;
+
+	const float z_w = q.z*q.w;
+
+	return mat4f(
+		1 - 2 * (sy + sz), 2 * (x_y + z_w), 2 * (x_z - y_w), 0.0f,
+		2 * (x_y - z_w), 1 - 2 * (sx + sz), 2 * (y_z + x_w), 0.0f,
+		2 * (x_z + y_w), 2 * (y_z - x_w), 1 - 2 * (sx + sy), 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+quaternion			RotationMatrixToQuaternion(const mat4f& m) {
+	const float trace = m._00 + m._11 + m._22;
+	quaternion q;
+	if (trace > 0) {
+		float s = 0.5f / sqrtf(trace + 1.0f);
+		q.w = 0.25f / s;
+		q.x = (m._21 - m._12) * s;
+		q.y = (m._02 - m._20) * s;
+		q.z = (m._10 - m._01) * s;
+	}
+	else {
+		if (m._00 > m._11 && m._00 > m._22) {
+			float s = 2.0f * sqrtf(1.0f + m._00 - m._11 - m._22);
+			q.w = (m._21 - m._12) / s;
+			q.x = 0.25f * s;
+			q.y = (m._01 + m._10) / s;
+			q.z = (m._02 + m._20) / s;
+		}
+		else if (m._11 > m._22) {
+			float s = 2.0f * sqrtf(1.0f + m._11 - m._00 - m._22);
+			q.w = (m._02 - m._20) / s;
+			q.x = (m._01 + m._10) / s;
+			q.y = 0.25f * s;
+			q.z = (m._12 + m._21) / s;
+		}
+		else {
+			float s = 2.0f * sqrtf(1.0f + m._22 - m._00 - m._11);
+			q.w = (m._10 - m._01) / s;
+			q.x = (m._02 + m._20) / s;
+			q.y = (m._12 + m._21) / s;
+			q.z = 0.25f * s;
+		}
+	}
+	return Normalize(q);
+}
+
 // -------- EQUALITY TESTING ------------
 
-bool IsEqual(const vec2f& v1, const vec2f& v2, const float eps = EPSILON) {
+bool IsEqual(const vec2f& v1, const vec2f& v2, const float eps) {
 	return (abs(v1.x - v2.x) <= EPSILON) && 
 		(abs(v1.y - v2.y) <= EPSILON);
 }
-bool IsEqual(const vec3f& v1, const vec3f& v2, const float eps = EPSILON) {
+bool IsEqual(const vec3f& v1, const vec3f& v2, const float eps) {
 	return (abs(v1.x - v2.x) <= EPSILON) && 
 		(abs(v1.y - v2.y) <= EPSILON) && 
 		(abs(v1.z - v2.z) <= EPSILON);
 }
-bool IsEqual(const vec4f& v1, const vec4f& v2, const float eps = EPSILON) {
+bool IsEqual(const vec4f& v1, const vec4f& v2, const float eps) {
 	return (abs(v1.x - v2.x) <= EPSILON) &&
 		(abs(v1.y - v2.y) <= EPSILON) &&
 		(abs(v1.z - v2.z) <= EPSILON) &&
 		(abs(v1.w - v2.w) <= EPSILON);
 }
-bool IsEqual(const quaternion& v1, const quaternion& v2, const float eps = EPSILON) {
+bool IsEqual(const quaternion& v1, const quaternion& v2, const float eps) {
 	return (abs(v1.x - v2.x) <= EPSILON) &&
 		(abs(v1.y - v2.y) <= EPSILON) &&
 		(abs(v1.z - v2.z) <= EPSILON) &&
 		(abs(v1.w - v2.w) <= EPSILON);
 }
 #define E(x,y,e) (abs(x-y) <= e)
-bool IsEqual(const mat4f& v1, const mat4f& v2, const float eps = EPSILON) {
+bool IsEqual(const mat4f& v1, const mat4f& v2, const float eps) {
 	return
 		E(v1._00, v2._00, eps) &&
 		E(v1._01, v2._01, eps) &&
@@ -93,8 +333,28 @@ bool IsEqual(const mat4f& v1, const mat4f& v2, const float eps = EPSILON) {
 		E(v1._32, v2._32, eps) &&
 		E(v1._33, v2._33, eps);
 }
+bool IsEqual(const mat4f& v1, const DirectX::XMMATRIX& v2, const float eps) {
+	return
+		E(v1._00, v2.r[0].m128_f32[0], eps) &&
+		E(v1._01, v2.r[0].m128_f32[1], eps) &&
+		E(v1._02, v2.r[0].m128_f32[2], eps) &&
+		E(v1._03, v2.r[0].m128_f32[3], eps) &&
+		E(v1._10, v2.r[1].m128_f32[0], eps) &&
+		E(v1._11, v2.r[1].m128_f32[1], eps) &&
+		E(v1._12, v2.r[1].m128_f32[2], eps) &&
+		E(v1._13, v2.r[1].m128_f32[3], eps) &&
+		E(v1._20, v2.r[2].m128_f32[0], eps) &&
+		E(v1._21, v2.r[2].m128_f32[1], eps) &&
+		E(v1._22, v2.r[2].m128_f32[2], eps) &&
+		E(v1._23, v2.r[2].m128_f32[3], eps) &&
+		E(v1._30, v2.r[3].m128_f32[0], eps) &&
+		E(v1._31, v2.r[3].m128_f32[1], eps) &&
+		E(v1._32, v2.r[3].m128_f32[2], eps) &&
+		E(v1._33, v2.r[3].m128_f32[3], eps);
+}
 #undef E
-// -------- OTHER FUNCTIONS ------------
+
+// -------- VECTOR FUNCTIONS ------------
 
 vec3f	Cross(const vec3f& u, const vec3f& v) {
 	vec3f result;
@@ -103,6 +363,8 @@ vec3f	Cross(const vec3f& u, const vec3f& v) {
 	result.z = (u.x*v.y) - (u.y*v.x);
 	return result;
 }
+
+// --------- UTILITY FUNCTIONS -----------
 
 #define OP(x,m1,m2) ((x < m1) ? m1 : (x > m2) ? m2 : x)
 float	Clamp(const float u, const float min, const float max) {
@@ -185,227 +447,9 @@ float			SmoothStep(const float& edge0, const float& edge1, const float& v) {
 	return t*t*(3.0f - 2.0f*t);
 }
 
-// --------- QUATERNION FUNCTIONS ---------
 
-mat4f				QuaternionToRotationMatrix(const quaternion& q) {
-	const float sx = q.x*q.x;
-	const float sy = q.y*q.y;
-	const float sz = q.z*q.z;
 
-	const float x_z = q.x*q.z;
-	const float x_y = q.x*q.y;
-	const float x_w = q.x*q.w;
 
-	const float y_z = q.y*q.z;
-	const float y_w = q.y*q.w;
-
-	const float z_w = q.z*q.w;
-
-	return mat4f(
-		1 - 2 * (sy - sz), 2 * (x_y + z_w), 2 * (x_z - y_w), 0.0f,
-		2 * (x_y - z_w), 1 - 2 * (sx - sz), 2 * (y_z + x_w), 0.0f,
-		2 * (x_z + y_w), 2 * (y_z - x_w), 1 - 2 * (sx - sy), 0.0f,
-		           0.0f,            0.0f,              0.0f, 1.0f
-	);
-}
-
-quaternion			RotationMatrixToQuaternion(const mat4f& m) {
-	const float trace = m._00 + m._11 + m._22;
-	quaternion q;
-	if (trace > 0) {
-		float s = 0.5f / sqrtf(trace + 1.0f);
-		q.w = 0.25f / s;
-		q.x = (m._21 - m._12) * s;
-		q.y = (m._02 - m._20) * s;
-		q.z = (m._10 - m._01) * s;
-	}
-	else {
-		if (m._00 > m._11 && m._00 > m._22) {
-			float s = 2.0f * sqrtf(1.0f + m._00 - m._11 - m._22);
-			q.w = (m._21 - m._12) / s;
-			q.x = 0.25f * s;
-			q.y = (m._01 + m._10) / s;
-			q.z = (m._02 + m._20) / s;
-		}
-		else if (m._11 > m._22) {
-			float s = 2.0f * sqrtf(1.0f + m._11 - m._00 - m._22);
-			q.w = (m._02 - m._20) / s;
-			q.x = (m._01 + m._10) / s;
-			q.y = 0.25f * s;
-			q.z = (m._12 + m._21) / s;
-		}
-		else {
-			float s = 2.0f * sqrtf(1.0f + m._22 - m._00 - m._11);
-			q.w = (m._10 - m._01) / s;
-			q.x = (m._02 + m._20) / s;
-			q.y = (m._12 + m._21) / s;
-			q.z = 0.25f * s;
-		}
-	}
-	return Normalize(q);
-}
-
-// ------- MATRIX FUNCTIONS ----------
-
-mat4f Transpose(const mat4f& m) {
-	return mat4f(
-		m._00, m._10, m._20, m._30,
-		m._01, m._11, m._21, m._31,
-		m._02, m._12, m._22, m._32,
-		m._03, m._13, m._23, m._33
-	);
-}
-mat4f Inverse(const mat4f& in) {
-	// from https://stackoverflow.com/questions/2624422/efficient-4x4-matrix-inverse-affine-transform
-	mat4f m;
-	float s0 = in._00 * in._11 - in._10 * in._01;
-	float s1 = in._00 * in._12 - in._10 * in._02;
-	float s2 = in._00 * in._13 - in._10 * in._03;
-	float s3 = in._01 * in._12 - in._11 * in._02;
-	float s4 = in._01 * in._13 - in._11 * in._03;
-	float s5 = in._02 * in._13 - in._12 * in._03;
-
-	float c5 = in._22 * in._33 - in._32 * in._23;
-	float c4 = in._21 * in._33 - in._31 * in._23;
-	float c3 = in._21 * in._32 - in._31 * in._22;
-	float c2 = in._20 * in._33 - in._30 * in._23;
-	float c1 = in._20 * in._32 - in._30 * in._22;
-	float c0 = in._20 * in._31 - in._30 * in._21;
-
-	// Should check for 0 determinant
-
-	float invdet = 1 / (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
-
-	m._00 = (in._11 * c5 - in._12 * c4 + in._13 * c3) * invdet;
-	m._01 = (-in._01 * c5 + in._02 * c4 - in._03 * c3) * invdet;
-	m._02 = (in._31 * s5 - in._32 * s4 + in._33 * s3) * invdet;
-	m._03 = (-in._21 * s5 + in._22 * s4 - in._23 * s3) * invdet;
-
-	m._10 = (-in._10 * c5 + in._12 * c2 - in._13 * c1) * invdet;
-	m._11 = (in._00 * c5 - in._02 * c2 + in._03 * c1) * invdet;
-	m._12 = (-in._30 * s5 + in._32 * s2 - in._33 * s1) * invdet;
-	m._13 = (in._20 * s5 - in._22 * s2 + in._23 * s1) * invdet;
-
-	m._20 = (in._10 * c4 - in._11 * c2 + in._13 * c0) * invdet;
-	m._21 = (-in._00 * c4 + in._01 * c2 - in._03 * c0) * invdet;
-	m._22 = (in._30 * s4 - in._31 * s2 + in._33 * s0) * invdet;
-	m._23 = (-in._20 * s4 + in._21 * s2 - in._23 * s0) * invdet;
-
-	m._30 = (-in._10 * c3 + in._11 * c1 - in._12 * c0) * invdet;
-	m._31 = (in._00 * c3 - in._01 * c1 + in._02 * c0) * invdet;
-	m._32 = (-in._30 * s3 + in._31 * s1 - in._32 * s0) * invdet;
-	m._33 = (in._20 * s3 - in._21 * s1 + in._22 * s0) * invdet;
-
-	return m;
-}
-
-mat4f Translation(const vec3f& translation) {
-	return Translation(translation.x, translation.y, translation.z);
-}
-mat4f Translation(const float xt, const float yt, const float zt) {
-	return mat4f(
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		xt  , yt  , zt  , 1.0f
-	);
-}
-
-mat4f Scale(const float scale) {
-	return Scale(scale, scale, scale);
-}
-mat4f Scale(const vec3f& scale) {
-	return Scale(scale.x, scale.y, scale.z);
-}
-mat4f Scale(const float xs, const float ys, const float zs) {
-	return mat4f(
-		xs, 0.0f, 0.0f, 0.0f,
-		0.0f, ys, 0.0f, 0.0f,
-		0.0f, 0.0f, zs, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	);
-}
-
-mat4f RotationX(const float rad) {
-	const float cos_t = cosf(rad);
-	const float sin_t = sinf(rad);
-	return mat4f(
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, cos_t, sin_t, 0.0f,
-		0.0f, -sin_t, cos_t, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	);
-}
-mat4f RotationY(const float rad) {
-	const float cos_t = cosf(rad);
-	const float sin_t = sinf(rad);
-	return mat4f(
-		cos_t, 0.0f, -sin_t, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		sin_t, 0.0f, cos_t, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	);
-}
-mat4f RotationZ(const float rad) {
-	const float cos_t = cosf(rad);
-	const float sin_t = sinf(rad);
-	return mat4f(
-		cos_t, sin_t, 0.0f, 0.0f,
-		-sin_t, cos_t, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	);
-}
-
-mat4f RotationMatrixFromEulerAngles(const vec3f& euler) {
-	return RotationMatrixFromYawPitchRoll(euler.y, euler.x, euler.z);
-}
-mat4f RotationMatrixFromYawPitchRoll(const float yaw, const float pitch, const float roll) {
-	/*const float cy = cosf(yaw);
-	const float sy = sinf(yaw);
-
-	const float cp = cosf(pitch);
-	const float sp = sinf(pitch);
-
-	const float cr = cosf(roll);
-	const float sr = sinf(roll);
-
-	const float sy_sp = sy*sp;
-	const float sy_cp = sy*cp;
-	const float sr_cp = sr*cp;
-	const float cr_cp = cr*cp;
-
-	return mat4f(
-		cr*cy, cr*sy_sp - sr_cp, cr*sy_cp + sr_cp, 0.0f,
-		sr*cy, sr*sy_sp + cr_cp, sr*sy_cp - cr_cp, 0.0f,
-		  -sy,            cy*sp,            cy*cp, 0.0f,
-		 0.0f,             0.0f,             0.0f, 1.0f
-	);*/
-	return Transpose(RotationZ(roll) * RotationX(pitch) * RotationY(yaw));
-}
-mat4f AxisAngleToRotationMatrix(const vec3f& axis, const float angle) {
-	return QuaternionToRotationMatrix(AxisAngleToQuaternion(axis, angle));
-}
-
-vec3f AxisAngleToEuler(const vec3f& p_axis, float angle) {
-	auto axis = Normalize(p_axis);
-	float s = sinf(angle);
-	float t = 1 - cosf(angle);
-	float z_comp = (axis.x * axis.y * t) + (axis.z * s);
-	float bank, heading, attitude;
-	if (abs(z_comp) > 0.999) {
-		float sign = z_comp < 0.0f ? -1.0f : 1.0f;
-		bank = 0;
-		heading = sign * 2 * atan2(axis.x*sinf(angle / 2), cosf(angle / 2));
-		attitude = sign*DirectX::XM_PIDIV2;
-	}
-	else {
-		bank = atan2(axis.x*s - axis.y*axis.z*t, 1 - (powf(axis.z, 2) + powf(axis.x, 2))*t);
-		heading = atan2(axis.y*s - axis.x*axis.z*t, 1 - (powf(axis.y, 2) + powf(axis.z, 2))*t);
-		attitude = asinf(z_comp);
-	}
-	return vec3f(bank, heading, attitude);
-}
 
 /*
 void TestAngleToEuler() {

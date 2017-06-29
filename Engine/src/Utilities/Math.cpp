@@ -5,7 +5,7 @@
 
 namespace pn {
 
-// ------- CONSTANTS -------
+#pragma region Constants
 
 const float EPSILON = 0.00001f;
 
@@ -48,9 +48,9 @@ const mat4f mat4f::One		= mat4f(1.0f, 1.0f, 1.0f, 1.0f,
 									1.0f, 1.0f, 1.0f, 1.0f,
 									1.0f, 1.0f, 1.0f, 1.0f);
 
-// ------ FUNCTIONS --------
+#pragma endregion
 
-// ------- MATRIX FUNCTIONS ----------
+#pragma region Matrix Functions
 
 mat4f Transpose(const mat4f& m) {
 	return mat4f(
@@ -211,27 +211,22 @@ mat4f Orthographic(const float width, const float height, const float near_z, co
 	);
 }
 
-vec3f AxisAngleToEuler(const vec3f& p_axis, float angle) {
-	auto axis = Normalize(p_axis);
-	float s = sinf(angle);
-	float t = 1 - cosf(angle);
-	float z_comp = (axis.x * axis.y * t) + (axis.z * s);
-	float bank, heading, attitude;
-	if (abs(z_comp) > 0.999) {
-		float sign = z_comp < 0.0f ? -1.0f : 1.0f;
-		bank = 0;
-		heading = sign * 2 * atan2(axis.x*sinf(angle / 2), cosf(angle / 2));
-		attitude = sign*DirectX::XM_PIDIV2;
-	}
-	else {
-		bank = atan2(axis.x*s - axis.y*axis.z*t, 1 - (powf(axis.z, 2) + powf(axis.x, 2))*t);
-		heading = atan2(axis.y*s - axis.x*axis.z*t, 1 - (powf(axis.y, 2) + powf(axis.z, 2))*t);
-		attitude = asinf(z_comp);
-	}
-	return vec3f(bank, heading, attitude);
+mat4f FromCoordinateSystem(const vec3f& origin, const vec3f& forward, const vec3f& up) {
+	vec3f z = Normalize(forward);
+	vec3f x = Normalize(Cross(up, z));
+	vec3f y = Normalize(Cross(z, x));
+	return mat4f(x, y, z, origin);
+}
+mat4f ToCoordinateSystem(const vec3f& origin, const vec3f& forward, const vec3f& up) {
+	return Inverse(FromCoordinateSystem(origin, forward, up));
+}
+mat4f LookAt(const vec3f& position, const vec3f& target, const vec3f& up) {
+	return ToCoordinateSystem(position, target - position, up);
 }
 
-// --------- QUATERNION FUNCTIONS ---------
+#pragma endregion
+
+#pragma region Quaternion Functions
 
 mat4f				QuaternionToRotationMatrix(const quaternion& q) {
 	const float sx = q.x*q.x;
@@ -290,7 +285,9 @@ quaternion			RotationMatrixToQuaternion(const mat4f& m) {
 	return Normalize(q);
 }
 
-// -------- EQUALITY TESTING ------------
+#pragma endregion
+
+#pragma region Equality Testing Functions
 
 bool IsEqual(const vec2f& v1, const vec2f& v2, const float eps) {
 	return (abs(v1.x - v2.x) <= EPSILON) && 
@@ -354,7 +351,9 @@ bool IsEqual(const mat4f& v1, const DirectX::XMMATRIX& v2, const float eps) {
 }
 #undef E
 
-// -------- VECTOR FUNCTIONS ------------
+#pragma endregion
+
+#pragma region Vector Functions
 
 vec3f	Cross(const vec3f& u, const vec3f& v) {
 	vec3f result;
@@ -364,7 +363,9 @@ vec3f	Cross(const vec3f& u, const vec3f& v) {
 	return result;
 }
 
-// --------- UTILITY FUNCTIONS -----------
+#pragma endregion
+
+#pragma region Utility Functions
 
 #define OP(x,m1,m2) ((x < m1) ? m1 : (x > m2) ? m2 : x)
 float	Clamp(const float u, const float min, const float max) {
@@ -442,48 +443,32 @@ vec4f	Max(const vec4f& u, const vec4f& v) {
 #undef OP
 
 template<>
-float			SmoothStep(const float& edge0, const float& edge1, const float& v) {
+float	SmoothStep(const float& edge0, const float& edge1, const float& v) {
 	float t = Clamp((v - edge0) / (edge1 - edge0), 0.0f, 1.0f);
 	return t*t*(3.0f - 2.0f*t);
 }
 
-
-
-
-
-/*
-void TestAngleToEuler() {
-	auto test = [](float x, float y, float z) {
-		auto quat = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(y, x, z);
-		float angle;
-		DirectX::XMVECTOR axis;
-		DirectX::XMQuaternionToAxisAngle(&axis, &angle, quat);
-		
-		auto c = AxisAngleToEuler(pn::vec3f(DirectX::XMVectorGetByIndex(axis,0), DirectX::XMVectorGetByIndex(axis, 1), DirectX::XMVectorGetByIndex(axis, 2)), 
-								  angle);
-		//auto quat_c = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(c.y, c.x, c.z);
-		
-		Log("({}, {}, {}) | ({}, {}, {})", x, y, z, c.x, c.y, c.z);
-		assert(abs(x - c.x) < 0.00001);
-		assert(abs(y - c.y) < 0.00001);
-		assert(abs(z - c.z) < 0.00001);
-		const float EPS = 0.1;
-		if (
-			(abs(x - c.x) > EPS) ||
-			(abs(y - c.y) > EPS) ||
-			(abs(z - c.z) > EPS)) {
-			Log("({}, {}, {}) | ({}, {}, {})", x, y, z, c.x, c.y, c.z);
-		}
-	};
-
-	const float dt = 0.1f;
-	for (float x = 0.0f; x < DirectX::XM_2PI; x += dt) {
-		for (float y = 0.0f; y < DirectX::XM_2PI; y += dt) {
-			for (float z = 0.0f; z < DirectX::XM_2PI; z += dt) {
-				test(x, y, z);
-			}
-		}
+vec3f	AxisAngleToEuler(const vec3f& p_axis, float angle) {
+	auto axis = Normalize(p_axis);
+	float s = sinf(angle);
+	float t = 1 - cosf(angle);
+	float z_comp = (axis.x * axis.y * t) + (axis.z * s);
+	float bank, heading, attitude;
+	if (abs(z_comp) > 0.999) {
+		float sign = z_comp < 0.0f ? -1.0f : 1.0f;
+		bank = 0;
+		heading = sign * 2 * atan2(axis.x*sinf(angle / 2), cosf(angle / 2));
+		attitude = sign*DirectX::XM_PIDIV2;
 	}
+	else {
+		bank = atan2(axis.x*s - axis.y*axis.z*t, 1 - (powf(axis.z, 2) + powf(axis.x, 2))*t);
+		heading = atan2(axis.y*s - axis.x*axis.z*t, 1 - (powf(axis.y, 2) + powf(axis.z, 2))*t);
+		attitude = asinf(z_comp);
+	}
+	return vec3f(bank, heading, attitude);
 }
-*/
+
+#pragma endregion
+
+
 } //namespace pn

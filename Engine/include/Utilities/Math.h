@@ -12,7 +12,7 @@ struct vec2f {
 	float x;
 	float y;
 
-	vec2f() noexcept : x(), y() {}
+	vec2f()					noexcept : x(), y() {}
 	vec2f(float x, float y) noexcept : x(x), y(y) {}
 	vec2f(const vec2f& vec) noexcept : x(vec.x), y(vec.y) {}
 
@@ -43,12 +43,12 @@ struct vec3f {
 	float y;
 	float z;
 
-	vec3f() noexcept : x(), y(), z() {}
-	vec3f(float x, float y, float z) noexcept : x(x), y(y), z(z) {}
-	vec3f(const vec3f& vec) noexcept : x(vec.x), y(vec.y), z(vec.z) {}
+	vec3f()								noexcept : x(), y(), z() {}
+	vec3f(float x, float y, float z)	noexcept : x(x), y(y), z(z) {}
+	vec3f(const vec3f& vec)				noexcept : x(vec.x), y(vec.y), z(vec.z) {}
 
-	vec3f(const vec2f& vec, float z) noexcept : x(vec.x), y(vec.y), z(z) {}
-	vec3f(float x, const vec2f& vec) noexcept : x(x), y(vec.x), z(vec.y) {}
+	vec3f(const vec2f& vec, float z)	noexcept : x(vec.x), y(vec.y), z(z) {}
+	vec3f(float x, const vec2f& vec)	noexcept : x(x), y(vec.x), z(vec.y) {}
 
 	vec3f operator+(const vec3f& rhs) const { return vec3f(x + rhs.x, y + rhs.y, z + rhs.z); }
 	vec3f operator-(const vec3f& rhs) const { return vec3f(x - rhs.x, y - rhs.y, z - rhs.z); }
@@ -74,22 +74,22 @@ struct vec3f {
 };
 
 struct vec4f {
-	float x;
-	float y;
-	float z;
-	float w;
+	union {	float x; float r; };
+	union { float y; float g; };
+	union {	float z; float b; };
+	union {	float w; float a; };
 
-	vec4f() noexcept : x(), y(), z(), w() {}
-	vec4f(float x, float y, float z, float w) noexcept : x(x), y(y), z(z), w(w) {}
-	vec4f(const vec4f& vec) noexcept : x(vec.x), y(vec.y), z(vec.z), w(vec.w) {}
+	vec4f()										noexcept : x(), y(), z(), w() {}
+	vec4f(float x, float y, float z, float w)	noexcept : x(x), y(y), z(z), w(w) {}
+	vec4f(const vec4f& vec)						noexcept : x(vec.x), y(vec.y), z(vec.z), w(vec.w) {}
 
-	vec4f(const vec3f& xyz, float w) noexcept : x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
-	vec4f(float x, const vec3f& yzw) noexcept : x(x), y(yzw.x), z(yzw.y), w(yzw.z) {}
+	vec4f(const vec3f& xyz, float w)			noexcept : x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
+	vec4f(float x, const vec3f& yzw)			noexcept : x(x), y(yzw.x), z(yzw.y), w(yzw.z) {}
 
-	vec4f(const vec2f& xy, const vec2f& zw) noexcept : x(xy.x), y(xy.y), z(zw.x), w(zw.y) {}
-	vec4f(const vec2f& xy, float z, float w) noexcept : x(xy.x), y(xy.y), z(z), w(w) {}
-	vec4f(float x, const vec2f& yz, float w) noexcept : x(x), y(yz.x), z(yz.y), w(w) {}
-	vec4f(float x, float y, const vec2f& zw) noexcept : x(x), y(y), z(zw.x), w(zw.y) {}
+	vec4f(const vec2f& xy, const vec2f& zw)		noexcept : x(xy.x), y(xy.y), z(zw.x), w(zw.y) {}
+	vec4f(const vec2f& xy, float z, float w)	noexcept : x(xy.x), y(xy.y), z(z), w(w) {}
+	vec4f(float x, const vec2f& yz, float w)	noexcept : x(x), y(yz.x), z(yz.y), w(w) {}
+	vec4f(float x, float y, const vec2f& zw)	noexcept : x(x), y(y), z(zw.x), w(zw.y) {}
 
 	vec3f xyz() const { return vec3f(x, y, z); }
 
@@ -126,11 +126,12 @@ struct quaternion {
 	float z;
 	float w;
 
-	quaternion() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
-	quaternion(const float x, const float y, const float z, const float w) : x(x), y(y), z(z), w(w) {}
-	explicit quaternion(const vec4f& vec) : x(vec.x), y(vec.y), z(vec.z), w(vec.w) {}
-	quaternion(const vec3f& vec, const float s) : x(vec.x), y(vec.y), z(vec.z), w(s) {}
-	quaternion(const quaternion& q) : x(q.x), y(q.y), z(q.z), w(q.w) {}
+	quaternion()								noexcept : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
+	quaternion(const float x, const float y, const float z, const float w) 
+												noexcept : x(x), y(y), z(z), w(w) {}
+	explicit quaternion(const vec4f& vec)		noexcept : x(vec.x), y(vec.y), z(vec.z), w(vec.w) {}
+	quaternion(const vec3f& vec, const float s) noexcept : x(vec.x), y(vec.y), z(vec.z), w(s) {}
+	quaternion(const quaternion& q)				noexcept : x(q.x), y(q.y), z(q.z), w(q.w) {}
 
 	quaternion operator+(const quaternion& rhs) const { return quaternion(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w); }
 	quaternion operator-(const quaternion& rhs) const { return quaternion(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w); }
@@ -175,7 +176,7 @@ struct mat4f {
 	float _20, _21, _22, _23;
 	float _30, _31, _32, _33;
 
-	mat4f() :
+	mat4f() noexcept :
 		_00(1.0f), _01(0.0f), _02(0.0f), _03(0.0f),
 		_10(0.0f), _11(1.0f), _12(0.0f), _13(0.0f),
 		_20(0.0f), _21(0.0f), _22(1.0f), _23(0.0f),
@@ -185,25 +186,29 @@ struct mat4f {
 		float m00, float m01, float m02, float m03,
 		float m10, float m11, float m12, float m13,
 		float m20, float m21, float m22, float m23,
-		float m30, float m31, float m32, float m33) :
+		float m30, float m31, float m32, float m33) noexcept :
 		_00(m00), _01(m01), _02(m02), _03(m03),
 		_10(m10), _11(m11), _12(m12), _13(m13),
 		_20(m20), _21(m21), _22(m22), _23(m23),
 		_30(m30), _31(m31), _32(m32), _33(m33) {}
 
-	explicit mat4f(const vec3f& r0, const vec3f& r1, const vec3f& r2) :
+	mat4f(const vec3f& r0, const vec3f& r1, const vec3f& r2) noexcept :
 		_00(r0.x), _01(r0.y), _02(r0.z), _03(0.0f),
 		_10(r1.x), _11(r1.y), _12(r1.z), _13(0.0f),
 		_20(r2.x), _21(r2.y), _22(r2.z), _23(0.0f),
 		_30(0.0f), _31(0.0f), _32(0.0f), _33(1.0f) {}
-
-	explicit mat4f(const vec4f& r0, const vec4f& r1, const vec4f& r2, const vec4f& r3) :
+	mat4f(const vec3f& r0, const vec3f& r1, const vec3f& r2, const vec3f& r3) noexcept :
+		_00(r0.x), _01(r0.y), _02(r0.z), _03(0.0f),
+		_10(r1.x), _11(r1.y), _12(r1.z), _13(0.0f),
+		_20(r2.x), _21(r2.y), _22(r2.z), _23(0.0f),
+		_30(r3.x), _31(r3.y), _32(r3.z), _33(1.0f) {}
+	mat4f(const vec4f& r0, const vec4f& r1, const vec4f& r2, const vec4f& r3) noexcept :
 		_00(r0.x), _01(r0.y), _02(r0.z), _03(r0.w),
 		_10(r1.x), _11(r1.y), _12(r1.z), _13(r1.w),
 		_20(r2.x), _21(r2.y), _22(r2.z), _23(r2.w),
 		_30(r3.x), _31(r3.y), _32(r3.z), _33(r3.w) {}
 
-	mat4f(const mat4f& m) { std::memcpy(this, &m, sizeof(float) * 16); }
+	mat4f(const mat4f& m) noexcept { std::memcpy(this, &m, sizeof(float) * 16); }
 
 	mat4f& operator=(const mat4f& m) { std::memcpy(this, &m, sizeof(float) * 16); return *this; }
 	mat4f& operator+=(const mat4f& m) {
@@ -341,7 +346,7 @@ template<typename Vec>
 inline float	Length(const Vec& v) { return sqrtf(LengthSqr(v)); }
 
 template<typename Vec>
-Vec				Normalize(const Vec& v) {
+inline Vec		Normalize(const Vec& v) {
 	return (v / Length(v));
 }
 
@@ -373,6 +378,10 @@ mat4f AxisAngleToRotationMatrix(const vec3f& axis, const float angle);
 
 mat4f PerspectiveFov(const float fov, const float aspect_ratio, const float near_z, const float far_z);
 mat4f Orthographic(const float width, const float height, const float near_z, const float far_z);
+
+mat4f FromCoordinateSystem(const vec3f& origin, const vec3f& forward, const vec3f& up);
+mat4f ToCoordinateSystem(const vec3f& origin, const vec3f& forward, const vec3f& up);
+mat4f LookAt(const vec3f& position, const vec3f& target, const vec3f& up);
 
 // --------- QUATERNION FUNCTIONS ---------
 
@@ -407,6 +416,11 @@ template<typename Vec>
 inline Vec		operator*(const float c, const Vec& v) {
 	return v * c;
 }
+
+template<typename Vec>
+inline Vec		operator-(const Vec& v) {
+	return v * -1.0f;
+}
 inline vec4f	operator*(const vec4f& v, const mat4f& m) {
 	return vec4f(
 		v.x*m._00 + v.y*m._10 + v.z*m._20 + v.w*m._30,
@@ -438,7 +452,6 @@ inline bool				IsAngleEqual(const float r1, const float r2, const float eps = EP
 inline bool				IsRadianEqual(const float r1, const float r2, const float eps = EPSILON) {
 	return IsAngleEqual(Angle(r1), Angle(r2), eps);
 }
-
 
 // ------- EQUALITY TESTING ----------
 

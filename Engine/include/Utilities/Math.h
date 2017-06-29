@@ -12,7 +12,7 @@ struct vec2f {
 	float x;
 	float y;
 
-	vec2f()					noexcept : x(), y() {}
+	vec2f()					noexcept : x(0.0f), y(0.0f) {}
 	vec2f(float x, float y) noexcept : x(x), y(y) {}
 	vec2f(const vec2f& vec) noexcept : x(vec.x), y(vec.y) {}
 
@@ -43,7 +43,7 @@ struct vec3f {
 	float y;
 	float z;
 
-	vec3f()								noexcept : x(), y(), z() {}
+	vec3f()								noexcept : x(0.0f), y(0.0f), z(0.0f) {}
 	vec3f(float x, float y, float z)	noexcept : x(x), y(y), z(z) {}
 	vec3f(const vec3f& vec)				noexcept : x(vec.x), y(vec.y), z(vec.z) {}
 
@@ -79,7 +79,7 @@ struct vec4f {
 	union {	float z; float b; };
 	union {	float w; float a; };
 
-	vec4f()										noexcept : x(), y(), z(), w() {}
+	vec4f()										noexcept : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
 	vec4f(float x, float y, float z, float w)	noexcept : x(x), y(y), z(z), w(w) {}
 	vec4f(const vec4f& vec)						noexcept : x(vec.x), y(vec.y), z(vec.z), w(vec.w) {}
 
@@ -473,7 +473,6 @@ bool operator!=(const V1& lhs, const V2& rhs) {
 }
 
 
-
 // -------- VECTOR FUNCTIONS -----------------
 
 inline float	Dot(const vec2f& u, const vec2f& v) {
@@ -523,6 +522,13 @@ Vec				SmoothStep(const Vec& edge0, const Vec& edge1, const Vec& v) {
 
 template<>
 float			SmoothStep(const float& edge0, const float& edge1, const float& v);
+
+template<typename Vec>
+inline bool		Any(const Vec& v, const float eps = EPSILON) { return !IsEqual(v, Vec::Zero, eps); }
+
+inline bool		All(const vec2f& v, const float eps = EPSILON) { return abs(v.x) >= eps && abs(v.y) >= eps; }
+inline bool		All(const vec3f& v, const float eps = EPSILON) { return abs(v.x) >= eps && abs(v.y) >= eps && abs(v.z) >= eps; }
+inline bool		All(const vec4f& v, const float eps = EPSILON) { return abs(v.x) >= eps && abs(v.y) >= eps && abs(v.z) >= eps && abs(v.w) >= eps; }
 
 // ----------- TRANSFORMATIONS ---------------
 

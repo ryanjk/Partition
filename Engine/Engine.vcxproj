@@ -166,6 +166,7 @@
     <ClInclude Include="include\imgui\stb_truetype.h" />
     <ClInclude Include="include\IO\FileUtil.h" />
     <ClInclude Include="include\IO\PathUtil.h" />
+    <ClInclude Include="include\UI\EditorUI.h" />
     <ClInclude Include="include\UI\UIUtil.h" />
     <ClInclude Include="include\Utilities\Logging.h" />
     <ClInclude Include="include\Utilities\Math.h" />
@@ -182,6 +183,7 @@
     <ClCompile Include="src\imgui\imgui_impl_dx11.cpp" />
     <ClCompile Include="src\IO\FileUtil.cpp" />
     <ClCompile Include="src\IO\PathUtil.cpp" />
+    <ClCompile Include="src\UI\EditorUI.cpp" />
     <ClCompile Include="src\UI\UIUtil.cpp" />
     <ClCompile Include="src\Utilities\Logging.cpp" />
     <ClCompile Include="src\Utilities\Math.cpp" />

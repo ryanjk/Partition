@@ -10,6 +10,7 @@
 #include <IO\PathUtil.h>
 
 #include <UI\UIUtil.h>
+#include <UI\EditorUI.h>
 
 #include <chrono>
 
@@ -163,15 +164,18 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 	// ------ SET UP IMGUI ------------------------------
 
 	ImGui_ImplDX11_Init(h_wnd, device.Get(), context.Get());
-
-	// MAIN LOOP
-
-	ShowWindow(h_wnd, nCmdShow);
+	pn::gui::InitEditorUI();
 
 	bool show_test_window		= true;
 	bool show_another_window	= false;
 	ImVec4 clear_col			= ImColor(114, 144, 154);
 	bool show_edit_matrix		= true;
+	bool show_main_menu			= true;
+
+	// MAIN LOOP
+
+	ShowWindow(h_wnd, nCmdShow);
+
 
 	bool bGotMsg;
 	MSG  msg;
@@ -209,11 +213,6 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 		// Render
 		ImGui_ImplDX11_NewFrame();
 
-
-		/*if (show_test_window) {
-			ImGui::ShowTestWindow(&show_test_window);
-		} */
-
 		// Update global uniforms
 		c.t += static_cast<float>(dt);
 		auto screen_desc = pn::GetTextureDesc(pn::GetSwapChainBackBuffer(swap_chain));
@@ -221,27 +220,10 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 		c.screen_height = static_cast<float>(screen_desc.Height);
 		context->UpdateSubresource(global_constant_buffer.Get(), 0, nullptr, &c, 0, 0);
 
-		// draw main menu
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0.0f, 0.0f, 0.0f, 0.0f });
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, { 0.0f });
-		if (ImGui::Begin("Window", &show_test_window, 
-							ImGuiWindowFlags_MenuBar | 
-							ImGuiWindowFlags_NoTitleBar |
-							ImGuiWindowFlags_NoMove | 
-							ImGuiWindowFlags_NoResize)) {
-			ImGui::SetWindowPos({ 0, 0 });
-			ImGui::SetWindowSize({ static_cast<float>(screen_desc.Width), 20 });
-			if (ImGui::BeginMenuBar()) {
-				if (ImGui::BeginMenu("File")) {
-
-					ImGui::EndMenu();
-				}
-				ImGui::EndMenuBar();
-			}
-			ImGui::End();
-		}
-		ImGui::PopStyleVar(1);
-		ImGui::PopStyleColor(1);
+		// Draw main menu
+		show_main_menu = ImGui::Button("Show main menu") ? !show_main_menu : show_main_menu;
+		pn::gui::SetMainMenuVisible(show_main_menu);
+		pn::gui::DrawMainMenu(screen_desc.Width);
 
 		float color[] = { (cos(total_time) + 1)*0.5, (cos(3*total_time) + 1)*0.5, 0.439f, 1.000f };
 		context->ClearRenderTargetView(render_target_view.Get(), color);

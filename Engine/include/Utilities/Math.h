@@ -421,6 +421,14 @@ inline quaternion	AxisAngleToQuaternion(const vec3f& axis, const float angle) {
 inline quaternion	AxisAngleToQuaternion(const vec4f& axis_angle) {
 	return AxisAngleToQuaternion(axis_angle.xyz(), axis_angle.w);
 }
+inline quaternion	EulerToQuaternion(const float xr, const float yr, const float zr) {
+	return AxisAngleToQuaternion(vec3f::UnitX, xr) * 
+		AxisAngleToQuaternion(vec3f::UnitY, yr) * 
+		AxisAngleToQuaternion(vec3f::UnitZ, zr);
+}
+inline quaternion	EulerToQuaternion(const vec3f& euler_angles) {
+	return EulerToQuaternion(euler_angles.x, euler_angles.y, euler_angles.z);
+}
 
 // ------ OPERATORS ---------------
 

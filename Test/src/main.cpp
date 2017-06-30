@@ -111,7 +111,7 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 
 	// ---------- LOAD RESOURCES ----------------
 
-	auto mesh			= pn::LoadMesh(pn::GetResourcePath("torus.fbx"));
+	auto mesh			= pn::LoadMesh(pn::GetResourcePath("monkey.fbx"));
 	auto mesh_buffer	= pn::CreateMeshBuffer(device, mesh);
 
 	auto tex			= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
@@ -207,13 +207,12 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 		}
 
 		// Render
-
 		ImGui_ImplDX11_NewFrame();
 
-		float color[] = { (cos(total_time) + 1)*0.5, (cos(3*total_time) + 1)*0.5, 0.439f, 1.000f };
-		context->ClearRenderTargetView(render_target_view.Get(), color);
-		context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
+
+		/*if (show_test_window) {
+			ImGui::ShowTestWindow(&show_test_window);
+		} */
 
 		// Update global uniforms
 		c.t += static_cast<float>(dt);
@@ -221,6 +220,35 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 		c.screen_width = static_cast<float>(screen_desc.Width);
 		c.screen_height = static_cast<float>(screen_desc.Height);
 		context->UpdateSubresource(global_constant_buffer.Get(), 0, nullptr, &c, 0, 0);
+
+		// draw main menu
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0.0f, 0.0f, 0.0f, 0.0f });
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, { 0.0f });
+		if (ImGui::Begin("Window", &show_test_window, 
+							ImGuiWindowFlags_MenuBar | 
+							ImGuiWindowFlags_NoTitleBar |
+							ImGuiWindowFlags_NoMove | 
+							ImGuiWindowFlags_NoResize)) {
+			ImGui::SetWindowPos({ 0, 0 });
+			ImGui::SetWindowSize({ static_cast<float>(screen_desc.Width), 20 });
+			if (ImGui::BeginMenuBar()) {
+				if (ImGui::BeginMenu("File")) {
+
+					ImGui::EndMenu();
+				}
+				ImGui::EndMenuBar();
+			}
+			ImGui::End();
+		}
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(1);
+
+		float color[] = { (cos(total_time) + 1)*0.5, (cos(3*total_time) + 1)*0.5, 0.439f, 1.000f };
+		context->ClearRenderTargetView(render_target_view.Get(), color);
+		context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
+
+
 
 		// set vertex buffer
 		auto& cmesh_buffer = mesh_buffer[0];
@@ -238,7 +266,6 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 		// update world and view
 		ImGui::SliderFloat3("position", &pos.x, -10.0f, 10.0f);
 		ImGui::SliderFloat3("rotation", &rot.x, -pn::TWOPI, pn::TWOPI);
-
 		ic.model = pn::SRTMatrix(scale, rot, pos);
 		
 		// update projection

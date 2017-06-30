@@ -165,7 +165,7 @@ mat4f RotationZ(const float rad) {
 }
 
 mat4f SRTMatrix(const vec3f& scale, const vec3f& euler_angles, const vec3f& translation) {
-	return Scale(scale) * EulerToRotationMatrix(euler_angles) * Translation(translation);
+	return SRTMatrix(scale, EulerToQuaternion(euler_angles), translation);
 }
 mat4f SRTMatrix(const vec3f& scale, const quaternion& rotation, const vec3f& translation) {
 	return Scale(scale) * QuaternionToRotationMatrix(rotation) * Translation(translation);

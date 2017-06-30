@@ -282,12 +282,6 @@ public:
 			test(s, r, t);
 		}
 
-		{
-			vec3f t(92130.0f, -1032.4f, -112.0f);
-			vec3f r(Rad(91110.0f), Rad(-42.1241f), Rad(312.0f));
-			vec3f s(2.0f, -1.0f, -121.0f);
-			test(s, r, t);
-		}
 	}
 	
 };

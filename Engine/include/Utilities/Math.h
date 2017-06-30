@@ -1,8 +1,10 @@
 #pragma once
 
-#include <DirectXMath.h>
-
 #include <functional>
+
+namespace DirectX {
+struct XMMATRIX;
+}
 
 namespace pn {
 
@@ -74,10 +76,10 @@ struct vec3f {
 };
 
 struct vec4f {
-	union {	float x; float r; };
-	union { float y; float g; };
-	union {	float z; float b; };
-	union {	float w; float a; };
+	float x;
+	float y;
+	float z;
+	float w;
 
 	vec4f()										noexcept : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
 	vec4f(float x, float y, float z, float w)	noexcept : x(x), y(y), z(z), w(w) {}
@@ -358,30 +360,40 @@ inline float	Distance(const Vec& v1, const Vec& v2) { return sqrtf(DistanceSqr(v
 
 // --------- MATRIX FUNCTIONS -------------
 
-mat4f Transpose(const mat4f& m);
-mat4f Inverse(const mat4f& in);
+mat4f		Transpose(const mat4f& m);
+mat4f		Inverse(const mat4f& in);
 
-mat4f Translation(const vec3f& translation);
-mat4f Translation(const float xt, const float yt, const float zt);
+mat4f		Translation(const vec3f& translation);
+mat4f		Translation(const float xt, const float yt, const float zt);
 
-mat4f Scale(const float scale);
-mat4f Scale(const vec3f& scale);
-mat4f Scale(const float xs, const float ys, const float zs);
+mat4f		Scale(const float scale);
+mat4f		Scale(const vec3f& scale);
+mat4f		Scale(const float xs, const float ys, const float zs);
 
-mat4f RotationX(const float rad);
-mat4f RotationY(const float rad);
-mat4f RotationZ(const float rad);
+mat4f		RotationX(const float rad);
+mat4f		RotationY(const float rad);
+mat4f		RotationZ(const float rad);
 
-mat4f RotationMatrixFromEulerAngles(const vec3f& euler);
-mat4f RotationMatrixFromEulerAngles(const float xr, const float yr, const float zr);
-mat4f AxisAngleToRotationMatrix(const vec3f& axis, const float angle);
+mat4f		SRTMatrix(const vec3f& scale, const vec3f& euler_angles, const vec3f& translation);
+mat4f		SRTMatrix(const vec3f& scale, const quaternion& rotation, const vec3f& translation);
 
-mat4f PerspectiveFov(const float fov, const float aspect_ratio, const float near_z, const float far_z);
-mat4f Orthographic(const float width, const float height, const float near_z, const float far_z);
+/*
+vec3f		GetTranslation(const mat4f& m);
+vec3f		GetScale(const mat4f& m);
+vec3f		GetRotation(const mat4f& m);
+void		Decompose(const mat4f& m, vec3f& translation, vec3f& rotation, vec3f& scale);
+*/
 
-mat4f FromCoordinateSystem(const vec3f& origin, const vec3f& forward, const vec3f& up);
-mat4f ToCoordinateSystem(const vec3f& origin, const vec3f& forward, const vec3f& up);
-mat4f LookAt(const vec3f& position, const vec3f& target, const vec3f& up);
+mat4f		EulerToRotationMatrix(const vec3f& euler);
+mat4f		EulerToRotationMatrix(const float xr, const float yr, const float zr);
+mat4f		AxisAngleToRotationMatrix(const vec3f& axis, const float angle);
+
+mat4f		PerspectiveFov(const float fov, const float aspect_ratio, const float near_z, const float far_z);
+mat4f		Orthographic(const float width, const float height, const float near_z, const float far_z);
+
+mat4f		FromCoordinateSystem(const vec3f& origin, const vec3f& forward, const vec3f& up);
+mat4f		ToCoordinateSystem(const vec3f& origin, const vec3f& forward, const vec3f& up);
+mat4f		LookAt(const vec3f& position, const vec3f& target, const vec3f& up);
 
 // --------- QUATERNION FUNCTIONS ---------
 
@@ -460,6 +472,8 @@ bool IsEqual(const vec3f& v1, const vec3f& v2, const float eps = EPSILON);
 bool IsEqual(const vec4f& v1, const vec4f& v2, const float eps = EPSILON);
 bool IsEqual(const quaternion& v1, const quaternion& v2, const float eps = EPSILON);
 bool IsEqual(const mat4f& v1, const mat4f& v2, const float eps = EPSILON);
+
+
 bool IsEqual(const mat4f& v1, const DirectX::XMMATRIX& v2, const float eps = EPSILON);
 
 template<typename V1, typename V2>
@@ -509,6 +523,10 @@ vec2f			Max(const vec2f& u, const vec2f& v);
 vec3f			Max(const vec3f& u, const vec3f& v);
 vec4f			Max(const vec4f& u, const vec4f& v);
 
+inline vec2f	Reciprocal(const vec2f& v) { return vec2f(1 / v.x, 1 / v.y); }
+inline vec3f	Reciprocal(const vec3f& v) { return vec3f(1 / v.x, 1 / v.y, 1 / v.z); }
+inline vec4f	Reciprocal(const vec4f& v) { return vec4f(1 / v.x, 1 / v.y, 1 / v.z, 1 / v.w); }
+
 template<typename Vec>
 Vec				Lerp(const Vec& v1, const Vec& v2, float t) {
 	return ((1.0f - t)*v1) + (t*v2);
@@ -529,6 +547,8 @@ inline bool		Any(const Vec& v, const float eps = EPSILON) { return !IsEqual(v, V
 inline bool		All(const vec2f& v, const float eps = EPSILON) { return abs(v.x) >= eps && abs(v.y) >= eps; }
 inline bool		All(const vec3f& v, const float eps = EPSILON) { return abs(v.x) >= eps && abs(v.y) >= eps && abs(v.z) >= eps; }
 inline bool		All(const vec4f& v, const float eps = EPSILON) { return abs(v.x) >= eps && abs(v.y) >= eps && abs(v.z) >= eps && abs(v.w) >= eps; }
+
+inline int		Sign(const float f) { return (f > 0) ? 1 : (f < 0) ? -1 : 0; }
 
 // ----------- TRANSFORMATIONS ---------------
 
@@ -558,7 +578,5 @@ inline vec4f	RotateVector(const vec4f& v, const vec3f& axis, const float angle) 
 inline vec4f	RotateVector(const vec4f& v, const vec4f& axis_angle) {
 	return RotateVector(v, AxisAngleToQuaternion(axis_angle));
 }
-
-vec3f AxisAngleToEuler(const vec3f& axis, float angle);
 
 } // namespace pn

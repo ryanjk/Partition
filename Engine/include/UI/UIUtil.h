@@ -38,7 +38,7 @@ template<>
 void		ImGuiCall(const pn::string& name, float* value, float min, float max, ui::default_t s);
 
 template<>
-void		ImGuiCall(const pn::string& name, DirectX::XMVECTOR* value, float min, float max, ui::quaternion_t s);
+void		ImGuiCall(const pn::string& name, pn::vec4f* value, float min, float max, ui::quaternion_t s);
 
 template<>
 void		ImGuiCall(const pn::string& name, pn::mat4f* value, float min, float max, ui::transform_t s);

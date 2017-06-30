@@ -111,7 +111,7 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 
 	// ---------- LOAD RESOURCES ----------------
 
-	auto mesh			= pn::LoadMesh(pn::GetResourcePath("plane.fbx"));
+	auto mesh			= pn::LoadMesh(pn::GetResourcePath("torus.fbx"));
 	auto mesh_buffer	= pn::CreateMeshBuffer(device, mesh);
 
 	auto tex			= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
@@ -127,11 +127,10 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 
 	auto pixel_shader	= pn::CreatePixelShader(device, pn::GetResourcePath("ps.cso"));
 
-	struct GlobalConstantBufferData {
+	struct alignas(16) GlobalConstantBufferData {
 		float t = 0.0f;
 		float screen_width;
 		float screen_height;
-		float padding[1];
 	};
 	GlobalConstantBufferData c;
 	c.screen_width	= static_cast<float>(awd.width);
@@ -147,7 +146,11 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 	InstanceConstantBufferData ic;
 	auto instance_constant_buffer = pn::CreateConstantBuffer(device, &ic, 1);
 
-	//ic.model = DirectX::XMMatrixTranslation(0.0, 0.0, 4.0);
+	pn::vec3f pos(0, 0, 4);
+	pn::vec3f scale(1, 1, 1);
+	pn::vec3f rot(0, 0, 0);
+
+	ic.model = pn::SRTMatrix(scale,rot,pos);
 	ic.view = pn::mat4f::Identity;
 
 	camera = pn::ProjectionMatrix{ pn::ProjectionType::PERSPECTIVE,
@@ -233,8 +236,11 @@ int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInst
 		// update instance uniforms
 
 		// update world and view
-		//VDBMS(&ic.model, -10.0f, 10.0f, ui::transform_t());
+		ImGui::SliderFloat3("position", &pos.x, -10.0f, 10.0f);
+		ImGui::SliderFloat3("rotation", &rot.x, -pn::TWOPI, pn::TWOPI);
 
+		ic.model = pn::SRTMatrix(scale, rot, pos);
+		
 		// update projection
 		float width		= camera.GetViewWidth();
 		float height	= camera.GetViewHeight();

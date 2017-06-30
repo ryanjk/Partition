@@ -137,42 +137,56 @@ public:
 	TEST_METHOD(EulerRotationTest) {
 
 		{
-			mat4f m = RotationMatrixFromEulerAngles(0.0f, 0.0f, 0.0f);
+			mat4f m = EulerToRotationMatrix(0.0f, 0.0f, 0.0f);
 			Assert::IsTrue(m == mat4f::Identity);
 		}
 
 		for (float t = -TWOPI; t <= TWOPI; t += 0.1f) {
-			mat4f m = RotationMatrixFromEulerAngles(t, 0.0f, 0.0f);
+			mat4f m = EulerToRotationMatrix(t, 0.0f, 0.0f);
 			auto xm = RotationX(t);
 			auto diff = m - xm;
 			Assert::IsTrue(IsEqual(diff, mat4f::Zero));
 		}
 
 		for (float t = -TWOPI; t <= TWOPI; t += 0.1f) {
-			mat4f m = RotationMatrixFromEulerAngles(0, t, 0.0f);
+			mat4f m = EulerToRotationMatrix(0, t, 0.0f);
 			auto xm = RotationY(t);
 			auto diff = m - xm;
 			Assert::IsTrue(IsEqual(diff, mat4f::Zero));
 		}
 
 		for (float t = -TWOPI; t <= TWOPI; t += 0.1f) {
-			mat4f m = RotationMatrixFromEulerAngles(0, 0, t);
+			mat4f m = EulerToRotationMatrix(0, 0, t);
 			auto xm = RotationZ(t);
 			auto diff = m - xm;
 			Assert::IsTrue(IsEqual(diff, mat4f::Zero));
 		}
 
-#ifdef NDEBUG
+/*#ifdef NDEBUG
 		for (float t = -TWOPI; t <= TWOPI; t += 0.1f) {
 			for (float u = -TWOPI; u <= TWOPI; u += 0.1f) {
 				for (float v = -TWOPI; v <= TWOPI; v += 0.1f) {
-					mat4f m = RotationMatrixFromEulerAngles(t, u, v);
-					auto xm = RotationZ(v) * RotationY(u) * RotationX(t);
+					mat4f m = EulerToRotationMatrix(t, u, v);
+					auto xm = RotationZ(v) * RotationX(t) * RotationY(u);
 					Assert::IsTrue(m == xm);
 				}
 			}
 		}
-#endif
+#else
+		for (float t = -TWOPI; t <= TWOPI; t += 0.5f) {
+			for (float u = -TWOPI; u <= TWOPI; u += 0.5f) {
+				for (float v = -TWOPI; v <= TWOPI; v += 0.5f) {
+					mat4f m = EulerToRotationMatrix(t, u, v);
+					//auto xm = RotationZ(v) * RotationX(t) * RotationY(u);
+					auto dxm = DirectX::XMMatrixRotationRollPitchYaw(t, u, v);
+					if (m != dxm) {
+						Assert::IsTrue(true);
+					}
+					Assert::IsTrue(m == dxm);
+				}
+			}
+		}
+#endif*/
 	}
 
 	TEST_METHOD(PerspectiveFovTest) {
@@ -231,6 +245,49 @@ public:
 		Assert::IsTrue(r.xyz() == vec3f::Zero);
 
 		vec4f x = vec4f::UnitX;
+	}
+
+	/*TEST_METHOD(DecomposeTest) {
+		vec3f t(90.0f, -102.4f, 12.0f);
+		vec3f r(Rad(90.0f), Rad(0.0f), Rad(0.0f));
+		vec3f s(1.0f, 1.0f, 1.0f);
+		
+		mat4f m = Scale(s) * RotationMatrixFromEulerAngles(r) * Translation(t);
+
+		auto tra = GetTranslation(m);
+		Assert::IsTrue(t == tra);
+
+		auto sca = GetScale(m);
+		Assert::IsTrue(IsEqual(s, sca));
+		
+		auto rot = GetRotation(m);
+		Assert::IsTrue(IsRadianEqual(r.x, rot.x) && IsRadianEqual(r.y, rot.y) && IsRadianEqual(r.z, rot.z));
+
+	} */
+
+	TEST_METHOD(SRTMatrixTest) {
+		auto test = [](const vec3f& s, const vec3f& r, const vec3f& t) {
+			auto m = SRTMatrix(s, r, t);
+			auto dxm = DirectX::XMMatrixScaling(s.x, s.y, s.z) * 
+				DirectX::XMMatrixRotationRollPitchYaw(r.x, r.y, r.z) * 
+				DirectX::XMMatrixTranslation(t.x, t.y, t.z);
+
+			Assert::IsTrue(m == dxm);
+		};
+
+		{
+			vec3f t(90.0f, -102.4f, 12.0f);
+			vec3f r(Rad(90.0f), Rad(0.0f), Rad(0.0f));
+			vec3f s(1.0f, 1.0f, 1.0f);
+			test(s, r, t);
+		}
+
+		{
+			vec3f t(92130.0f, -1032.4f, -112.0f);
+			vec3f r(Rad(91110.0f), Rad(-42.1241f), Rad(312.0f));
+			vec3f s(2.0f, -1.0f, -121.0f);
+			test(s, r, t);
+		}
 	}
 	
 };

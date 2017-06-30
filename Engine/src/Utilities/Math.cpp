@@ -3,6 +3,8 @@
 
 #include <utility>
 
+#include <DirectXMath.h>
+
 namespace pn {
 
 #pragma region Constants
@@ -162,10 +164,41 @@ mat4f RotationZ(const float rad) {
 	);
 }
 
-mat4f RotationMatrixFromEulerAngles(const vec3f& euler) {
-	return RotationMatrixFromEulerAngles(euler.x, euler.y, euler.z);
+mat4f SRTMatrix(const vec3f& scale, const vec3f& euler_angles, const vec3f& translation) {
+	return Scale(scale) * EulerToRotationMatrix(euler_angles) * Translation(translation);
 }
-mat4f RotationMatrixFromEulerAngles(const float pitch, const float yaw, const float roll) {
+mat4f SRTMatrix(const vec3f& scale, const quaternion& rotation, const vec3f& translation) {
+	return Scale(scale) * QuaternionToRotationMatrix(rotation) * Translation(translation);
+}
+
+/*
+vec3f		GetTranslation(const mat4f& m) {
+	return vec3f(m._30, m._31, m._32);
+}
+vec3f		GetScale(const mat4f& m) {
+	const float xs = Length(vec3f(m._00, m._01, m._02));
+	const float ys = Length(vec3f(m._10, m._11, m._12));
+	const float zs = Length(vec3f(m._20, m._21, m._22));
+	return vec3f(xs, ys, zs);
+}
+vec3f		GetRotation(const mat4f& m) {
+	const vec3f scale = GetScale(m);
+	auto ortho_m = Scale(Reciprocal(scale)) * m;
+	const float xr = atan2f(ortho_m._21, ortho_m._22);
+	const float yr = atan2f(-ortho_m._20, Length(vec2f(ortho_m._21, ortho_m._22)));
+	const float zr = atan2f(ortho_m._10, ortho_m._00);
+	return vec3f(xr, yr, zr);
+}
+void		Decompose(const mat4f& m, vec3f& translation, vec3f& rotation, vec3f& scale) {
+	translation = GetTranslation(m);
+	rotation	= GetRotation(m);
+	scale		= GetScale(m);
+}*/
+
+mat4f EulerToRotationMatrix(const vec3f& euler) {
+	return EulerToRotationMatrix(euler.x, euler.y, euler.z);
+}
+mat4f EulerToRotationMatrix(const float pitch, const float yaw, const float roll) {
 	const float cy = cosf(yaw);
 	const float sy = sinf(yaw);
 
@@ -180,12 +213,12 @@ mat4f RotationMatrixFromEulerAngles(const float pitch, const float yaw, const fl
 	const float sr_cp = sr*cp;
 	const float cr_cp = cr*cp;
 
-	return mat4f(
-		cr*cy, cr*sy_sp + sr_cp, -cr*sy_cp + sr*sp, 0.0f,
-		-sr*cy, -sr*sy_sp + cr_cp, sr*sy_cp + cr*sp, 0.0f,
-		sy, -cy*sp, cy*cp, 0.0f,
+	return Transpose(mat4f(
+		cr*cy - sr*sy_sp, -sr_cp, sr*sp*cy + cr*sy, 0.0f,
+		sr*cy + cr*sy_sp, cr_cp, sr*sy - cr*cy*sp, 0.0f,
+	 	          -cp*sy,    sp,            cp*cy, 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
-	);
+	));
 }
 mat4f AxisAngleToRotationMatrix(const vec3f& axis, const float angle) {
 	return QuaternionToRotationMatrix(AxisAngleToQuaternion(axis, angle));
@@ -446,26 +479,6 @@ template<>
 float	SmoothStep(const float& edge0, const float& edge1, const float& v) {
 	float t = Clamp((v - edge0) / (edge1 - edge0), 0.0f, 1.0f);
 	return t*t*(3.0f - 2.0f*t);
-}
-
-vec3f	AxisAngleToEuler(const vec3f& p_axis, float angle) {
-	auto axis = Normalize(p_axis);
-	float s = sinf(angle);
-	float t = 1 - cosf(angle);
-	float z_comp = (axis.x * axis.y * t) + (axis.z * s);
-	float bank, heading, attitude;
-	if (abs(z_comp) > 0.999) {
-		float sign = z_comp < 0.0f ? -1.0f : 1.0f;
-		bank = 0;
-		heading = sign * 2 * atan2(axis.x*sinf(angle / 2), cosf(angle / 2));
-		attitude = sign*DirectX::XM_PIDIV2;
-	}
-	else {
-		bank = atan2(axis.x*s - axis.y*axis.z*t, 1 - (powf(axis.z, 2) + powf(axis.x, 2))*t);
-		heading = atan2(axis.y*s - axis.x*axis.z*t, 1 - (powf(axis.y, 2) + powf(axis.z, 2))*t);
-		attitude = asinf(z_comp);
-	}
-	return vec3f(bank, heading, attitude);
 }
 
 #pragma endregion

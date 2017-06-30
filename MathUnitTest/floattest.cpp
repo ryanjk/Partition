@@ -67,7 +67,7 @@ public:
 		Assert::IsTrue(IsAngleEqual(0.0f, 360.0f));
 		Assert::IsTrue(IsAngleEqual(0.0f, -360.0f));
 		
-		Assert::IsTrue(IsAngleEqual(180.0f, 180.0f));
+		Assert::IsTrue(IsAngleEqual(180.0f, -180.0f));
 		Assert::IsTrue(IsAngleEqual(180.0f, 180.0f + 360.0f));
 		Assert::IsTrue(IsAngleEqual(180.0f, 180.0f - 360.0f));
 
@@ -83,6 +83,8 @@ public:
 		Assert::IsTrue(IsRadianEqual(0.0f, 0.0f));
 		Assert::IsTrue(IsRadianEqual(0.0f, TWOPI));
 		Assert::IsTrue(IsRadianEqual(0.0f, -TWOPI));
+
+		Assert::IsTrue(IsRadianEqual(Rad(180.0f), Rad(-180.0f)));
 
 		Assert::IsFalse(IsRadianEqual(Rad(0.0f), Rad(1.0f)));
 		Assert::IsFalse(IsRadianEqual(Rad(0.0f), Rad(-1.0f)));

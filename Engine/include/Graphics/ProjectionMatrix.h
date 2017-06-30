@@ -62,10 +62,10 @@ public:
 		if (dirty) {
 			switch (projection_type) {
 			case ProjectionType::ORTHOGRAPHIC:
-				//projection_matrix_cache = DirectX::XMMatrixOrthographicLH(orthographic_size * view_width, orthographic_size * view_height, near_plane, far_plane);
+				projection_matrix_cache = Orthographic(orthographic_size * view_width, orthographic_size * view_height, near_plane, far_plane);
 				break;
 			case ProjectionType::PERSPECTIVE:
-				//projection_matrix_cache = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(fov), view_width / view_height, near_plane, far_plane);
+				projection_matrix_cache = PerspectiveFov(Rad(fov), view_width / view_height, near_plane, far_plane);
 				break;
 			default:
 				LogError("Unknown projection type");

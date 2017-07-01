@@ -39,6 +39,10 @@ void DrawMainMenu(const unsigned int screen_width) {
 		if (ImGui::BeginMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
 
+				if (ImGui::MenuItem("Exit", nullptr, nullptr)) {
+
+				}
+
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenuBar();

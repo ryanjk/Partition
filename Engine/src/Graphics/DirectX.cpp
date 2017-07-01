@@ -222,6 +222,7 @@ mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh) {
 
 	mesh_buffer.positions = CreateVertexBuffer(device, mesh.positions);
 	mesh_buffer.indices = CreateIndexBuffer(device, mesh.indices);
+	mesh_buffer.index_count = mesh.indices.size();
 	mesh_buffer.topology = mesh.topology;
 
 	if (!mesh.normals.empty()) {

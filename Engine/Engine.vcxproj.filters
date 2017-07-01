@@ -75,6 +75,12 @@
     <ClInclude Include="include\UI\EditorUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Application\Global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Application\MainLoop.inc">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Graphics\Window.cpp">
@@ -117,6 +123,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\UI\EditorUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Application\Global.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

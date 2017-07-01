@@ -152,6 +152,8 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Application\Global.h" />
+    <ClInclude Include="include\Application\MainLoop.inc" />
     <ClInclude Include="include\Graphics\DirectX.h" />
     <ClInclude Include="include\Graphics\MeshLoadUtil.h" />
     <ClInclude Include="include\Graphics\ProjectionMatrix.h" />
@@ -173,6 +175,7 @@
     <ClInclude Include="include\Utilities\UtilityTypes.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Application\Global.cpp" />
     <ClCompile Include="src\Graphics\DirectX.cpp" />
     <ClCompile Include="src\Graphics\MeshLoadUtil.cpp" />
     <ClCompile Include="src\Graphics\TextureLoadUtil.cpp" />

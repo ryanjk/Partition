@@ -6,6 +6,8 @@ namespace pn {
 
 namespace gui {
 
+// ----------- FUNCTIONS ----------------
+
 void InitEditorUI();
 
 void SetMainMenuVisible(bool value);

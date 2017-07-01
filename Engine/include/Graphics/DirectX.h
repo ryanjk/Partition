@@ -115,6 +115,7 @@ struct input_element_desc {
 };
 
 struct input_layout_desc {
+	input_layout_desc() : ptr(nullptr), desc() {}
 	input_layout_desc(dx_input_layout ptr, vertex_input_desc desc) :
 		ptr{ ptr }, desc{ desc } {}
 
@@ -149,6 +150,7 @@ struct mesh_buffer_t {
 	dx_buffer				uv2s;
 
 	dx_buffer				indices;
+	unsigned int			index_count;
 	D3D_PRIMITIVE_TOPOLOGY	topology;
 };
 

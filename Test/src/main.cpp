@@ -14,288 +14,152 @@
 
 #include <chrono>
 
-static pn::dx_device device;
-static pn::dx_swap_chain swap_chain;
-static pn::dx_render_target_view render_target_view;
-static pn::dx_depth_stencil_view depth_stencil_view;
-static pn::ProjectionMatrix camera;
+#include <Application\MainLoop.inc>
 
-extern IMGUI_API LRESULT   ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+struct alignas(16) GlobalConstantBufferData {
+	float t = 0.0f;
+	float screen_width;
+	float screen_height;
+};
+GlobalConstantBufferData c;
 
-pn::window_long CALLBACK WindowProc(pn::window_handle hwnd, unsigned int uMsg, pn::window_uint wParam, pn::window_long lParam) {
-	if (ImGui_ImplDX11_WndProcHandler(hwnd, uMsg, wParam, lParam)) {
-		return true;
-	}
+struct InstanceConstantBufferData {
+	pn::mat4f model;
+	pn::mat4f view;
+	pn::mat4f proj;
+};
+InstanceConstantBufferData ic;
 
-	switch (uMsg) {
-	case WM_SIZE:
-		if (device.Get() != nullptr && wParam != SIZE_MINIMIZED) {
-			auto width = (unsigned int) LOWORD(lParam);
-			auto height = (unsigned int) HIWORD(lParam);
-			LogDebug("Resizing window to width: {}, height: {}", width, height);
+pn::dx_buffer global_constant_buffer;
+pn::dx_buffer instance_constant_buffer;
 
-			ImGui_ImplDX11_InvalidateDeviceObjects();
-			if (render_target_view.Get() != nullptr) {
-				render_target_view.ReleaseAndGetAddressOf();
-				render_target_view = nullptr;
-			}
+pn::dx_vertex_shader vertex_shader;
+pn::input_layout_desc input_layout;
+pn::dx_pixel_shader pixel_shader;
 
-			swap_chain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-			pn::ResizeRenderTargetViewportCamera(device, width, height, swap_chain, render_target_view, depth_stencil_view, camera);
+pn::vector<pn::mesh_buffer_t> mesh_buffer;
 
-			ImGui_ImplDX11_CreateDeviceObjects(); 
-		}
-		return 0;
-	case WM_CLOSE:
-	{
-		pn::menu_handle hMenu;
-		hMenu = GetMenu(hwnd);
-		if (hMenu != NULL) {
-			DestroyMenu(hMenu);
-		}
-		DestroyWindow(hwnd);
-		return 0;
-	}
+pn::vec3f pos(0, 0, 4);
+pn::vec3f scale(1, 1, 1);
+pn::vec3f rot(0, 0, 0);
 
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
+pn::texture_t tex;
+pn::dx_sampler_state sampler_state;
 
-	case WM_CREATE:
-		break;
-	}
-
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
-}
-
-int WINAPI wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInstance, pn::window_pwstr command_line_args, int nCmdShow) {
-	
-	// INIT ENVIRONMENT
-
-	pn::CreateConsole();
-	pn::InitLogger();
-	pn::InitPathUtil();
-
+void Init() {
 	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/Test/");
 	pn::SetResourceDirectoryName("resource");
 
-	if (hInstance == NULL) {
-		hInstance = (pn::instance_handle) GetModuleHandle(NULL);
-	}
-
-	auto hr = CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
-	if (FAILED(hr)) {
-		LogError("Couldn't initialize COM: {}", pn::ErrMsg(hr));
-	}
-
-	// INIT WINDOWS
-
-	pn::application_window_desc awd;
-	awd.h_instance = hInstance;
-	awd.width = 1366;
-	awd.height = 768;
-	awd.fullscreen = false;
-	auto h_wnd = pn::CreateApplicationWindow(awd, WindowProc);
-
-	
-	// INIT DIRECTX
-
-	device		= pn::CreateDevice();
-	swap_chain	= pn::CreateMainWindowSwapChain(device, h_wnd, awd);
-
-	pn::InitTextureFactory(device);
-
-	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(device, swap_chain, render_target_view, depth_stencil_view);
-
-	auto context = pn::GetContext(device);
-	pn::SetViewport(context, awd.width, awd.height);
-
 	// ---------- LOAD RESOURCES ----------------
 
-	auto mesh			= pn::LoadMesh(pn::GetResourcePath("monkey.fbx"));
-	auto mesh_buffer	= pn::CreateMeshBuffer(device, mesh);
+	auto mesh = pn::LoadMesh(pn::GetResourcePath("monkey.fbx"));
+	mesh_buffer = pn::CreateMeshBuffer(device, mesh);
 
-	auto tex			= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
-
-	auto sampler_state	= pn::CreateSamplerState(device);
+	tex = pn::LoadTexture2D(pn::GetResourcePath("image.png"));
+	sampler_state = pn::CreateSamplerState(device);
 
 
 	// --------- CREATE SHADER DATA ---------------
 
-	auto vs_byte_code	= pn::ReadFile(pn::GetResourcePath("vs.cso"));
-	auto vertex_shader	= pn::CreateVertexShader(device, vs_byte_code);
-	auto input_layout	= pn::CreateInputLayout(device, vs_byte_code);
+	auto vs_byte_code = pn::ReadFile(pn::GetResourcePath("vs.cso"));
+	vertex_shader = pn::CreateVertexShader(device, vs_byte_code);
+	input_layout = pn::CreateInputLayout(device, vs_byte_code);
 
-	auto pixel_shader	= pn::CreatePixelShader(device, pn::GetResourcePath("ps.cso"));
+	pixel_shader = pn::CreatePixelShader(device, pn::GetResourcePath("ps.cso"));
 
-	struct alignas(16) GlobalConstantBufferData {
-		float t = 0.0f;
-		float screen_width;
-		float screen_height;
-	};
-	GlobalConstantBufferData c;
-	c.screen_width	= static_cast<float>(awd.width);
-	c.screen_height	= static_cast<float>(awd.height);
+	c.screen_width = static_cast<float>(pn::app::window_desc.width);
+	c.screen_height = static_cast<float>(pn::app::window_desc.height);
 
-	auto global_constant_buffer = pn::CreateConstantBuffer(device, &c, 1);
+	global_constant_buffer = pn::CreateConstantBuffer(device, &c, 1);
+	instance_constant_buffer = pn::CreateConstantBuffer(device, &ic, 1);
 
-	struct InstanceConstantBufferData {
-		pn::mat4f model;
-		pn::mat4f view;
-		pn::mat4f proj;
-	};
-	InstanceConstantBufferData ic;
-	auto instance_constant_buffer = pn::CreateConstantBuffer(device, &ic, 1);
-
-	pn::vec3f pos(0, 0, 4);
-	pn::vec3f scale(1, 1, 1);
-	pn::vec3f rot(0, 0, 0);
-
-	ic.model = pn::SRTMatrix(scale,rot,pos);
+	ic.model = pn::SRTMatrix(scale, rot, pos);
 	ic.view = pn::mat4f::Identity;
 
 	camera = pn::ProjectionMatrix{ pn::ProjectionType::PERSPECTIVE,
-		static_cast<float>(awd.width), static_cast<float>(awd.height),
+		static_cast<float>(pn::app::window_desc.width), static_cast<float>(pn::app::window_desc.height),
 		0.01f, 1000.0f,
 		70.0f, 0.1f
 	};
 	ic.proj = camera.GetMatrix();
-	
-	// ------ SET UP IMGUI ------------------------------
+}
 
-	ImGui_ImplDX11_Init(h_wnd, device.Get(), context.Get());
-	pn::gui::InitEditorUI();
+void Update(const float dt) {}
 
-	bool show_test_window		= true;
-	bool show_another_window	= false;
-	ImVec4 clear_col			= ImColor(114, 144, 154);
-	bool show_edit_matrix		= true;
-	bool show_main_menu			= true;
+void Render() {
+	auto context = pn::GetContext(device);
 
-	// MAIN LOOP
+	// Update global uniforms
+	c.t += static_cast<float>(pn::app::dt);
+	auto screen_desc = pn::GetTextureDesc(pn::GetSwapChainBackBuffer(swap_chain));
+	c.screen_width = static_cast<float>(screen_desc.Width);
+	c.screen_height = static_cast<float>(screen_desc.Height);
+	context->UpdateSubresource(global_constant_buffer.Get(), 0, nullptr, &c, 0, 0);
 
-	ShowWindow(h_wnd, nCmdShow);
+	// Set render target backbuffer color
+	float color[] = { 
+		(cos(pn::app::time_since_application_start) + 1)*0.5, 
+		(cos(3 * pn::app::time_since_application_start) + 1)*0.5,
+		0.439f, 
+		1.000f };
+	context->ClearRenderTargetView(render_target_view.Get(), color);
+	context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
 
+	// set vertex buffer
+	auto& cmesh_buffer = mesh_buffer[0];
+	pn::SetContextVertexBuffers(context, input_layout, cmesh_buffer);
+	context->IASetInputLayout(input_layout.ptr.Get());
+	context->IASetIndexBuffer(cmesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
+	context->IASetPrimitiveTopology(cmesh_buffer.topology);
 
-	bool bGotMsg;
-	MSG  msg;
-	msg.message = WM_NULL;
-	PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
-	
-	auto prev_time			= std::chrono::system_clock::now();
-	double time_to_process	= 0;
-	double total_time		= 0;
-	const double FPS		= 60.0;
-	const double FIXED_DT	= 1 / FPS;
-	while (WM_QUIT != msg.message) {
+	// set shader
+	context->VSSetShader(vertex_shader.Get(), nullptr, 0);
+	context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 
-		// Get and handle input
-		bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
-		if (bGotMsg) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-			continue;
-		}
+	// update instance uniforms
 
-		// Update the game
-		auto current_time = std::chrono::system_clock::now();
-		auto dt = std::chrono::duration<double>(current_time - prev_time).count();
-		time_to_process += dt;
-		total_time += dt;
-		prev_time = current_time;
+	// update world and view
+	ImGui::SliderFloat3("position", &pos.x, -10.0f, 10.0f);
+	ImGui::SliderFloat3("rotation", &rot.x, -pn::TWOPI, pn::TWOPI);
+	ic.model = pn::SRTMatrix(scale, rot, pos);
 
-		int u = 0;
-		while (time_to_process >= FIXED_DT) {
-			// update(FIXED_DT)
-			time_to_process -= FIXED_DT;
-		}
+	// update projection
+	float width = camera.GetViewWidth();
+	float height = camera.GetViewHeight();
+	float fov = camera.GetFov();
+	float size = camera.GetOrthographicSize();
 
-		// Render
-		ImGui_ImplDX11_NewFrame();
+	VDBM(&width, 1.0f, 3000.0f);
+	VDBM(&height, 1.0f, 3000.0f);
+	VDBM(&fov, 1.0f, 180.0f);
+	ImGui::SliderFloat("size", &size, 0.001f, 1.0f, "%.3f", 2.0f);
 
-		// Update global uniforms
-		c.t += static_cast<float>(dt);
-		auto screen_desc = pn::GetTextureDesc(pn::GetSwapChainBackBuffer(swap_chain));
-		c.screen_width = static_cast<float>(screen_desc.Width);
-		c.screen_height = static_cast<float>(screen_desc.Height);
-		context->UpdateSubresource(global_constant_buffer.Get(), 0, nullptr, &c, 0, 0);
+	camera.SetOrthographicSize(size);
+	camera.SetFov(fov);
+	camera.SetViewWidth(width);
+	camera.SetViewHeight(height);
 
-		// Draw main menu
-		show_main_menu = ImGui::Button("Show main menu") ? !show_main_menu : show_main_menu;
-		pn::gui::SetMainMenuVisible(show_main_menu);
-		pn::gui::DrawMainMenu(screen_desc.Width);
-
-		float color[] = { (cos(total_time) + 1)*0.5, (cos(3*total_time) + 1)*0.5, 0.439f, 1.000f };
-		context->ClearRenderTargetView(render_target_view.Get(), color);
-		context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
-
-
-
-		// set vertex buffer
-		auto& cmesh_buffer = mesh_buffer[0];
-		pn::SetContextVertexBuffers(context, input_layout, cmesh_buffer);
-		context->IASetInputLayout(input_layout.ptr.Get());
-		context->IASetIndexBuffer(cmesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
-		context->IASetPrimitiveTopology(cmesh_buffer.topology);
-
-		// set shader
-		context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-		context->PSSetShader(pixel_shader.Get(), nullptr, 0);
-
-		// update instance uniforms
-
-		// update world and view
-		ImGui::SliderFloat3("position", &pos.x, -10.0f, 10.0f);
-		ImGui::SliderFloat3("rotation", &rot.x, -pn::TWOPI, pn::TWOPI);
-		ic.model = pn::SRTMatrix(scale, rot, pos);
-		
-		// update projection
-		float width		= camera.GetViewWidth();
-		float height	= camera.GetViewHeight();
-		float fov		= camera.GetFov();
-		float size		= camera.GetOrthographicSize();
-
-		VDBM(&width, 1.0f, 3000.0f);
-		VDBM(&height, 1.0f, 3000.0f);
-		VDBM(&fov, 1.0f, 180.0f);
-		ImGui::SliderFloat("size", &size, 0.001f, 1.0f, "%.3f", 2.0f);
-		//VDBM(&size, 0.001f, 1.0f);
-
-		camera.SetOrthographicSize(size);
-		camera.SetFov(fov);
-		camera.SetViewWidth(width);
-		camera.SetViewHeight(height);
-
-		bool toggle_proj = ImGui::Button("Toggle");
-		if (toggle_proj) {
-			auto cur = camera.GetProjectionType();
-			camera.SetProjectionType(cur == pn::ProjectionType::ORTHOGRAPHIC ? pn::ProjectionType::PERSPECTIVE : pn::ProjectionType::ORTHOGRAPHIC);
-		}
-
-		ic.proj = camera.GetMatrix();
-
-		// send updates to constant buffer
-		context->UpdateSubresource(instance_constant_buffer.Get(), 0, nullptr, &ic, 0, 0);
-
-		// set constant buffers in shaders
-		context->VSSetConstantBuffers(0, 1, global_constant_buffer.GetAddressOf());
-		context->VSSetConstantBuffers(1, 1, instance_constant_buffer.GetAddressOf());
-
-		context->PSSetConstantBuffers(0, 1, global_constant_buffer.GetAddressOf());
-
-		// update shader textures
-		context->PSSetShaderResources(0, 1, tex.resource_view.GetAddressOf());
-		context->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
-
-		context->DrawIndexed(mesh[0].indices.size(), 0, 0);
-		ImGui::Render();
-		auto hr = swap_chain->Present(1, 0);
-		if (FAILED(hr)) {
-			LogError("Swap chain present error: ", pn::ErrMsg(hr));
-		}
+	bool toggle_proj = ImGui::Button("Toggle Projection");
+	if (toggle_proj) {
+		auto cur = camera.GetProjectionType();
+		camera.SetProjectionType(cur == pn::ProjectionType::ORTHOGRAPHIC ? pn::ProjectionType::PERSPECTIVE : pn::ProjectionType::ORTHOGRAPHIC);
 	}
 
-	// Shutdown
-	pn::CloseLogger();
+	ic.proj = camera.GetMatrix();
+
+	// send updates to constant buffer
+	context->UpdateSubresource(instance_constant_buffer.Get(), 0, nullptr, &ic, 0, 0);
+
+	// set constant buffers in shaders
+	context->VSSetConstantBuffers(0, 1, global_constant_buffer.GetAddressOf());
+	context->VSSetConstantBuffers(1, 1, instance_constant_buffer.GetAddressOf());
+
+	context->PSSetConstantBuffers(0, 1, global_constant_buffer.GetAddressOf());
+
+	// update shader textures
+	context->PSSetShaderResources(0, 1, tex.resource_view.GetAddressOf());
+	context->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
+
+	context->DrawIndexed(mesh_buffer[0].index_count, 0, 0);
 }

@@ -11,7 +11,14 @@ namespace input {
 
 // -------- ENUMERATIONS -----------
 
-enum input_key {
+enum class key_state : unsigned char {
+	PRESSED, 
+	RELEASED,
+	JUST_PRESSED, 
+	JUST_RELEASED
+};
+
+enum input_key : unsigned char {
 	LEFT_MOUSE		= VK_LBUTTON,
 	RIGHT_MOUSE		= VK_RBUTTON,
 	MIDDLE_MOUSE	= VK_MBUTTON,
@@ -54,33 +61,26 @@ struct mouse_pos_t {
 };
 
 struct input_state_t {
-	bool		keys[256]		= { 0 };
-	bool		left_mouse		= false;
-	bool		right_mouse		= false;
-	bool		middle_mouse	= false;
-	float		mouse_wheel		= 0.0f;
-	mouse_pos_t	mouse_pos		= { 0, 0 };
+	key_state	keys[256];
+	float		mouse_wheel;
+	mouse_pos_t	mouse_pos;
 };
 
 // -------- FUNCTIONS --------------
 
-void		InitInput();
+void			InitInput();
+void			InputOnEndOfFrame();
 
-void		SetKeyState(const int vkey, const bool state);
-bool		GetKeyState(const int vkey);
+void			SetKeyState(const int vkey, const key_state state);
+key_state		GetKeyState(const input_key vkey);
 
-void		SetLeftMouse(const bool state);
-void		SetRightMouse(const bool state);
-void		SetMiddleMouse(const bool state);
+void			SetMousePos(const mouse_pos_t mouse_pos);
+mouse_pos_t		GetMousePos();
 
-void		SetMousePos(const mouse_pos_t mouse_pos);
-mouse_pos_t GetMousePos();
+void			IncrementMouseWheel(const float amount);
 
-void		IncrementMouseWheel(const float amount);
-
-void		AddInputCharacter(const char c);
-void		ClearInputCharacters();
-string		GetInputCharacters();
+void			AddInputCharacter(const char c);
+const string&	GetInputCharacters();
 
 
 } // namespace input

@@ -18,6 +18,8 @@
 
 #include <chrono>
 
+using namespace pn::input;
+
 // --------- VARIABLES -------------
 pn::dx_device				device;
 pn::dx_swap_chain			swap_chain;
@@ -28,7 +30,6 @@ pn::ProjectionMatrix		camera;
 // -------- USER-DEFINED MAIN LOOP FUNCTIONS -----------
 
 void Init();
-void GetInput();
 void Update(const float dt);
 void Render();
 
@@ -83,38 +84,43 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 
 	case WM_KEYDOWN:
 		if (wParam < 256) {
-			pn::input::SetKeyState(wParam, true);
+			bool was_down_last_frame = lParam >> 30;
+			key_state new_key_state = key_state::PRESSED;
+			if (!was_down_last_frame) {
+				new_key_state = key_state::JUST_PRESSED;
+			}
+			pn::input::SetKeyState(wParam, new_key_state);
 		}
 		break;
 
 	case WM_KEYUP:
 		if (wParam < 256) {
-			pn::input::SetKeyState(wParam, false);
+			pn::input::SetKeyState(wParam, key_state::JUST_RELEASED);
 		}
 		break;
 
 	case WM_LBUTTONDOWN:
-		pn::input::SetLeftMouse(true);
+		pn::input::SetKeyState(VK_LBUTTON, key_state::JUST_PRESSED);
 		break;
 
 	case WM_LBUTTONUP:
-		pn::input::SetLeftMouse(false);
+		pn::input::SetKeyState(VK_LBUTTON, key_state::JUST_RELEASED);
 		break;
 
 	case WM_RBUTTONDOWN:
-		pn::input::SetRightMouse(true);
+		pn::input::SetKeyState(VK_RBUTTON, key_state::JUST_PRESSED);
 		break;
 
 	case WM_RBUTTONUP:
-		pn::input::SetRightMouse(false);
+		pn::input::SetKeyState(VK_RBUTTON, key_state::JUST_RELEASED);
 		break;
 
 	case WM_MBUTTONDOWN:
-		pn::input::SetMiddleMouse(true);
+		pn::input::SetKeyState(VK_MBUTTON, key_state::JUST_PRESSED);
 		break;
 
 	case WM_MBUTTONUP:
-		pn::input::SetMiddleMouse(false);
+		pn::input::SetKeyState(VK_MBUTTON, key_state::JUST_RELEASED);
 		break;
 		
 	case WM_MOUSEWHEEL:
@@ -205,17 +211,12 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 		// BEGINNING OF FRAME CALLS
 
-		// Get and handle input
+		// GET INPUT
 		bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
 		if (bGotMsg) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 			continue;
-		}
-
-		auto input_chars = pn::input::GetInputCharacters();
-		if (pn::Size(input_chars) > 0) {
-			Log("{}", pn::input::GetInputCharacters());
 		}
 
 		// UPDATE
@@ -250,7 +251,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		}
 
 		// END OF FRAME CALLS
-		pn::input::ClearInputCharacters();
+		pn::input::InputOnEndOfFrame();
 	}
 
 	// Shutdown

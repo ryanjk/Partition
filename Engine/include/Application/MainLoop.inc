@@ -37,7 +37,7 @@ extern IMGUI_API LRESULT	ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPAR
 
 pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, pn::window_uint wParam, pn::window_long lParam) {
 	if (ImGui_ImplDX11_WndProcHandler(hwnd, uMsg, wParam, lParam)) {
-		return true;
+		//return true;
 	}
 
 	switch (uMsg) {
@@ -80,8 +80,56 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 
 	case WM_CREATE:
 		break;
-	}
 
+	case WM_KEYDOWN:
+		if (wParam < 256) {
+			pn::input::SetKeyState(wParam, true);
+		}
+		break;
+
+	case WM_KEYUP:
+		if (wParam < 256) {
+			pn::input::SetKeyState(wParam, false);
+		}
+		break;
+
+	case WM_LBUTTONDOWN:
+		pn::input::SetLeftMouse(true);
+		break;
+
+	case WM_LBUTTONUP:
+		pn::input::SetLeftMouse(false);
+		break;
+
+	case WM_RBUTTONDOWN:
+		pn::input::SetRightMouse(true);
+		break;
+
+	case WM_RBUTTONUP:
+		pn::input::SetRightMouse(false);
+		break;
+
+	case WM_MBUTTONDOWN:
+		pn::input::SetMiddleMouse(true);
+		break;
+
+	case WM_MBUTTONUP:
+		pn::input::SetMiddleMouse(false);
+		break;
+		
+	case WM_MOUSEWHEEL:
+		pn::input::IncrementMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f);
+		break;
+
+	case WM_MOUSEMOVE:
+		pn::input::SetMousePos({ (signed short) (lParam), (signed short) (lParam >> 16) });
+		break;
+	
+	case WM_CHAR:
+		pn::input::AddInputCharacter((unsigned short) wParam);
+		break;
+	
+	}
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
@@ -155,12 +203,19 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	pn::app::FIXED_DT = 1 / pn::app::FPS;
 	while (WM_QUIT != msg.message) {
 
+		// BEGINNING OF FRAME CALLS
+
 		// Get and handle input
 		bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
 		if (bGotMsg) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 			continue;
+		}
+
+		auto input_chars = pn::input::GetInputCharacters();
+		if (pn::Size(input_chars) > 0) {
+			Log("{}", pn::input::GetInputCharacters());
 		}
 
 		// UPDATE
@@ -193,6 +248,9 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		if (FAILED(hr)) {
 			LogError("Swap chain present error: ", pn::ErrMsg(hr));
 		}
+
+		// END OF FRAME CALLS
+		pn::input::ClearInputCharacters();
 	}
 
 	// Shutdown

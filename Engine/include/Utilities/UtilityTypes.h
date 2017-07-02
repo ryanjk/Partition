@@ -19,13 +19,26 @@ using map		= std::unordered_map<K, V>;
 
 using bytes		= vector<char>;
 
+// ------------ TYPE DEFINITIONS --------
+
+template<typename T1, typename T2>
+struct pair {
+	T1 first;
+	T2 second;
+};
+
 // ------------ FUNCTIONS -------------
 
 // --------- CONTAINER FUNCTIONS -----
 
 template<typename Container>
-auto	Size(const Container& vec) -> decltype(vec.size()) {
-	return vec.size();
+auto	Size(const Container& container) -> decltype(container.size()) {
+	return container.size();
+}
+
+template<typename Container>
+void	Clear(Container& container) {
+	container.clear();
 }
 
 // ------- VECTOR FUNCTIONS -----------
@@ -58,6 +71,11 @@ void	Resize(Vec& vec, const SizeType s) {
 
 template<typename T>
 auto	Get(const vector<T>& v, size_t i) -> decltype(v[i]) {
+	return v[i];
+}
+
+template<typename T>
+auto	Get(vector<T>& v, size_t i) -> decltype(v[i]) {
 	return v[i];
 }
 

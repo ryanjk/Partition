@@ -48,23 +48,40 @@ enum input_key {
 
 // -------- TYPE DEFINITIONS ----------
 
-struct input_state_t {
-	bool	keys[256]		= { 0 };
-	bool	left_mouse		= false;
-	bool	right_mouse		= false;
-	bool	middle_mouse	= false;
-	float	mouse_wheel		= 0.0f;
-	vec2f	mouse_pos		= { 0.0f, 0.0f };
+struct mouse_pos_t {
+	signed short x;
+	signed short y;
 };
 
-// -------- VARIABLES ---------------
-
-extern input_state_t	input_state;
-extern pn::string		input_characters;
+struct input_state_t {
+	bool		keys[256]		= { 0 };
+	bool		left_mouse		= false;
+	bool		right_mouse		= false;
+	bool		middle_mouse	= false;
+	float		mouse_wheel		= 0.0f;
+	mouse_pos_t	mouse_pos		= { 0, 0 };
+};
 
 // -------- FUNCTIONS --------------
 
-void InitInput();
+void		InitInput();
+
+void		SetKeyState(const int vkey, const bool state);
+bool		GetKeyState(const int vkey);
+
+void		SetLeftMouse(const bool state);
+void		SetRightMouse(const bool state);
+void		SetMiddleMouse(const bool state);
+
+void		SetMousePos(const mouse_pos_t mouse_pos);
+mouse_pos_t GetMousePos();
+
+void		IncrementMouseWheel(const float amount);
+
+void		AddInputCharacter(const char c);
+void		ClearInputCharacters();
+string		GetInputCharacters();
+
 
 } // namespace input
 

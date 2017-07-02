@@ -9,9 +9,9 @@
 #include <Graphics\Window.h>
 #include <Graphics\ProjectionMatrix.h>
 
-#include <Utilities\UtilityTypes.h>
 #include <Utilities\Logging.h>
 #include <Utilities\Math.h>
+#include <Utilities\UtilityTypes.h>
 
 namespace pn {
 

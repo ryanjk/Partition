@@ -23,30 +23,30 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 	pn::mesh_t result_mesh;
 
 	const unsigned int VERTEX_COUNT = mesh->mNumVertices;
-	result_mesh.positions.resize(VERTEX_COUNT);
+	Resize(result_mesh.positions, VERTEX_COUNT);
 	std::memcpy(&(result_mesh.positions[0]), mesh->mVertices, VERTEX_COUNT * sizeof(pn::vec3f));
 
 	if (mesh->HasNormals()) {
-		result_mesh.normals.resize(VERTEX_COUNT);
+		Resize(result_mesh.normals, VERTEX_COUNT);
 		std::memcpy(&result_mesh.normals[0], mesh->mNormals, VERTEX_COUNT * sizeof(pn::vec3f));
 	}
 
 	if (mesh->HasTangentsAndBitangents()) {
-		result_mesh.tangents.resize(VERTEX_COUNT);
-		result_mesh.bitangents.resize(VERTEX_COUNT);
+		Resize(result_mesh.tangents, VERTEX_COUNT);
+		Resize(result_mesh.bitangents, VERTEX_COUNT);
 		std::memcpy(&result_mesh.tangents[0], mesh->mTangents, VERTEX_COUNT * sizeof(pn::vec3f));
 		std::memcpy(&result_mesh.bitangents[0], mesh->mBitangents, VERTEX_COUNT * sizeof(pn::vec3f));
 	}
 
 	if (mesh->GetNumColorChannels() >= 1) {
-		result_mesh.colors.resize(VERTEX_COUNT);
+		Resize(result_mesh.colors, VERTEX_COUNT);
 		std::memcpy(&result_mesh.colors[0], mesh->mColors[0], VERTEX_COUNT * sizeof(pn::vec4f));
 	}
 
 	if (mesh->GetNumUVChannels() >= 1) {
-		result_mesh.uvs.resize(VERTEX_COUNT);
+		Resize(result_mesh.uvs, VERTEX_COUNT);
 		if (mesh->GetNumUVChannels() >= 2) {
-			result_mesh.uv2s.resize(VERTEX_COUNT);
+			Resize(result_mesh.uv2s, VERTEX_COUNT);
 		}
 	}
 
@@ -58,11 +58,11 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 		}
 	}
 
-	result_mesh.indices.reserve(VERTEX_COUNT / 3);
+	Reserve(result_mesh.indices, VERTEX_COUNT / 3);
 	for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
 		aiFace face = mesh->mFaces[i];
 		for (unsigned int j = 0; j < face.mNumIndices; ++j) {
-			result_mesh.indices.push_back(face.mIndices[j]);
+			pn::Insert(result_mesh.indices, face.mIndices[j]);
 		}
 	}
 	result_mesh.topology = D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -74,7 +74,7 @@ void ProcessAINode(aiNode* node, const aiScene* scene, pn::vector<mesh_t>& meshe
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
 		auto* ai_mesh = scene->mMeshes[node->mMeshes[i]];
 		auto mesh = ConvertAIMeshToMesh(ai_mesh, scene);
-		meshes.push_back(mesh);
+		Insert(meshes, mesh);
 	}
 
 	for (unsigned int i = 0; i < node->mNumChildren; ++i) {

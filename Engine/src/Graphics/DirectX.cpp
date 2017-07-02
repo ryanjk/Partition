@@ -373,7 +373,7 @@ vertex_input_desc GetVertexInputDescFromShader(const pn::bytes& vs_byte_code) {
 	}
 
 	vertex_input_desc vertex_desc;
-	vertex_desc.reserve(shader_desc.InputParameters);
+	Reserve(vertex_desc, shader_desc.InputParameters);
 	for (unsigned int i = 0; i < shader_desc.InputParameters; ++i) {
 		D3D11_SIGNATURE_PARAMETER_DESC param_desc;
 		auto hr = reflector->GetInputParameterDesc(i, &param_desc);
@@ -383,7 +383,7 @@ vertex_input_desc GetVertexInputDescFromShader(const pn::bytes& vs_byte_code) {
 		LogDebug("Creating element description");
 		input_element_desc element_desc(param_desc, i);
 
-		vertex_desc.push_back(element_desc);
+		pn::Insert(vertex_desc, element_desc);
 	}
 
 	return vertex_desc;
@@ -447,52 +447,52 @@ void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout
 	const auto NUM_PARAMETERS = layout.desc.size();
 
 	pn::vector<ID3D11Buffer*> vertex_buffers;
-	vertex_buffers.reserve(NUM_PARAMETERS);
+	Reserve(vertex_buffers, NUM_PARAMETERS);
 
 	pn::vector<unsigned int> strides;
-	strides.reserve(NUM_PARAMETERS);
+	Reserve(strides, NUM_PARAMETERS);
 
 	pn::vector<unsigned int> offsets;
-	offsets.reserve(NUM_PARAMETERS);
+	Reserve(offsets, NUM_PARAMETERS);
 
 	for (size_t i = 0; i < layout.desc.size(); ++i) {
 		const auto& el = layout.desc[i];
 
 		std::string type = el.SemanticName;
 		if (type == "POSITION") {
-			vertex_buffers.push_back(cmesh_buffer.positions.Get());
-			strides.push_back(sizeof(pn::vec3f));
-			offsets.push_back(0);
+			Insert(vertex_buffers, cmesh_buffer.positions.Get());
+			Insert(strides, sizeof(pn::vec3f));
+			Insert(offsets, 0);
 		}
 		else if (type == "NORMAL") {
-			vertex_buffers.push_back(cmesh_buffer.normals.Get());
-			strides.push_back(sizeof(pn::vec3f));
-			offsets.push_back(0);
+			Insert(vertex_buffers, cmesh_buffer.normals.Get());
+			Insert(strides, sizeof(pn::vec3f));
+			Insert(offsets, 0);
 		}
 		else if ((type == "TEXCOORD") || (type == "TEXCOORD0")) {
-			vertex_buffers.push_back(cmesh_buffer.uvs.Get());
-			strides.push_back(sizeof(pn::vec2f));
-			offsets.push_back(0);
+			Insert(vertex_buffers, cmesh_buffer.uvs.Get());
+			Insert(strides, sizeof(pn::vec2f));
+			Insert(offsets, 0);
 		}
 		else if ((type == "TANGENT") || (type == "TANGENT0")) {
-			vertex_buffers.push_back(cmesh_buffer.tangents.Get());
-			strides.push_back(sizeof(pn::vec3f));
-			offsets.push_back(0);
+			Insert(vertex_buffers, cmesh_buffer.tangents.Get());
+			Insert(strides, sizeof(pn::vec3f));
+			Insert(offsets, 0);
 		}
 		else if (type == "TANGENT1") {
-			vertex_buffers.push_back(cmesh_buffer.bitangents.Get());
-			strides.push_back(sizeof(pn::vec3f));
-			offsets.push_back(0);
+			Insert(vertex_buffers, cmesh_buffer.bitangents.Get());
+			Insert(strides, sizeof(pn::vec3f));
+			Insert(offsets, 0);
 		}
 		else if (type == "TEXCOORD1") {
-			vertex_buffers.push_back(cmesh_buffer.uv2s.Get());
-			strides.push_back(sizeof(pn::vec2f));
-			offsets.push_back(0);
+			Insert(vertex_buffers, cmesh_buffer.uv2s.Get());
+			Insert(strides, sizeof(pn::vec2f));
+			Insert(offsets, 0);
 		}
 		else if (type == "COLOR") {
-			vertex_buffers.push_back(cmesh_buffer.colors.Get());
-			strides.push_back(sizeof(pn::vec4f));
-			offsets.push_back(0);
+			Insert(vertex_buffers, cmesh_buffer.colors.Get());
+			Insert(strides, sizeof(pn::vec4f));
+			Insert(offsets, 0);
 		}
 		else {
 			LogError("Unknown parameter type '{}' in CMeshBuffer", type);

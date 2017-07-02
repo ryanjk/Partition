@@ -2,8 +2,11 @@
 
 #include <Graphics\Window.h>
 #include <Graphics\DirectX.h>
+#include <Graphics\TextureLoadUtil.h>
 
 #include <Utilities\Logging.h>
+
+#include <Input\Input.h>
 
 #include <IO\FileUtil.h>
 #include <IO\PathUtil.h>
@@ -15,18 +18,21 @@
 
 #include <chrono>
 
-// -------- USER-DEFINED MAIN LOOP FUNCTIONS -----------
-
-extern void Init();
-extern void Update(const float dt);
-extern void Render();
-
+// --------- VARIABLES -------------
 pn::dx_device				device;
 pn::dx_swap_chain			swap_chain;
 pn::dx_render_target_view	render_target_view;
 pn::dx_depth_stencil_view	depth_stencil_view;
 pn::ProjectionMatrix		camera;
 
+// -------- USER-DEFINED MAIN LOOP FUNCTIONS -----------
+
+void Init();
+void GetInput();
+void Update(const float dt);
+void Render();
+
+// ----------- LOOP FUNCTIONS --------------
 extern IMGUI_API LRESULT	ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, pn::window_uint wParam, pn::window_long lParam) {
@@ -79,6 +85,7 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
+// PROGRAM ENTRY POINT
 int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrevInstance, pn::window_pwstr command_line_args, int nCmdShow) {
 
 	// INIT ENVIRONMENT
@@ -86,6 +93,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	pn::CreateConsole();
 	pn::InitLogger();
 	pn::InitPathUtil();
+	pn::input::InitInput();
 
 	if (hInstance == NULL) {
 		hInstance = (pn::instance_handle) GetModuleHandle(NULL);
@@ -122,17 +130,19 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	ImGui_ImplDX11_Init(h_wnd, device.Get(), context.Get());
 	pn::gui::InitEditorUI();
 
-	bool	show_test_window = true;
+	bool	show_test_window	= true;
 	bool	show_another_window = false;
-	ImVec4	clear_col = ImColor(114, 144, 154);
-	bool	show_edit_matrix = true;
-	bool	show_main_menu = true;
+	ImVec4	clear_col			= ImColor(114, 144, 154);
+	bool	show_edit_matrix	= true;
+	bool	show_main_menu		= true;
 
 	// ------- USER-DEFINED INIT CALL -----------------
 	Init();
 
+	// ----- DISPLAY WINDOW -----------
 	ShowWindow(h_wnd, nCmdShow);
-	// MAIN LOOP
+
+	// ----- MAIN LOOP------------
 
 	bool bGotMsg;
 	MSG  msg;

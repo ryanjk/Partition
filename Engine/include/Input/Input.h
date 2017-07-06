@@ -18,6 +18,12 @@ enum class key_state : unsigned char {
 	JUST_RELEASED
 };
 
+enum class mouse_wheel_state : unsigned char {
+	SCROLL_UP,
+	SCROLL_DOWN,
+	NO_CHANGE
+};
+
 enum input_key : unsigned char {
 	LEFT_MOUSE		= VK_LBUTTON,
 	RIGHT_MOUSE		= VK_RBUTTON,
@@ -61,9 +67,9 @@ struct mouse_pos_t {
 };
 
 struct input_state_t {
-	key_state	keys[256];
-	float		mouse_wheel;
-	mouse_pos_t	mouse_pos;
+	key_state			keys[256];
+	mouse_wheel_state	mouse_wheel;
+	mouse_pos_t			mouse_pos;
 };
 
 // -------- FUNCTIONS --------------
@@ -77,7 +83,8 @@ key_state		GetKeyState(const input_key vkey);
 void			SetMousePos(const mouse_pos_t mouse_pos);
 mouse_pos_t		GetMousePos();
 
-void			IncrementMouseWheel(const float amount);
+void			SetMouseWheelState(const mouse_wheel_state state);
+mouse_wheel_state GetMouseWheelState();
 
 void			AddInputCharacter(const char c);
 const string&	GetInputCharacters();

@@ -46,7 +46,11 @@ pn::vec3f rot(0, 0, 0);
 pn::texture_t tex;
 pn::dx_sampler_state sampler_state;
 
+int Add(int x, int y) { return x + y; }
+
 void Init() {
+	REGISTER_COMMAND(Add, int, int, int);
+
 	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/Test/");
 	pn::SetResourceDirectoryName("resource");
 

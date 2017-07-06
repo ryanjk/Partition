@@ -124,7 +124,10 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 		break;
 		
 	case WM_MOUSEWHEEL:
-		pn::input::IncrementMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f);
+	{
+		auto new_state = GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? mouse_wheel_state::SCROLL_UP : mouse_wheel_state::SCROLL_DOWN;
+		pn::input::SetMouseWheelState(new_state);
+	}
 		break;
 
 	case WM_MOUSEMOVE:
@@ -135,6 +138,9 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 		pn::input::AddInputCharacter((unsigned short) wParam);
 		break;
 	
+	case WM_QUIT:
+		pn::app::Exit();
+		break;
 	}
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
@@ -184,10 +190,9 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	ImGui_ImplDX11_Init(h_wnd, device.Get(), context.Get());
 	pn::gui::InitEditorUI();
 
-	bool	show_test_window	= true;
-	bool	show_another_window = false;
-	ImVec4	clear_col			= ImColor(114, 144, 154);
-	bool	show_edit_matrix	= true;
+	bool	display_imgui		= true;
+	bool	show_test_window	= false;
+	bool	show_command_line	= false;
 	bool	show_main_menu		= true;
 
 	// ------- USER-DEFINED INIT CALL -----------------
@@ -207,7 +212,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	float time_to_process = 0;
 	pn::app::FPS = 60.0f;
 	pn::app::FIXED_DT = 1 / pn::app::FPS;
-	while (WM_QUIT != msg.message) {
+	while (!pn::app::ShouldExit()) {
 
 		// BEGINNING OF FRAME CALLS
 
@@ -218,6 +223,14 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 			DispatchMessage(&msg);
 			continue;
 		}
+
+		// Draw main menu
+		//show_main_menu = pn::input::GetKeyState(input_key::SPACE) == key_state::JUST_PRESSED ? !show_main_menu : show_main_menu;
+		pn::gui::SetMainMenuVisible(show_main_menu);
+
+		// Draw command line
+		show_command_line = pn::input::GetKeyState(input_key::TILDE) == key_state::JUST_PRESSED ? !show_command_line : show_command_line;
+		pn::gui::SetCommandLine(show_command_line);
 
 		// UPDATE
 		auto current_time = std::chrono::system_clock::now();
@@ -236,15 +249,21 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		// Start new frame
 		ImGui_ImplDX11_NewFrame();
 
+		if (show_test_window) {
+			ImGui::ShowTestWindow(nullptr);
+		}
+
 		// Draw main menu
-		show_main_menu = ImGui::Button("Show main menu") ? !show_main_menu : show_main_menu;
-		pn::gui::SetMainMenuVisible(show_main_menu);
 		pn::gui::DrawMainMenu(awd.width);
 
+		// Draw command line
+		pn::gui::DrawCommandLine();
+		
 		// USER-DEFINED RENDER CALL
 		Render();
 
 		ImGui::Render();
+
 		auto hr = swap_chain->Present(1, 0);
 		if (FAILED(hr)) {
 			LogError("Swap chain present error: ", pn::ErrMsg(hr));

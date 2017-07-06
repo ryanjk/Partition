@@ -40,7 +40,7 @@ window_class CreateWindowClass(const pn::string& class_name, const instance_hand
 	wc.cbWndExtra = 0; // The number of extra bytes to allocate following the window instance
 	wc.hInstance = h_instance;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	//wc.hbrBackground = (HBRUSH) GetStockObject(BLACK_BRUSH); // A handle to the class background brush. This member can be a handle to the physical brush to be used for painting the background, or it can be a color value.
+	wc.hbrBackground = (HBRUSH) GetStockObject(BLACK_BRUSH); // A handle to the class background brush. This member can be a handle to the physical brush to be used for painting the background, or it can be a color value.
 	wc.lpszClassName = class_name.c_str();
 	wc.lpszMenuName = NULL; // The resource name of the class menu, as the name appears in the resource file. If you use an integer to identify the menu, use the MAKEINTRESOURCE macro. If this member is NULL, windows belonging to this class have no default menu.
 	wc.hIcon = GetIcon();

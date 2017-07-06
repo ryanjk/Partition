@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <sstream>
 
 namespace pn {
 
@@ -21,10 +22,21 @@ using bytes		= vector<char>;
 
 // ------------ TYPE DEFINITIONS --------
 
-template<typename T1, typename T2>
-struct pair {
-	T1 first;
-	T2 second;
+struct StringValue {
+	pn::string data;
+
+	StringValue(const string& s) : data(s) {}
+	StringValue(const char* s) : data(s) {}
+
+	operator string() { return data; }
+
+	template<typename T>
+	operator T() {
+		std::istringstream iss(data);
+		T new_data;
+		iss >> new_data;
+		return new_data;
+	}
 };
 
 // ------------ FUNCTIONS -------------
@@ -41,31 +53,51 @@ void	Clear(Container& container) {
 	container.clear();
 }
 
-// ------- VECTOR FUNCTIONS -----------
+// ------- STRING FUNCTIONS ----------
 
-template<typename Vec, typename T>
-void	Insert(Vec& vec, T&& value) {
-	vec.push_back(std::forward<T>(value));
+inline vector<string>	Split(const string& s, char delim) {
+	std::stringstream ss(s);
+	vector<string> elements;
+	string element;
+	while (std::getline(ss, element, delim)) {
+		elements.emplace_back(element);
+	}
+	return elements;
 }
 
-template<typename Vec, typename T, typename... Ts>
-void	Insert(Vec& vec, T&& value, Ts&&... args) {
-	vec.push_back(std::forward<T>(value));
+inline void				Insert(string& s, char c) {
+	s.push_back(c);
+}
+
+inline const char*		CString(const string& s) {
+	return s.c_str();
+}
+
+// ------- VECTOR FUNCTIONS -----------
+
+template<typename T, typename U>
+void	Insert(vector<T>& vec, U&& value) {
+	vec.push_back(std::forward<U>(value));
+}
+
+template<typename T, typename U, typename... Us>
+void	Insert(vector<T>& vec, U&& value, Us&&... args) {
+	vec.push_back(std::forward<U>(value));
 	Insert(vec, args...);
 }
 
-template<typename Vec>
-auto	Pop(Vec& vec) -> decltype(vec.pop_back()) {
+template<typename T>
+auto	Pop(vector<T>& vec) -> decltype(vec.pop_back()) {
 	return vec.pop_back();
 }
 
-template<typename Vec, typename SizeType>
-void	Reserve(Vec& vec, const SizeType s) {
+template<typename T, typename SizeType>
+void	Reserve(vector<T>& vec, const SizeType s) {
 	vec.reserve(s);
 }
 
-template<typename Vec, typename SizeType>
-void	Resize(Vec& vec, const SizeType s) {
+template<typename T, typename SizeType>
+void	Resize(vector<T>& vec, const SizeType s) {
 	vec.resize(s);
 }
 
@@ -82,7 +114,7 @@ auto	Get(vector<T>& v, size_t i) -> decltype(v[i]) {
 // -------- MAP FUNCTIONS ------------
 
 template<typename K, typename V>
-void	Contains(const map<K,V>& m, const K& key) {
+bool	Contains(const map<K,V>& m, const K& key) {
 	return m.find(key) != m.end();
 }
 
@@ -93,7 +125,7 @@ void	Insert(map<K,V>& m, K&& key, V&& value) {
 }
 
 template<typename K, typename V>
-auto	Get(const map<K,V>& m, const K& key) -> decltype(m.at(key)) {
+auto	Get(const map<K,V>& m, const K& key) {
 	return m.at(key);
 }
 

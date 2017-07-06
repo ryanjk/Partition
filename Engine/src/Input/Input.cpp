@@ -25,7 +25,7 @@ void InitInput() {
 		++i;
 	} while (i != 0);
 	input_state.mouse_pos = { 0, 0 };
-	input_state.mouse_wheel = 0.0f;
+	input_state.mouse_wheel = mouse_wheel_state::NO_CHANGE;
 }
 
 void InputOnEndOfFrame() {
@@ -43,6 +43,10 @@ void InputOnEndOfFrame() {
 		}
 		++i;
 	} while (i != 0);
+
+	if (GetMouseWheelState() == mouse_wheel_state::SCROLL_DOWN || GetMouseWheelState() == mouse_wheel_state::SCROLL_UP) {
+		SetMouseWheelState(mouse_wheel_state::NO_CHANGE);
+	}
 }
 
 void SetKeyState(int vkey, key_state state) {
@@ -72,9 +76,21 @@ mouse_pos_t GetMousePos() {
 	return input_state.mouse_pos;
 }
 
-void IncrementMouseWheel(const float amount) {
-	input_state.mouse_wheel += amount;
-	Log("Mouse wheel {}", input_state.mouse_wheel);
+void SetMouseWheelState(const mouse_wheel_state state) {
+	input_state.mouse_wheel = state;
+	if (state == mouse_wheel_state::NO_CHANGE) {
+		Log("Mouse wheel no change");
+	}
+	else if (state == mouse_wheel_state::SCROLL_DOWN) {
+		Log("Mouse wheel scrolled down");
+	}
+	else {
+		Log("Mouse wheel scrolled up");
+	}
+}
+
+mouse_wheel_state GetMouseWheelState() {
+	return input_state.mouse_wheel;
 }
 
 void AddInputCharacter(const char c) {

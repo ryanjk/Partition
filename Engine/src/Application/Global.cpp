@@ -13,6 +13,17 @@ float FIXED_DT;
 float dt;
 float time_since_application_start;
 
+bool exit;
+
+// ---------- FUNCTIONS ---------
+
+void Exit() {
+	exit = true;
+}
+bool ShouldExit() {
+	return exit;
+}
+
 }
 
 }

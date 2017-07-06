@@ -15,6 +15,11 @@ extern float FIXED_DT;
 extern float dt;
 extern float time_since_application_start;
 
+// ------ FUNCTIONS ------------
+
+void Exit();
+bool ShouldExit();
+
 }
 
 }

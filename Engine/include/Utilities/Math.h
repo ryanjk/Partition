@@ -480,19 +480,21 @@ bool IsEqual(const vec3f& v1, const vec3f& v2, const float eps = EPSILON);
 bool IsEqual(const vec4f& v1, const vec4f& v2, const float eps = EPSILON);
 bool IsEqual(const quaternion& v1, const quaternion& v2, const float eps = EPSILON);
 bool IsEqual(const mat4f& v1, const mat4f& v2, const float eps = EPSILON);
-
-
 bool IsEqual(const mat4f& v1, const DirectX::XMMATRIX& v2, const float eps = EPSILON);
 
-template<typename V1, typename V2>
-bool operator==(const V1& lhs, const V2& rhs) {
-	return IsEqual(lhs, rhs, EPSILON);
-}
+inline bool operator==(const vec2f& v1, const vec2f& v2) { return IsEqual(v1, v2); }
+inline bool operator==(const vec3f& v1, const vec3f& v2) { return IsEqual(v1, v2); }
+inline bool operator==(const vec4f& v1, const vec4f& v2) { return IsEqual(v1, v2); }
+inline bool operator==(const quaternion& v1, const quaternion& v2) { return IsEqual(v1, v2); }
+inline bool operator==(const mat4f& v1, const mat4f& v2) { return IsEqual(v1, v2); }
+inline bool operator==(const mat4f& v1, const DirectX::XMMATRIX& v2) { return IsEqual(v1, v2); }
 
-template<typename V1, typename V2>
-bool operator!=(const V1& lhs, const V2& rhs) {
-	return !IsEqual(lhs, rhs, EPSILON);
-}
+inline bool operator!=(const vec2f& v1, const vec2f& v2) { return !IsEqual(v1, v2); }
+inline bool operator!=(const vec3f& v1, const vec3f& v2) { return !IsEqual(v1, v2); }
+inline bool operator!=(const vec4f& v1, const vec4f& v2) { return !IsEqual(v1, v2); }
+inline bool operator!=(const quaternion& v1, const quaternion& v2) { return !IsEqual(v1, v2); }
+inline bool operator!=(const mat4f& v1, const mat4f& v2) { return !IsEqual(v1, v2); }
+inline bool operator!=(const mat4f& v1, const DirectX::XMMATRIX& v2) { return !IsEqual(v1, v2); }
 
 
 // -------- VECTOR FUNCTIONS -----------------

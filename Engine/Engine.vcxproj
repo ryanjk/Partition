@@ -177,6 +177,7 @@
     <ClInclude Include="include\UI\UIUtil.h" />
     <ClInclude Include="include\Utilities\Logging.h" />
     <ClInclude Include="include\Utilities\Math.h" />
+    <ClInclude Include="include\Utilities\Memory.h" />
     <ClInclude Include="include\Utilities\UtilityTypes.h" />
   </ItemGroup>
   <ItemGroup>

@@ -49,7 +49,13 @@ pn::dx_sampler_state sampler_state;
 
 pn::linear_allocator frame_alloc(1024 * 1024);
 
+int resize_window(int width, int height) {
+	return SetWindowPos(h_wnd, NULL, 0, 0, width, height, SWP_NOREDRAW | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+}
+
 void Init() {
+	REGISTER_COMMAND(resize_window, int, int, int);
+
 	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/Test/");
 	pn::SetResourceDirectoryName("resource");
 

@@ -16,38 +16,44 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{5e3dfdaa-5bde-4d3e-85b6-e8b2ee01a381}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Application">
+      <UniqueIdentifier>{bde62234-6ef0-45c0-935b-e068c9447f84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Graphics">
+      <UniqueIdentifier>{f567ddfb-e479-4ba2-aa43-5701d189ec53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Input">
+      <UniqueIdentifier>{84b7ce14-810e-49e4-a964-4ca80357e338}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\IO">
+      <UniqueIdentifier>{5f23771d-cd15-45a1-b898-0b518cc9d516}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UI">
+      <UniqueIdentifier>{bd1e15fc-ab76-47b9-a358-7c293e13b6f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utilities">
+      <UniqueIdentifier>{ce5c0e1d-8a34-4f41-a96c-a687aca42225}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Application">
+      <UniqueIdentifier>{f769d280-ad78-4b8b-8631-4fc57b63ec37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Graphics">
+      <UniqueIdentifier>{e3b559c8-1cf1-46c9-9ec8-976653e1a48d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Input">
+      <UniqueIdentifier>{474f5433-d893-45e2-8572-31d6409cbf17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\IO">
+      <UniqueIdentifier>{71522933-35e9-4996-8bb0-460ddc506663}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utilities">
+      <UniqueIdentifier>{73916b83-ae7f-440d-b2af-de20fabcb420}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UI">
+      <UniqueIdentifier>{573eeecc-7d15-4f17-b2dd-b9bb22a054b5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Utilities\UtilityTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Graphics\Window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Graphics\DirectX.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Utilities\Logging.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\IO\FileUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Graphics\MeshLoadUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Utilities\Math.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\IO\PathUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Graphics\ProjectionMatrix.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\UI\UIUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
@@ -69,50 +75,59 @@
     <ClInclude Include="include\imgui\stb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="include\Graphics\TextureLoadUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\UI\EditorUI.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\Application\MainLoop.inc">
+      <Filter>Header Files\Application</Filter>
     </ClInclude>
     <ClInclude Include="include\Application\Global.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Application</Filter>
     </ClInclude>
-    <ClInclude Include="include\Application\MainLoop.inc">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\Graphics\DirectX.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Graphics\MeshLoadUtil.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Graphics\Window.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Graphics\ProjectionMatrix.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Graphics\TextureLoadUtil.h">
+      <Filter>Header Files\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="include\Input\Input.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Input</Filter>
     </ClInclude>
-    <ClInclude Include="include\Utilities\Memory.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\IO\PathUtil.h">
+      <Filter>Header Files\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IO\FileUtil.h">
+      <Filter>Header Files\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Utilities\UtilityTypes.h">
+      <Filter>Header Files\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="include\Utilities\frame_string.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Utilities\Logging.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Utilities\Math.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Utilities\Memory.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UI\EditorUI.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UI\UIUtil.h">
+      <Filter>Header Files\UI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Graphics\Window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Utilities\Logging.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\DirectX.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\IO\FileUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\MeshLoadUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\IO\PathUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\UI\UIUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\imgui\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
@@ -125,23 +140,44 @@
     <ClCompile Include="src\imgui\imgui_impl_dx11.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\TextureLoadUtil.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\Graphics\DirectX.cpp">
+      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Utilities\Math.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\Graphics\MeshLoadUtil.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\TextureLoadUtil.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Window.cpp">
+      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\UI\EditorUI.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\UI</Filter>
     </ClCompile>
-    <ClCompile Include="src\Application\Global.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Input\Input.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\UI\UIUtil.cpp">
+      <Filter>Source Files\UI</Filter>
     </ClCompile>
     <ClCompile Include="src\Utilities\UtilityTypes.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utilities\Math.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utilities\Logging.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Application\Global.cpp">
+      <Filter>Source Files\Application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IO\FileUtil.cpp">
+      <Filter>Source Files\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IO\PathUtil.cpp">
+      <Filter>Source Files\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Input\Input.cpp">
+      <Filter>Source Files\Input</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

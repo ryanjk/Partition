@@ -28,6 +28,8 @@ pn::dx_render_target_view	render_target_view;
 pn::dx_depth_stencil_view	depth_stencil_view;
 pn::ProjectionMatrix		camera;
 
+pn::window_handle h_wnd;
+
 // -------- USER-DEFINED MAIN LOOP FUNCTIONS -----------
 
 void Init();
@@ -176,7 +178,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	awd.width = 1366;
 	awd.height = 768;
 	awd.fullscreen = false;
-	auto h_wnd = pn::CreateApplicationWindow(awd, WindowProc);
+	h_wnd = pn::CreateApplicationWindow(awd, WindowProc);
 
 	// INIT DIRECTX
 

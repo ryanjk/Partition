@@ -22,23 +22,23 @@ namespace MemoryUnitTest
 		
 		TEST_METHOD(ConstructorTest) {
 			{
-				pool_allocator<char, 5> a;
+				pool_allocator<char> a(5);
 				Assert::IsTrue(a.HasFree());
 			}
 
 			{
-				pool_allocator<int, 50> a;
+				pool_allocator<int> a(50);
 				Assert::IsTrue(a.HasFree());
 			}
 
 			{
-				pool_allocator<blob, 500> a;
+				pool_allocator<blob> a(1024);
 				Assert::IsTrue(a.HasFree());
 			}
 		}
 
 		TEST_METHOD(CreateAndDestroyTest) {
-			pool_allocator<blob, 2> a;
+			pool_allocator<blob> a(2);
 
 			blob* b = a.Create();
 			Assert::IsTrue(b != nullptr);

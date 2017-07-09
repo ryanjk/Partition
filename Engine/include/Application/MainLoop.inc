@@ -5,6 +5,7 @@
 #include <Graphics\TextureLoadUtil.h>
 
 #include <Utilities\Logging.h>
+#include <Utilities\Memory.h>
 
 #include <Input\Input.h>
 
@@ -32,6 +33,9 @@ pn::ProjectionMatrix		camera;
 void Init();
 void Update(const float dt);
 void Render();
+
+void MainLoopBegin();
+void MainLoopEnd();
 
 // ----------- LOOP FUNCTIONS --------------
 extern IMGUI_API LRESULT	ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -215,6 +219,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	while (!pn::app::ShouldExit()) {
 
 		// BEGINNING OF FRAME CALLS
+		MainLoopBegin();
 
 		// GET INPUT
 		bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
@@ -271,6 +276,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 		// END OF FRAME CALLS
 		pn::input::InputOnEndOfFrame();
+		MainLoopEnd();
 	}
 
 	// Shutdown

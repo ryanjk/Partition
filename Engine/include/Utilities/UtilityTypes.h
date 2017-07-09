@@ -5,6 +5,10 @@
 #include <unordered_map>
 #include <sstream>
 
+#include <string.h>
+
+#include <Utilities\Memory.h>
+
 namespace pn {
 
 // ------------ TYPEDEFS ---------------
@@ -20,24 +24,55 @@ using map		= std::unordered_map<K, V>;
 
 using bytes		= vector<char>;
 
-// ------------ TYPE DEFINITIONS --------
+// ------------ STRUCT/CLASS DEFINITIONS --------
 
-struct StringValue {
-	pn::string data;
+template<typename T>
+struct basic_frame_string {
+	static linear_allocator*	frame_alloc;
+	T*							data;
+	size_t						length;
 
-	StringValue(const string& s) : data(s) {}
-	StringValue(const char* s) : data(s) {}
-
-	operator string() { return data; }
-
-	template<typename T>
-	operator T() {
-		std::istringstream iss(data);
-		T new_data;
-		iss >> new_data;
-		return new_data;
+	basic_frame_string() : data(nullptr), length(0) {}
+	basic_frame_string(const basic_frame_string& f) {
+		length = f.length;
+		data = Allocate(length);
+		memcpy(data, f.data, sizeof(T)*length);
 	}
+	basic_frame_string(basic_frame_string&& f) {
+		length = f.length;
+		data = f.data;
+		f.data = nullptr;
+		f.length = 0;
+	}
+	basic_frame_string(const char* str) {
+		length = strlen(str);
+		data = Allocate(length);
+		memcpy(data, str, sizeof(T)*length);
+	}
+
+	T& operator[](size_t index) {
+		return data[index];
+	}
+	T operator[](size_t index) const {
+		return data[index];
+	}
+
+	static void SetFrameAllocator(linear_allocator* fa) {
+		frame_alloc = fa;
+	}
+
+private:
+	T* Allocate(size_t n) {
+		assert(frame_alloc != nullptr);
+		return (T*) frame_alloc->Allocate(n);
+	}
+
 };
+
+template<typename T>
+linear_allocator* basic_frame_string<T>::frame_alloc = nullptr;
+
+using frame_string = basic_frame_string<char>;
 
 // ------------ FUNCTIONS -------------
 

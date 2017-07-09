@@ -46,11 +46,9 @@ pn::vec3f rot(0, 0, 0);
 pn::texture_t tex;
 pn::dx_sampler_state sampler_state;
 
-int Add(int x, int y) { return x + y; }
+pn::linear_allocator frame_alloc(1024 * 1024);
 
 void Init() {
-	REGISTER_COMMAND(Add, int, int, int);
-
 	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/Test/");
 	pn::SetResourceDirectoryName("resource");
 
@@ -167,3 +165,9 @@ void Render() {
 
 	context->DrawIndexed(mesh_buffer[0].index_count, 0, 0);
 }
+
+void MainLoopBegin() {
+	frame_alloc.Release();
+}
+
+void MainLoopEnd() {}

@@ -19,13 +19,13 @@ public:
 	};
 
 	TEST_METHOD(ConstructorTest) {
-		linear_allocator<1024> a;
+		linear_allocator a(1024);
 		Assert::IsTrue(a.HasFree(1024));
 		Assert::IsTrue(a.HasFree());
 	}
 
 	TEST_METHOD(CreateAndDestroyTest) {
-		linear_allocator<16> a;
+		linear_allocator a(16);
 
 		auto* b = a.Allocate(4);
 		Assert::IsFalse(a.HasFree(16));

@@ -6,13 +6,14 @@
 
 namespace pn {
 
-template<typename T, unsigned int N>
+template<typename T>
 class pool_allocator {
 	struct alignas(sizeof(T)) free_memory_node {
 		free_memory_node* next;
 	};
-	free_memory_node* head;
-	free_memory_node memory[N];
+	free_memory_node*	head;
+	free_memory_node*	memory;
+	size_t				N;
 
 	T* Allocate() {
 		if (!HasFree()) return nullptr;
@@ -22,14 +23,19 @@ class pool_allocator {
 	}
 
 public:
-	pool_allocator() {
-		head = &memory[0];
+	pool_allocator(size_t N) {
+		memory = new free_memory_node[N];
+		head = memory;
 		free_memory_node* current = head;
 		for (int i = 0; i < N - 1; ++i) {
 			current->next = current + 1;
 			current = current->next;
 		}
 		current->next = nullptr;
+	}
+	
+	~pool_allocator() {
+		delete memory;
 	}
 
 	bool HasFree() const {
@@ -55,15 +61,24 @@ public:
 	}
 };
 
-template<unsigned int N>
 class linear_allocator {
-	char	memory[N];
+	char*	memory;
 	char*	offset;
+	size_t	N;
 
 public:
-	linear_allocator() {
+	linear_allocator(size_t N) : N(N) {
+		memory = new char[N];
 		offset = memory;
 	}
+	~linear_allocator() {
+		delete memory;
+	}
+
+	linear_allocator(const linear_allocator&)				= delete;
+	linear_allocator(linear_allocator&&)					= delete;
+	linear_allocator& operator=(const linear_allocator&)	= delete;
+	linear_allocator& operator=(linear_allocator&&)			= delete;
 
 	bool HasFree() const {
 		return offset < memory + N;
@@ -73,9 +88,9 @@ public:
 		return (offset + space_for) <= (memory + N);
 	}
 
-	char* Allocate(unsigned int n) {
+	void* Allocate(unsigned int n) {
 		assert(HasFree(n));
-		char* allocation = offset;
+		void* allocation = offset;
 		offset += n;
 		return allocation;
 	}

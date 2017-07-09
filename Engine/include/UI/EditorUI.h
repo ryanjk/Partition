@@ -14,6 +14,25 @@ namespace pn {
 
 namespace gui {
 
+// --------- CLASS DEFINITIONS ---------
+
+struct StringValue {
+	pn::string data;
+
+	StringValue(const string& s) : data(s) {}
+	StringValue(const char* s) : data(s) {}
+
+	operator string() { return data; }
+
+	template<typename T>
+	operator T() {
+		std::istringstream iss(data);
+		T new_data;
+		iss >> new_data;
+		return new_data;
+	}
+};
+
 // ----------- FUNCTIONS ----------------
 
 void InitEditorUI();

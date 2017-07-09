@@ -197,6 +197,7 @@
     <ClCompile Include="src\UI\UIUtil.cpp" />
     <ClCompile Include="src\Utilities\Logging.cpp" />
     <ClCompile Include="src\Utilities\Math.cpp" />
+    <ClCompile Include="src\Utilities\UtilityTypes.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

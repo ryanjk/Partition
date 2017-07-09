@@ -150,7 +150,7 @@ struct mesh_buffer_t {
 	dx_buffer				uv2s;
 
 	dx_buffer				indices;
-	unsigned int			index_count;
+	size_t					index_count;
 	D3D_PRIMITIVE_TOPOLOGY	topology;
 };
 
@@ -235,7 +235,7 @@ auto					CreateBufferDataDesc(BufferDataType* data) {
 }
 
 template<typename BufferDataType>
-auto					CreateBuffer(dx_device device, BufferDataType* v_data, const unsigned int n, const D3D11_BIND_FLAG bind_target) {
+auto					CreateBuffer(dx_device device, BufferDataType* v_data, const size_t n, const D3D11_BIND_FLAG bind_target) {
 	// Create buffer description
 	CD3D11_BUFFER_DESC buffer_desc(n * sizeof(BufferDataType), bind_target);
 
@@ -252,7 +252,7 @@ auto					CreateBuffer(dx_device device, BufferDataType* v_data, const unsigned i
 }
 
 template<typename VertexDataType>
-auto					CreateVertexBuffer(dx_device device, const VertexDataType* v_data, const unsigned int n) {
+auto					CreateVertexBuffer(dx_device device, const VertexDataType* v_data, const size_t n) {
 	return CreateBuffer(device, v_data, n, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER);
 }
 
@@ -262,7 +262,7 @@ auto					CreateVertexBuffer(dx_device device, const pn::vector<VertexDataType>& 
 }
 
 template<typename ConstantDataType>
-auto					CreateConstantBuffer(dx_device device, const ConstantDataType* c_data, const unsigned int n) {
+auto					CreateConstantBuffer(dx_device device, const ConstantDataType* c_data, const size_t n) {
 	static_assert((sizeof(ConstantDataType) % 16) == 0, "Constant Buffer size must be 16-byte aligned");
 	return CreateBuffer(device, c_data, n, D3D11_BIND_FLAG::D3D11_BIND_CONSTANT_BUFFER);
 }
@@ -273,7 +273,7 @@ auto					CreateConstantBuffer(dx_device device, const pn::vector<ConstantDataTyp
 }
 
 template<typename IndexDataType>
-auto					CreateIndexBuffer(dx_device device, const IndexDataType* i_data, const unsigned int n) {
+auto					CreateIndexBuffer(dx_device device, const IndexDataType* i_data, const size_t n) {
 	return CreateBuffer(device, i_data, n, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER);
 }
 

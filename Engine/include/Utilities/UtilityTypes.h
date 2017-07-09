@@ -26,53 +26,7 @@ using bytes		= vector<char>;
 
 // ------------ STRUCT/CLASS DEFINITIONS --------
 
-template<typename T>
-struct basic_frame_string {
-	static linear_allocator*	frame_alloc;
-	T*							data;
-	size_t						length;
 
-	basic_frame_string() : data(nullptr), length(0) {}
-	basic_frame_string(const basic_frame_string& f) {
-		length = f.length;
-		data = Allocate(length);
-		memcpy(data, f.data, sizeof(T)*length);
-	}
-	basic_frame_string(basic_frame_string&& f) {
-		length = f.length;
-		data = f.data;
-		f.data = nullptr;
-		f.length = 0;
-	}
-	basic_frame_string(const char* str) {
-		length = strlen(str);
-		data = Allocate(length);
-		memcpy(data, str, sizeof(T)*length);
-	}
-
-	T& operator[](size_t index) {
-		return data[index];
-	}
-	T operator[](size_t index) const {
-		return data[index];
-	}
-
-	static void SetFrameAllocator(linear_allocator* fa) {
-		frame_alloc = fa;
-	}
-
-private:
-	T* Allocate(size_t n) {
-		assert(frame_alloc != nullptr);
-		return (T*) frame_alloc->Allocate(n);
-	}
-
-};
-
-template<typename T>
-linear_allocator* basic_frame_string<T>::frame_alloc = nullptr;
-
-using frame_string = basic_frame_string<char>;
 
 // ------------ FUNCTIONS -------------
 
@@ -111,14 +65,14 @@ inline const char*		CString(const string& s) {
 // ------- VECTOR FUNCTIONS -----------
 
 template<typename T, typename U>
-void	Insert(vector<T>& vec, U&& value) {
+void	PushBack(vector<T>& vec, U&& value) {
 	vec.push_back(std::forward<U>(value));
 }
 
 template<typename T, typename U, typename... Us>
-void	Insert(vector<T>& vec, U&& value, Us&&... args) {
+void	PushBack(vector<T>& vec, U&& value, Us&&... args) {
 	vec.push_back(std::forward<U>(value));
-	Insert(vec, args...);
+	PushBack(vec, args...);
 }
 
 template<typename T>

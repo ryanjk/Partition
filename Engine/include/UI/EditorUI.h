@@ -10,6 +10,8 @@
 
 using std::conditional_t;
 
+#define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
+
 namespace pn {
 
 namespace gui {
@@ -33,9 +35,12 @@ struct StringValue {
 	}
 };
 
+
+
 // ----------- FUNCTIONS ----------------
 
 void InitEditorUI();
+void ShutdownEditorUI();
 
 void SetMainMenuVisible(bool value);
 void DrawMainMenu(const unsigned int screen_width);

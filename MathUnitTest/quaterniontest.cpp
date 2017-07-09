@@ -11,7 +11,7 @@ namespace MathUnitTest {
 TEST_CLASS(QuaternionTest) {
 public:
 	TEST_METHOD(SizeTest) {
-		Assert::AreEqual(static_cast<unsigned int>(16), sizeof(quaternion));
+		Assert::AreEqual(static_cast<size_t>(16), sizeof(quaternion));
 	}
 
 	TEST_METHOD(InverseTest) {

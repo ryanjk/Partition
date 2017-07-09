@@ -383,7 +383,7 @@ vertex_input_desc GetVertexInputDescFromShader(const pn::bytes& vs_byte_code) {
 		LogDebug("Creating element description");
 		input_element_desc element_desc(param_desc, i);
 
-		pn::Insert(vertex_desc, element_desc);
+		pn::PushBack(vertex_desc, element_desc);
 	}
 
 	return vertex_desc;
@@ -460,39 +460,39 @@ void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout
 
 		std::string type = el.SemanticName;
 		if (type == "POSITION") {
-			Insert(vertex_buffers, cmesh_buffer.positions.Get());
-			Insert(strides, sizeof(pn::vec3f));
-			Insert(offsets, 0);
+			PushBack(vertex_buffers, cmesh_buffer.positions.Get());
+			PushBack(strides, sizeof(pn::vec3f));
+			PushBack(offsets, 0);
 		}
 		else if (type == "NORMAL") {
-			Insert(vertex_buffers, cmesh_buffer.normals.Get());
-			Insert(strides, sizeof(pn::vec3f));
-			Insert(offsets, 0);
+			PushBack(vertex_buffers, cmesh_buffer.normals.Get());
+			PushBack(strides, sizeof(pn::vec3f));
+			PushBack(offsets, 0);
 		}
 		else if ((type == "TEXCOORD") || (type == "TEXCOORD0")) {
-			Insert(vertex_buffers, cmesh_buffer.uvs.Get());
-			Insert(strides, sizeof(pn::vec2f));
-			Insert(offsets, 0);
+			PushBack(vertex_buffers, cmesh_buffer.uvs.Get());
+			PushBack(strides, sizeof(pn::vec2f));
+			PushBack(offsets, 0);
 		}
 		else if ((type == "TANGENT") || (type == "TANGENT0")) {
-			Insert(vertex_buffers, cmesh_buffer.tangents.Get());
-			Insert(strides, sizeof(pn::vec3f));
-			Insert(offsets, 0);
+			PushBack(vertex_buffers, cmesh_buffer.tangents.Get());
+			PushBack(strides, sizeof(pn::vec3f));
+			PushBack(offsets, 0);
 		}
 		else if (type == "TANGENT1") {
-			Insert(vertex_buffers, cmesh_buffer.bitangents.Get());
-			Insert(strides, sizeof(pn::vec3f));
-			Insert(offsets, 0);
+			PushBack(vertex_buffers, cmesh_buffer.bitangents.Get());
+			PushBack(strides, sizeof(pn::vec3f));
+			PushBack(offsets, 0);
 		}
 		else if (type == "TEXCOORD1") {
-			Insert(vertex_buffers, cmesh_buffer.uv2s.Get());
-			Insert(strides, sizeof(pn::vec2f));
-			Insert(offsets, 0);
+			PushBack(vertex_buffers, cmesh_buffer.uv2s.Get());
+			PushBack(strides, sizeof(pn::vec2f));
+			PushBack(offsets, 0);
 		}
 		else if (type == "COLOR") {
-			Insert(vertex_buffers, cmesh_buffer.colors.Get());
-			Insert(strides, sizeof(pn::vec4f));
-			Insert(offsets, 0);
+			PushBack(vertex_buffers, cmesh_buffer.colors.Get());
+			PushBack(strides, sizeof(pn::vec4f));
+			PushBack(offsets, 0);
 		}
 		else {
 			LogError("Unknown parameter type '{}' in CMeshBuffer", type);

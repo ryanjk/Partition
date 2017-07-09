@@ -76,6 +76,7 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 			DestroyMenu(hMenu);
 		}
 		DestroyWindow(hwnd);
+		pn::app::Exit();
 		return 0;
 	}
 
@@ -280,5 +281,6 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	}
 
 	// Shutdown
+	pn::gui::ShutdownEditorUI();
 	pn::CloseLogger();
 }

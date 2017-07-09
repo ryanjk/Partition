@@ -62,7 +62,7 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 	for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
 		aiFace face = mesh->mFaces[i];
 		for (unsigned int j = 0; j < face.mNumIndices; ++j) {
-			pn::Insert(result_mesh.indices, face.mIndices[j]);
+			pn::PushBack(result_mesh.indices, face.mIndices[j]);
 		}
 	}
 	result_mesh.topology = D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -74,7 +74,7 @@ void ProcessAINode(aiNode* node, const aiScene* scene, pn::vector<mesh_t>& meshe
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
 		auto* ai_mesh = scene->mMeshes[node->mMeshes[i]];
 		auto mesh = ConvertAIMeshToMesh(ai_mesh, scene);
-		Insert(meshes, mesh);
+		PushBack(meshes, mesh);
 	}
 
 	for (unsigned int i = 0; i < node->mNumChildren; ++i) {

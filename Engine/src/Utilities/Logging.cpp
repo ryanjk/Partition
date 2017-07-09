@@ -29,7 +29,7 @@ void InitLogger() {
 
 		auto stdout_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
 		auto file_sink = std::make_shared<spdlog::sinks::simple_file_sink_mt>("log.txt", "logfile");
-		Insert(sinks, stdout_sink, file_sink);
+		PushBack(sinks, stdout_sink, file_sink);
 
 		console = std::make_shared<spdlog::logger>("console", std::begin(sinks), std::end(sinks));
 

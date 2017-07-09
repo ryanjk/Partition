@@ -5,6 +5,7 @@
 #include <Graphics\ProjectionMatrix.h>
 
 #include <Utilities\Logging.h>
+#include <Utilities\frame_string.h>
 
 #include <IO\FileUtil.h>
 #include <IO\PathUtil.h>
@@ -84,6 +85,9 @@ void Init() {
 		70.0f, 0.1f
 	};
 	ic.proj = camera.GetMatrix();
+
+	// --------- INIT CUSTOM ALLOCATORS -----------
+	pn::frame_string::SetFrameAllocator(&frame_alloc);
 }
 
 void Update(const float dt) {}

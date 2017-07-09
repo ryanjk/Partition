@@ -15,7 +15,7 @@ namespace MathUnitTest {
 TEST_CLASS(Mat4fTest) {
 public:
 	TEST_METHOD(SizeTest) {
-		Assert::AreEqual(static_cast<unsigned int>(64), sizeof(mat4f));
+		Assert::AreEqual(static_cast<size_t>(64), sizeof(mat4f));
 	}
 
 	TEST_METHOD(ConstructorTest) {

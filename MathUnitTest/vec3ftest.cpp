@@ -11,7 +11,7 @@ namespace MathUnitTest {
 TEST_CLASS(Vec3fTest) {
 public:
 	TEST_METHOD(SizeTest) {
-		Assert::AreEqual(static_cast<unsigned int>(12), sizeof(vec3f));
+		Assert::AreEqual(static_cast<size_t>(12), sizeof(vec3f));
 	}
 
 	TEST_METHOD(CrossProductTest) {

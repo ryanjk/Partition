@@ -14,7 +14,7 @@ namespace MathUnitTest
 	public:
 		
 		TEST_METHOD(SizeTest) {
-			Assert::AreEqual(static_cast<unsigned int>(8), sizeof(vec2f));
+			Assert::AreEqual(static_cast<size_t>(8), sizeof(vec2f));
 		}
 
 		TEST_METHOD(ConstructorTest) {

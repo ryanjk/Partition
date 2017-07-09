@@ -175,6 +175,7 @@
     <ClInclude Include="include\IO\PathUtil.h" />
     <ClInclude Include="include\UI\EditorUI.h" />
     <ClInclude Include="include\UI\UIUtil.h" />
+    <ClInclude Include="include\Utilities\frame_string.h" />
     <ClInclude Include="include\Utilities\Logging.h" />
     <ClInclude Include="include\Utilities\Math.h" />
     <ClInclude Include="include\Utilities\Memory.h" />

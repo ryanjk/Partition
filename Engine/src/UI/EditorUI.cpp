@@ -2,7 +2,7 @@
 
 #include <Application\Global.h>
 
-#define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
+
 
 namespace pn {
 
@@ -18,52 +18,11 @@ bool show_main_menu;
 bool show_command_line;
 
 map<int, function_map> functions;
+struct AppConsole* command_line;
 
-// --------- FUNCTIONS --------
+// -------- CLASS DEFINITIONS ---------
 
-void InitEditorUI() {
-	show_main_menu = true;
-	show_command_line = false;
-}
-
-// --------- MAIN MENU ---------
-
-void SetMainMenuVisible(bool value) {
-	show_main_menu = value;
-}
-
-void DrawMainMenu(const unsigned int screen_width) {
-	if (!show_main_menu) return;
-
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0.0f, 0.0f, 0.0f, 0.0f });
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, { 0.0f });
-	if (ImGui::Begin("Window", NULL,
-					 ImGuiWindowFlags_MenuBar |
-					 ImGuiWindowFlags_NoTitleBar |
-					 ImGuiWindowFlags_NoMove |
-					 ImGuiWindowFlags_NoResize)) {
-		ImGui::SetWindowPos({ 0, 0 });
-		ImGui::SetWindowSize({ static_cast<float>(screen_width), MAIN_MENU_HEIGHT });
-		if (ImGui::BeginMenuBar()) {
-			if (ImGui::BeginMenu("File")) {
-
-				if (ImGui::MenuItem("Exit", nullptr, nullptr)) {
-					pn::app::Exit();
-				}
-
-				ImGui::EndMenu();
-			}
-			ImGui::EndMenuBar();
-		}
-		ImGui::End();
-	}
-	ImGui::PopStyleVar(1);
-	ImGui::PopStyleColor(1);
-}
-
-// --------- COMMAND LINE -------
-
-struct ExampleAppConsole {
+struct AppConsole {
 	char                  InputBuf[256];
 	ImVector<char*>       Items;
 	bool                  ScrollToBottom;
@@ -71,7 +30,7 @@ struct ExampleAppConsole {
 	int                   HistoryPos;    // -1: new line, 0..History.Size-1 browsing history.
 	ImVector<const char*> Commands;
 
-	ExampleAppConsole() {
+	AppConsole() {
 		ClearLog();
 		memset(InputBuf, 0, sizeof(InputBuf));
 		HistoryPos = -1;
@@ -80,7 +39,7 @@ struct ExampleAppConsole {
 		Commands.push_back("CLEAR");
 		Commands.push_back("CLASSIFY");  // "classify" is here to provide an example of "C"+[tab] completing to "CL" and displaying matches.
 	}
-	~ExampleAppConsole() {
+	~AppConsole() {
 		ClearLog();
 		for (int i = 0; i < History.Size; i++)
 			free(History[i]);
@@ -191,7 +150,7 @@ struct ExampleAppConsole {
 		}
 
 		switch (nargs) {
-		case 0: 
+		case 0:
 		{
 			auto& f = std::any_cast<std::function<StringValue(void)>>(functions[nargs][command_name]);
 			string result = f();
@@ -254,7 +213,7 @@ struct ExampleAppConsole {
 
 	static int TextEditCallbackStub(ImGuiTextEditCallbackData* data) // In C++11 you are better off using lambdas for this sort of forwarding callbacks
 	{
-		ExampleAppConsole* console = (ExampleAppConsole*) data->UserData;
+		AppConsole* console = (AppConsole*) data->UserData;
 		return console->TextEditCallback(data);
 	}
 
@@ -346,7 +305,57 @@ struct ExampleAppConsole {
 		return 0;
 	}
 };
-ExampleAppConsole command_line;
+
+// --------- FUNCTIONS --------
+
+void InitEditorUI() {
+	show_main_menu = true;
+	show_command_line = false;
+	command_line = new AppConsole;
+}
+
+void ShutdownEditorUI() {
+	delete command_line;
+}
+
+// --------- MAIN MENU ---------
+
+void SetMainMenuVisible(bool value) {
+	show_main_menu = value;
+}
+
+void DrawMainMenu(const unsigned int screen_width) {
+	if (!show_main_menu) return;
+
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0.0f, 0.0f, 0.0f, 0.0f });
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, { 0.0f });
+	if (ImGui::Begin("Window", NULL,
+					 ImGuiWindowFlags_MenuBar |
+					 ImGuiWindowFlags_NoTitleBar |
+					 ImGuiWindowFlags_NoMove |
+					 ImGuiWindowFlags_NoResize)) {
+		ImGui::SetWindowPos({ 0, 0 });
+		ImGui::SetWindowSize({ static_cast<float>(screen_width), MAIN_MENU_HEIGHT });
+		if (ImGui::BeginMenuBar()) {
+			if (ImGui::BeginMenu("File")) {
+
+				if (ImGui::MenuItem("Exit", nullptr, nullptr)) {
+					pn::app::Exit();
+				}
+
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
+		}
+		ImGui::End();
+	}
+	ImGui::PopStyleVar(1);
+	ImGui::PopStyleColor(1);
+}
+
+// --------- COMMAND LINE -------
+
+
 
 void SetCommandLine(bool value) {
 	show_command_line = value;
@@ -354,7 +363,7 @@ void SetCommandLine(bool value) {
 
 void DrawCommandLine() {
 	if (!show_command_line) return;
-	command_line.Draw("Command Line", nullptr);
+	command_line->Draw("Command Line", nullptr);
 }
 
 } // namespace gui

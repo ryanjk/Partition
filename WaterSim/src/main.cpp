@@ -41,10 +41,10 @@ struct alignas(16) WaveBuffer {
 	float A;
 	float L;
 	float w;
-	float PADDING;
+	float q;
 	pn::vec2f d;
 };
-#define N_WAVES 2
+#define N_WAVES 1
 WaveBuffer wb[N_WAVES];
 
 pn::dx_buffer global_constant_buffer;
@@ -105,10 +105,11 @@ void Init() {
 	dl.intensity = 1.0f;
 
 	for (int i = 0; i < N_WAVES; ++i) {
-		wb[i].A = 1.0f;
-		wb[i].L = 1.0f;
-		wb[i].w = 1.0f;
-		wb[i].d = { 0.0f, 1.0f };
+		wb[i].A = 0.615f;
+		wb[i].L = 5.615;
+		wb[i].w = 0.615;
+		wb[i].q = 0;
+		wb[i].d = { 0.68f, 0.735f };
 	}
 
 	camera = pn::ProjectionMatrix{ pn::ProjectionType::PERSPECTIVE,
@@ -163,6 +164,7 @@ void Render() {
 		ImGui::SliderFloat( (w_id + " amp").c_str(), &wb[i].A, 0.0f, 10.0f);
 		ImGui::SliderFloat((w_id + " L").c_str(), &wb[i].L, 0.0f, 10.0f);
 		ImGui::SliderFloat((w_id + " w").c_str(), &wb[i].w, 0.0f, 10.0f);
+		ImGui::SliderFloat((w_id + " Q").c_str(), &wb[i].q, 0.0f, 1.0f);
 		ImGui::SliderFloat2((w_id + " d").c_str(), &(wb[i].d.x), -1.0f, 1.0f);
 		wb[i].d = (wb[i].d == pn::vec2f::Zero) ? pn::vec2f::Zero : pn::Normalize(wb[i].d);
 	}
@@ -186,6 +188,7 @@ void Render() {
 	context->VSSetConstantBuffers(3, 1, wave_buffer.GetAddressOf());
 
 	context->PSSetConstantBuffers(0, 1, global_constant_buffer.GetAddressOf());
+	context->PSSetConstantBuffers(1, 1, instance_constant_buffer.GetAddressOf());
 	context->PSSetConstantBuffers(2, 1, directional_light_buffer.GetAddressOf());
 
 	// update shader textures

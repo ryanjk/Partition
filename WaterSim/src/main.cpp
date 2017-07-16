@@ -78,8 +78,8 @@ void Init() {
 	auto mesh		= pn::LoadMesh(pn::GetResourcePath("water.fbx"));
 	mesh_buffer		= pn::CreateMeshBuffer(device, mesh);
 
-	tex				= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
-	sampler_state	= pn::CreateSamplerState(device);
+	//tex				= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
+	//sampler_state	= pn::CreateSamplerState(device);
 
 
 	// --------- CREATE SHADER DATA ---------------
@@ -192,8 +192,8 @@ void Render() {
 	context->PSSetConstantBuffers(2, 1, directional_light_buffer.GetAddressOf());
 
 	// update shader textures
-	context->PSSetShaderResources(0, 1, tex.resource_view.GetAddressOf());
-	context->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
+	//context->PSSetShaderResources(0, 1, tex.resource_view.GetAddressOf());
+	//context->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
 
 	context->DrawIndexed(mesh_buffer[0].index_count, 0, 0);
 }

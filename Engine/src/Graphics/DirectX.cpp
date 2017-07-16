@@ -35,7 +35,7 @@ dx_device				CreateDevice() {
 	auto GetDeviceFlags = []() {
 		UINT deviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #if defined(DEBUG) || defined(_DEBUG)
-		deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+		//deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 		return deviceFlags;
 	};

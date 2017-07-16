@@ -20,6 +20,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MemoryUnitTest", "MemoryUni
 		{CD971CEE-EB5E-4844-B6AB-17B08B502162} = {CD971CEE-EB5E-4844-B6AB-17B08B502162}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WaterSim", "WaterSim\WaterSim.vcxproj", "{0DD0DCA1-FF23-42D0-8AA8-6E9B0CDAFADA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -60,6 +62,14 @@ Global
 		{11C6CAD1-0820-4C9F-9F41-D0AE6C3FCF40}.Release|x64.Build.0 = Release|x64
 		{11C6CAD1-0820-4C9F-9F41-D0AE6C3FCF40}.Release|x86.ActiveCfg = Release|Win32
 		{11C6CAD1-0820-4C9F-9F41-D0AE6C3FCF40}.Release|x86.Build.0 = Release|Win32
+		{0DD0DCA1-FF23-42D0-8AA8-6E9B0CDAFADA}.Debug|x64.ActiveCfg = Debug|x64
+		{0DD0DCA1-FF23-42D0-8AA8-6E9B0CDAFADA}.Debug|x64.Build.0 = Debug|x64
+		{0DD0DCA1-FF23-42D0-8AA8-6E9B0CDAFADA}.Debug|x86.ActiveCfg = Debug|Win32
+		{0DD0DCA1-FF23-42D0-8AA8-6E9B0CDAFADA}.Debug|x86.Build.0 = Debug|Win32
+		{0DD0DCA1-FF23-42D0-8AA8-6E9B0CDAFADA}.Release|x64.ActiveCfg = Release|x64
+		{0DD0DCA1-FF23-42D0-8AA8-6E9B0CDAFADA}.Release|x64.Build.0 = Release|x64
+		{0DD0DCA1-FF23-42D0-8AA8-6E9B0CDAFADA}.Release|x86.ActiveCfg = Release|Win32
+		{0DD0DCA1-FF23-42D0-8AA8-6E9B0CDAFADA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

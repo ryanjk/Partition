@@ -4,9 +4,9 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # Added by me (Ryan)
-lib/
+/lib
 Win32/
-Test/log.txt
+log.txt
 imgui.ini
 
 # User-specific files

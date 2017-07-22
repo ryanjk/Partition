@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.6
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{6B402D5F-ED22-45FF-A644-C5EAD0AEA36C}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -21,6 +21,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MemoryUnitTest", "MemoryUni
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WaterSim", "WaterSim\WaterSim.vcxproj", "{0DD0DCA1-FF23-42D0-8AA8-6E9B0CDAFADA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CD971CEE-EB5E-4844-B6AB-17B08B502162} = {CD971CEE-EB5E-4844-B6AB-17B08B502162}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

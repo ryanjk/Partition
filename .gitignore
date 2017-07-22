@@ -5,9 +5,20 @@
 
 # Added by me (Ryan)
 /lib
-Win32/
 log.txt
 imgui.ini
+Win32/
+x64/
+[Dd]ebug/
+[Rr]elease/
+
+!/**/lib/Win32/
+!/**/lib/x64/
+!/**/lib/Win32/[Dd]ebug/
+!/**/lib/Win32/[Rr]elease/
+!/**/lib/x64/[Dd]ebug/
+!/**/lib/x64/[Rr]elease/
+
 
 # User-specific files
 *.suo
@@ -19,11 +30,10 @@ imgui.ini
 *.userprefs
 
 # Build results
-[Dd]ebug/
+
 [Dd]ebugPublic/
-[Rr]elease/
+
 [Rr]eleases/
-x64/
 x86/
 bld/
 [Bb]in/

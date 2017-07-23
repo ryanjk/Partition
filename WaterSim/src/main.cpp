@@ -62,17 +62,12 @@ pn::dx_buffer instance_constant_buffer;
 pn::dx_buffer directional_light_buffer;
 pn::dx_buffer wave_buffer;
 
-// --- wave shader data -----
-pn::dx_vertex_shader vertex_shader;
-pn::input_layout_desc input_layout;
-pn::dx_pixel_shader pixel_shader;
-
-// ---- wave mesh buffer -----
-pn::vector<pn::mesh_buffer_t> mesh_buffer;
-
 // --- wave instance data ----
-pn::transform_t wave_t;
-
+pn::transform_t					wave_t;
+pn::vector<pn::mesh_buffer_t>	wave_mesh_buffer;
+pn::dx_vertex_shader			wave_vs;
+pn::dx_pixel_shader				wave_ps;
+pn::input_layout_desc			wave_input_layout;
 
 pn::linear_allocator frame_alloc(1024 * 1024);
 
@@ -86,8 +81,8 @@ void Init() {
 
 	// ---------- LOAD RESOURCES ----------------
 
-	auto mesh		= pn::LoadMesh(pn::GetResourcePath("water.fbx"));
-	mesh_buffer		= pn::CreateMeshBuffer(device, mesh);
+	auto mesh			= pn::LoadMesh(pn::GetResourcePath("water.fbx"));
+	wave_mesh_buffer	= pn::CreateMeshBuffer(device, mesh);
 
 	// ------- SET BLENDING STATE ------------
 
@@ -97,10 +92,10 @@ void Init() {
 	// --------- CREATE SHADER DATA ---------------
 
 	auto vs_byte_code	= pn::ReadFile(pn::GetResourcePath("water_vs.cso"));
-	vertex_shader		= pn::CreateVertexShader(device, vs_byte_code);
-	input_layout		= pn::CreateInputLayout(device, vs_byte_code);
+	wave_vs		= pn::CreateVertexShader(device, vs_byte_code);
+	wave_input_layout		= pn::CreateInputLayout(device, vs_byte_code);
 
-	pixel_shader		= pn::CreatePixelShader(device, pn::GetResourcePath("water_ps.cso"));
+	wave_ps		= pn::CreatePixelShader(device, pn::GetResourcePath("water_ps.cso"));
 
 	c.screen_width	= static_cast<float>(pn::app::window_desc.width);
 	c.screen_height	= static_cast<float>(pn::app::window_desc.height);
@@ -164,15 +159,15 @@ void Render() {
 // ------ BEGIN WATER
 
 	// set vertex buffer
-	auto& cmesh_buffer = mesh_buffer[0];
-	pn::SetContextVertexBuffers(context, input_layout, cmesh_buffer);
-	context->IASetInputLayout(input_layout.ptr.Get());
+	auto& cmesh_buffer = wave_mesh_buffer[0];
+	pn::SetContextVertexBuffers(context, wave_input_layout, cmesh_buffer);
+	context->IASetInputLayout(wave_input_layout.ptr.Get());
 	context->IASetIndexBuffer(cmesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
 	context->IASetPrimitiveTopology(cmesh_buffer.topology);
 
 	// set shader
-	context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-	context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	context->VSSetShader(wave_vs.Get(), nullptr, 0);
+	context->PSSetShader(wave_ps.Get(), nullptr, 0);
 
 	// update wave
 	for (int i = 0; i < N_WAVES; ++i) {
@@ -211,7 +206,7 @@ void Render() {
 	context->PSSetConstantBuffers(2, 1, instance_constant_buffer.GetAddressOf());
 	context->PSSetConstantBuffers(3, 1, directional_light_buffer.GetAddressOf());
 
-	pn::DrawIndexed(context, mesh_buffer[0]);
+	pn::DrawIndexed(context, wave_mesh_buffer[0]);
 
 // ----- END WATER
 

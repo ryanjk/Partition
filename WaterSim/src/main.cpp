@@ -17,6 +17,8 @@
 
 #include <Application\MainLoop.inc>
 
+// -- Uniform buffer data definitions ----
+
 struct alignas(16) GlobalConstantBufferData {
 	float t = 0.0f;
 	float screen_width;
@@ -24,10 +26,14 @@ struct alignas(16) GlobalConstantBufferData {
 };
 GlobalConstantBufferData c;
 
-struct InstanceConstantBufferData {
-	pn::mat4f model;
+struct CameraConstantBufferData {
 	pn::mat4f view;
 	pn::mat4f proj;
+};
+CameraConstantBufferData camera_buffer;
+
+struct InstanceConstantBufferData {
+	pn::mat4f model;
 };
 InstanceConstantBufferData ic;
 
@@ -47,24 +53,25 @@ struct alignas(16) WaveBuffer {
 #define N_WAVES 1
 WaveBuffer wb[N_WAVES];
 
+// ---- uniform buffers ------
 pn::dx_buffer global_constant_buffer;
+pn::dx_buffer camera_constant_buffer;
 pn::dx_buffer instance_constant_buffer;
 pn::dx_buffer directional_light_buffer;
-
 pn::dx_buffer wave_buffer;
 
+// --- wave shader data -----
 pn::dx_vertex_shader vertex_shader;
 pn::input_layout_desc input_layout;
 pn::dx_pixel_shader pixel_shader;
 
+// ---- wave mesh buffer -----
 pn::vector<pn::mesh_buffer_t> mesh_buffer;
 
+// --- wave instance data ----
 pn::vec3f pos(0, 0, 10);
 pn::vec3f scale(1, 1, 1);
 pn::vec3f rot(0.698, 0.465, 0);
-
-pn::texture_t tex;
-pn::dx_sampler_state sampler_state;
 
 pn::linear_allocator frame_alloc(1024 * 1024);
 
@@ -78,9 +85,28 @@ void Init() {
 	auto mesh		= pn::LoadMesh(pn::GetResourcePath("water.fbx"));
 	mesh_buffer		= pn::CreateMeshBuffer(device, mesh);
 
-	//tex				= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
-	//sampler_state	= pn::CreateSamplerState(device);
+	// ------- SET BLENDING STATE ------------
 
+	ID3D11BlendState* blend_state = nullptr;
+	D3D11_BLEND_DESC blend_desc;
+	ZeroMemory(&blend_desc, sizeof(D3D11_BLEND_DESC));
+	blend_desc.IndependentBlendEnable = false;
+	blend_desc.RenderTarget[0].BlendEnable = true;
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	auto hr = device->CreateBlendState(&blend_desc, &blend_state);
+	if (FAILED(hr)) {
+		LogError("Couldn't create blend state: {}", pn::ErrMsg(hr));
+	}
+	else {
+		pn::GetContext(device)->OMSetBlendState(blend_state, 0, 0xffffffff);
+	}
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -94,12 +120,14 @@ void Init() {
 	c.screen_height	= static_cast<float>(pn::app::window_desc.height);
 
 	global_constant_buffer		= pn::CreateConstantBuffer(device, &c, 1);
+	camera_constant_buffer		= pn::CreateConstantBuffer(device, &camera_buffer, 1);
 	instance_constant_buffer	= pn::CreateConstantBuffer(device, &ic, 1);
 	directional_light_buffer	= pn::CreateConstantBuffer(device, &dl, 1);
 	wave_buffer					= pn::CreateConstantBuffer(device, &wb, 1);
 
 	ic.model	= pn::SRTMatrix(scale, rot, pos);
-	ic.view		= pn::mat4f::Identity;
+
+	camera_buffer.view = pn::mat4f::Identity;
 
 	dl.direction = pn::vec3f(0.0f, 0.0f, 1.0f);
 	dl.intensity = 1.0f;
@@ -117,7 +145,7 @@ void Init() {
 		0.01f, 1000.0f,
 		70.0f, 0.1f
 	};
-	ic.proj = camera.GetMatrix();
+	camera_buffer.proj = camera.GetMatrix();
 
 	// --------- INIT CUSTOM ALLOCATORS -----------
 	pn::frame_string::SetFrameAllocator(&frame_alloc);
@@ -140,6 +168,12 @@ void Render() {
 	context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
 
+	// update uniform buffers that are shared across shaders
+	context->UpdateSubresource(global_constant_buffer.Get(), 0, nullptr, &c, 0, 0);
+	context->UpdateSubresource(camera_constant_buffer.Get(), 0, nullptr, &camera_buffer, 0, 0);
+
+// ------ BEGIN WATER
+
 	// set vertex buffer
 	auto& cmesh_buffer = mesh_buffer[0];
 	pn::SetContextVertexBuffers(context, input_layout, cmesh_buffer);
@@ -150,13 +184,6 @@ void Render() {
 	// set shader
 	context->VSSetShader(vertex_shader.Get(), nullptr, 0);
 	context->PSSetShader(pixel_shader.Get(), nullptr, 0);
-
-	// update instance uniforms
-
-	// update directional light
-	ImGui::SliderFloat3("light dir", &dl.direction.x, -1.0f, 1.0f);
-	ImGui::SliderFloat("light power", &dl.intensity, 0.0f, 10.0f);
-	dl.direction = pn::Normalize(dl.direction);
 
 	// update wave
 	for (int i = 0; i < N_WAVES; ++i) {
@@ -169,33 +196,36 @@ void Render() {
 		wb[i].d = (wb[i].d == pn::vec2f::Zero) ? pn::vec2f::Zero : pn::Normalize(wb[i].d);
 	}
 
-	// update world and view
+	// update model matrix
 	ImGui::SliderFloat3("position", &pos.x, -100.0f, 100.0f);
 	ImGui::SliderFloat3("rotation", &rot.x, -pn::TWOPI, pn::TWOPI);
 	ic.model = pn::SRTMatrix(scale, rot, pos);
 
-	// update projection
+	// update directional light
+	ImGui::SliderFloat3("light dir", &dl.direction.x, -1.0f, 1.0f);
+	ImGui::SliderFloat("light power", &dl.intensity, 0.0f, 10.0f);
+	dl.direction = pn::Normalize(dl.direction);
 
 	// send updates to uniform buffers
-	context->UpdateSubresource(global_constant_buffer.Get(), 0, nullptr, &c, 0, 0);
 	context->UpdateSubresource(instance_constant_buffer.Get(), 0, nullptr, &ic, 0, 0);
 	context->UpdateSubresource(directional_light_buffer.Get(), 0, nullptr, &dl, 0, 0);
 	context->UpdateSubresource(wave_buffer.Get(), 0, nullptr, &wb, 0, 0);
 
 	// set constant buffers in shaders
 	context->VSSetConstantBuffers(0, 1, global_constant_buffer.GetAddressOf());
-	context->VSSetConstantBuffers(1, 1, instance_constant_buffer.GetAddressOf());
+	context->VSSetConstantBuffers(1, 1, camera_constant_buffer.GetAddressOf());
+	context->VSSetConstantBuffers(2, 1, instance_constant_buffer.GetAddressOf());
 	context->VSSetConstantBuffers(3, 1, wave_buffer.GetAddressOf());
 
 	context->PSSetConstantBuffers(0, 1, global_constant_buffer.GetAddressOf());
-	context->PSSetConstantBuffers(1, 1, instance_constant_buffer.GetAddressOf());
-	context->PSSetConstantBuffers(2, 1, directional_light_buffer.GetAddressOf());
-
-	// update shader textures
-	//context->PSSetShaderResources(0, 1, tex.resource_view.GetAddressOf());
-	//context->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
+	context->VSSetConstantBuffers(1, 1, camera_constant_buffer.GetAddressOf());
+	context->PSSetConstantBuffers(2, 1, instance_constant_buffer.GetAddressOf());
+	context->PSSetConstantBuffers(3, 1, directional_light_buffer.GetAddressOf());
 
 	pn::DrawIndexed(context, mesh_buffer[0]);
+
+// ----- END WATER
+
 }
 
 void MainLoopBegin() {

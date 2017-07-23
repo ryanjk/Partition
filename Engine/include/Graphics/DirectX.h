@@ -150,7 +150,7 @@ struct mesh_buffer_t {
 	dx_buffer				uv2s;
 
 	dx_buffer				indices;
-	size_t					index_count;
+	unsigned int			index_count;
 	D3D_PRIMITIVE_TOPOLOGY	topology;
 };
 

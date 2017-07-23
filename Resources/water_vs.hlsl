@@ -3,10 +3,13 @@
 #define N_WAVES 1
 #define USE_GERSTNER
 
-cbuffer InstanceConstants : register(b1) {
-	float4x4 model;
+cbuffer CameraConstants : register(b1) {
 	float4x4 view;
 	float4x4 proj;
+}
+
+cbuffer InstanceConstants : register(b2) {
+	float4x4 model;
 }
 
 struct Wave {

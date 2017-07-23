@@ -222,7 +222,7 @@ mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh) {
 
 	mesh_buffer.positions = CreateVertexBuffer(device, mesh.positions);
 	mesh_buffer.indices = CreateIndexBuffer(device, mesh.indices);
-	mesh_buffer.index_count = mesh.indices.size();
+	mesh_buffer.index_count = static_cast<unsigned int>(mesh.indices.size());
 	mesh_buffer.topology = mesh.topology;
 
 	if (!mesh.normals.empty()) {
@@ -283,7 +283,7 @@ input_layout_desc CreateInputLayout(dx_device device, const pn::bytes& vs_byte_c
 	dx_ptr<ID3D11InputLayout> ptr;
 	auto hr = device->CreateInputLayout(
 		reinterpret_cast<const D3D11_INPUT_ELEMENT_DESC*>(desc.data()),
-		desc.size(),
+		static_cast<unsigned int>(desc.size()),
 		vs_byte_code.data(),
 		static_cast<unsigned int>(vs_byte_code.size()),
 		&ptr

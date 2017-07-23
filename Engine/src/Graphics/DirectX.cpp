@@ -285,7 +285,7 @@ input_layout_desc CreateInputLayout(dx_device device, const pn::bytes& vs_byte_c
 		reinterpret_cast<const D3D11_INPUT_ELEMENT_DESC*>(desc.data()),
 		desc.size(),
 		vs_byte_code.data(),
-		vs_byte_code.size(),
+		static_cast<unsigned int>(vs_byte_code.size()),
 		&ptr
 	);
 
@@ -502,7 +502,9 @@ void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout
 	context->IASetVertexBuffers(0, vertex_buffers.size(), const_cast<const pn::vector<ID3D11Buffer*>&>(vertex_buffers).data(), strides.data(), offsets.data());
 }
 
-
+void DrawIndexed(dx_context context, const mesh_buffer_t& mesh_buffer, unsigned int start_vertex_location, unsigned int base_vertex_location) {
+	context->DrawIndexed(static_cast<unsigned int>(mesh_buffer.index_count), start_vertex_location, base_vertex_location);
+}
 
 
 

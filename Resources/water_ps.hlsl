@@ -25,7 +25,7 @@ float4 main(PS_IN i) : SV_TARGET
 {
 	float3 shade = max(0.0, dot(i.n, -direction)) * intensity;
 	float4 view_pos = float4(view[3][0], view[3][1], view[3][2], 1);
-	float4 spec = pow(max(0.0, dot(normalize(view_pos - i.world_pos), i.n)), 10000);
+	float4 spec = pow(max(0.0, dot(normalize(view_pos - i.world_pos), i.n)), 1000);
 	float4 tex_color = float4(i.uv, 0, 1);
-	return float4(shade*tex_color.rgb + intensity*spec.xyz, 1.0);
+	return float4(shade*(tex_color.rgb + spec.rgb), 1.0);
 }

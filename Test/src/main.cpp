@@ -51,8 +51,8 @@ pn::linear_allocator frame_alloc(1024 * 1024);
 
 void Init() {
 
-	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/Test/");
-	pn::SetResourceDirectoryName("resource");
+	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
+	pn::SetResourceDirectoryName("Resources");
 
 	// ---------- LOAD RESOURCES ----------------
 
@@ -65,11 +65,11 @@ void Init() {
 
 	// --------- CREATE SHADER DATA ---------------
 
-	auto vs_byte_code = pn::ReadFile(pn::GetResourcePath("vs.cso"));
+	auto vs_byte_code = pn::ReadFile(pn::GetResourcePath("basic_vs.cso"));
 	vertex_shader = pn::CreateVertexShader(device, vs_byte_code);
 	input_layout = pn::CreateInputLayout(device, vs_byte_code);
 
-	pixel_shader = pn::CreatePixelShader(device, pn::GetResourcePath("ps.cso"));
+	pixel_shader = pn::CreatePixelShader(device, pn::GetResourcePath("basic_ps.cso"));
 
 	c.screen_width = static_cast<float>(pn::app::window_desc.width);
 	c.screen_height = static_cast<float>(pn::app::window_desc.height);

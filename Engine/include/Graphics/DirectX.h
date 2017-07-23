@@ -237,7 +237,7 @@ auto					CreateBufferDataDesc(BufferDataType* data) {
 template<typename BufferDataType>
 auto					CreateBuffer(dx_device device, BufferDataType* v_data, const size_t n, const D3D11_BIND_FLAG bind_target) {
 	// Create buffer description
-	CD3D11_BUFFER_DESC buffer_desc(n * sizeof(BufferDataType), bind_target);
+	CD3D11_BUFFER_DESC buffer_desc(static_cast<unsigned int>(n) * sizeof(BufferDataType), bind_target);
 
 	// Create buffer data
 	auto data_desc = CreateBufferDataDesc(v_data);
@@ -304,5 +304,7 @@ void					ResizeRenderTargetViewportCamera(dx_device device,
 														 ProjectionMatrix& camera);
 
 void					SetContextVertexBuffers(dx_context context, const input_layout_desc& input_layout, const mesh_buffer_t& mesh_buffer);
+
+void DrawIndexed(dx_context context, const mesh_buffer_t& mesh_buffer, unsigned int start_vertex_location = 0, unsigned int base_vertex_location = 0);
 
 } // namespace pn

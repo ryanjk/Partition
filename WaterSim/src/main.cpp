@@ -70,8 +70,8 @@ pn::linear_allocator frame_alloc(1024 * 1024);
 
 void Init() {
 
-	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/WaterSim/");
-	pn::SetResourceDirectoryName("resource");
+	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
+	pn::SetResourceDirectoryName("Resources");
 
 	// ---------- LOAD RESOURCES ----------------
 
@@ -84,11 +84,11 @@ void Init() {
 
 	// --------- CREATE SHADER DATA ---------------
 
-	auto vs_byte_code	= pn::ReadFile(pn::GetResourcePath("vs.cso"));
+	auto vs_byte_code	= pn::ReadFile(pn::GetResourcePath("water_vs.cso"));
 	vertex_shader		= pn::CreateVertexShader(device, vs_byte_code);
 	input_layout		= pn::CreateInputLayout(device, vs_byte_code);
 
-	pixel_shader		= pn::CreatePixelShader(device, pn::GetResourcePath("ps.cso"));
+	pixel_shader		= pn::CreatePixelShader(device, pn::GetResourcePath("water_ps.cso"));
 
 	c.screen_width	= static_cast<float>(pn::app::window_desc.width);
 	c.screen_height	= static_cast<float>(pn::app::window_desc.height);
@@ -164,7 +164,7 @@ void Render() {
 		ImGui::SliderFloat( (w_id + " amp").c_str(), &wb[i].A, 0.0f, 10.0f);
 		ImGui::SliderFloat((w_id + " L").c_str(), &wb[i].L, 0.0f, 10.0f);
 		ImGui::SliderFloat((w_id + " w").c_str(), &wb[i].w, 0.0f, 10.0f);
-		ImGui::SliderFloat((w_id + " Q").c_str(), &wb[i].q, 0.0f, 1.0f);
+		ImGui::SliderFloat((w_id + " Q").c_str(), &wb[i].q, 0.0f, 3.0f);
 		ImGui::SliderFloat2((w_id + " d").c_str(), &(wb[i].d.x), -1.0f, 1.0f);
 		wb[i].d = (wb[i].d == pn::vec2f::Zero) ? pn::vec2f::Zero : pn::Normalize(wb[i].d);
 	}
@@ -195,7 +195,7 @@ void Render() {
 	//context->PSSetShaderResources(0, 1, tex.resource_view.GetAddressOf());
 	//context->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
 
-	context->DrawIndexed(mesh_buffer[0].index_count, 0, 0);
+	pn::DrawIndexed(context, mesh_buffer[0]);
 }
 
 void MainLoopBegin() {

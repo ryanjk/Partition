@@ -13,6 +13,8 @@
 #include <UI\UIUtil.h>
 #include <UI\EditorUI.h>
 
+#include <Component\transform_t.h>
+
 #include <chrono>
 
 #include <Application\MainLoop.inc>
@@ -69,9 +71,8 @@ pn::dx_pixel_shader pixel_shader;
 pn::vector<pn::mesh_buffer_t> mesh_buffer;
 
 // --- wave instance data ----
-pn::vec3f pos(0, 0, 10);
-pn::vec3f scale(1, 1, 1);
-pn::vec3f rot(0.698, 0.465, 0);
+pn::transform_t wave_t;
+
 
 pn::linear_allocator frame_alloc(1024 * 1024);
 
@@ -110,7 +111,10 @@ void Init() {
 	directional_light_buffer	= pn::CreateConstantBuffer(device, &dl, 1);
 	wave_buffer					= pn::CreateConstantBuffer(device, &wb, 1);
 
-	ic.model	= pn::SRTMatrix(scale, rot, pos);
+	wave_t.position = { 0, 0, 15 };
+	wave_t.scale	= { 1, 1, 1 };
+	wave_t.rotation = { 0.698f, 0.465f, 0.f };
+	ic.model		= TransformToSRT(wave_t);
 
 	camera_buffer.view = pn::mat4f::Identity;
 
@@ -182,9 +186,9 @@ void Render() {
 	}
 
 	// update model matrix
-	ImGui::SliderFloat3("position", &pos.x, -100.0f, 100.0f);
-	ImGui::SliderFloat3("rotation", &rot.x, -pn::TWOPI, pn::TWOPI);
-	ic.model = pn::SRTMatrix(scale, rot, pos);
+	ImGui::SliderFloat3("position", &wave_t.position.x, -100.0f, 100.0f);
+	ImGui::SliderFloat3("rotation", &wave_t.rotation.x, -pn::TWOPI, pn::TWOPI);
+	ic.model = TransformToSRT(wave_t);
 
 	// update directional light
 	ImGui::SliderFloat3("light dir", &dl.direction.x, -1.0f, 1.0f);

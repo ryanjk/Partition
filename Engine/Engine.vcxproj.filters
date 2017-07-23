@@ -52,6 +52,12 @@
     <Filter Include="Source Files\UI">
       <UniqueIdentifier>{573eeecc-7d15-4f17-b2dd-b9bb22a054b5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Component">
+      <UniqueIdentifier>{ab94464d-9448-4b49-bf74-48ef21021204}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Component">
+      <UniqueIdentifier>{be03bf6e-c381-4331-8271-ec571283fa63}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\imgui\imconfig.h">
@@ -126,6 +132,9 @@
     <ClInclude Include="include\UI\UIUtil.h">
       <Filter>Header Files\UI</Filter>
     </ClInclude>
+    <ClInclude Include="include\Component\transform_t.h">
+      <Filter>Header Files\Component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\imgui\imgui.cpp">
@@ -178,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="src\Input\Input.cpp">
       <Filter>Source Files\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Component\transform_t.cpp">
+      <Filter>Source Files\Component</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

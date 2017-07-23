@@ -502,6 +502,39 @@ void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout
 	context->IASetVertexBuffers(0, vertex_buffers.size(), const_cast<const pn::vector<ID3D11Buffer*>&>(vertex_buffers).data(), strides.data(), offsets.data());
 }
 
+// ----------- BLENDING ----------------
+
+dx_blend_state CreateBlendState(dx_device device) {
+	D3D11_BLEND_DESC blend_desc;
+	ZeroMemory(&blend_desc, sizeof(D3D11_BLEND_DESC));
+	blend_desc.IndependentBlendEnable					= false;
+	blend_desc.RenderTarget[0].BlendEnable				= true;
+	blend_desc.RenderTarget[0].SrcBlend					= D3D11_BLEND_SRC_ALPHA;
+	blend_desc.RenderTarget[0].DestBlend				= D3D11_BLEND_INV_SRC_ALPHA;
+	blend_desc.RenderTarget[0].BlendOp					= D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].SrcBlendAlpha			= D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].DestBlendAlpha			= D3D11_BLEND_ZERO;
+	blend_desc.RenderTarget[0].BlendOpAlpha				= D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].RenderTargetWriteMask	= D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	return CreateBlendState(device, blend_desc);
+}
+
+dx_blend_state CreateBlendState(dx_device device, const D3D11_BLEND_DESC& blend_desc) {
+	pn::dx_blend_state blend_state;
+	auto hr = device->CreateBlendState(&blend_desc, blend_state.GetAddressOf());
+	if (FAILED(hr)) {
+		LogError("Couldn't create blend state: {}", pn::ErrMsg(hr));
+	}
+	return blend_state;
+}
+
+void SetBlendState(dx_device device, dx_blend_state blend_state) {
+	GetContext(device)->OMSetBlendState(blend_state.Get(), 0, 0xffffffff);
+}
+
+// ----------- DRAWING FUNCTIONS ------------
+
 void DrawIndexed(dx_context context, const mesh_buffer_t& mesh_buffer, unsigned int start_vertex_location, unsigned int base_vertex_location) {
 	context->DrawIndexed(static_cast<unsigned int>(mesh_buffer.index_count), start_vertex_location, base_vertex_location);
 }

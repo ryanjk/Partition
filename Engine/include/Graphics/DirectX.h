@@ -40,6 +40,8 @@ using dx_texture2d			= dx_ptr<ID3D11Texture2D>;
 using dx_resource			= dx_ptr<ID3D11Resource>;
 using dx_resource_view		= dx_ptr<ID3D11ShaderResourceView>;
 
+using dx_blend_state		= dx_ptr<ID3D11BlendState>;
+
 // ------------- CLASS DEFINITIONS ---------------
 
 struct input_element_desc {
@@ -304,6 +306,14 @@ void					ResizeRenderTargetViewportCamera(dx_device device,
 														 ProjectionMatrix& camera);
 
 void					SetContextVertexBuffers(dx_context context, const input_layout_desc& input_layout, const mesh_buffer_t& mesh_buffer);
+
+// ---------- BLENDING -----------------
+
+dx_blend_state	CreateBlendState(dx_device device);
+dx_blend_state	CreateBlendState(dx_device device, const D3D11_BLEND_DESC& blend_desc);
+void			SetBlendState(dx_device device, dx_blend_state blend_state);
+
+// -------- DRAWING FUNCTIONS ---------------
 
 void DrawIndexed(dx_context context, const mesh_buffer_t& mesh_buffer, unsigned int start_vertex_location = 0, unsigned int base_vertex_location = 0);
 

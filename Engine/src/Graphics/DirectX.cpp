@@ -353,6 +353,8 @@ CD3D11_TEXTURE2D_DESC GetTextureDesc(dx_texture2d texture) {
 	return desc;
 }
 
+// --------- SHADER REFLECTION ------------
+
 dx_shader_reflection GetShaderReflector(const pn::bytes& shader_byte_code) {
 	dx_shader_reflection reflector = nullptr;
 	auto hr = D3DReflect(shader_byte_code.data(), shader_byte_code.size(), IID_ID3D11ShaderReflection, (void**) reflector.GetAddressOf());
@@ -365,6 +367,10 @@ dx_shader_reflection GetShaderReflector(const pn::bytes& shader_byte_code) {
 
 vertex_input_desc GetVertexInputDescFromShader(const pn::bytes& vs_byte_code) {
 	dx_shader_reflection reflector = GetShaderReflector(vs_byte_code);
+	return GetVertexInputDescFromShader(reflector);
+}
+
+vertex_input_desc		GetVertexInputDescFromShader(dx_shader_reflection reflector) {
 	D3D11_SHADER_DESC shader_desc;
 	auto hr = reflector->GetDesc(&shader_desc);
 	if (FAILED(hr)) {
@@ -388,6 +394,25 @@ vertex_input_desc GetVertexInputDescFromShader(const pn::bytes& vs_byte_code) {
 
 	return vertex_desc;
 }
+
+D3D11_SHADER_INPUT_BIND_DESC GetResourceBindingDesc(dx_shader_reflection reflector, const pn::string& name) {
+	D3D11_SHADER_INPUT_BIND_DESC binding_desc;
+	ZeroMemory(&binding_desc, sizeof(D3D11_SHADER_INPUT_BIND_DESC));
+	auto hr = reflector->GetResourceBindingDescByName(name.c_str(), &binding_desc);
+	if (FAILED(hr)) {
+		// Failure could be fine if cbuffer is optimized out of shader
+		//LogError("Couldn't get resource binding desc: {}", ErrMsg(hr));
+	}
+	return binding_desc;
+}
+
+unsigned int GetUniformStartSlot(dx_shader_reflection reflector, const pn::string& name) {
+	auto binding_desc = GetResourceBindingDesc(reflector, name);
+	assert(binding_desc.Type == D3D_SHADER_INPUT_TYPE::D3D_SIT_CBUFFER);
+	return binding_desc.BindPoint;
+}
+
+// --------- VIEWPORT --------------
 
 void SetViewport(dx_context context, const int width, const int height) {
 	D3D11_VIEWPORT m_viewport;
@@ -443,7 +468,7 @@ void ResizeRenderTargetViewportCamera(
 	camera.SetViewHeight(static_cast<float>(height));
 }
 
-void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout, const mesh_buffer_t& cmesh_buffer) {
+void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout, const mesh_buffer_t& mesh_buffer) {
 	const auto NUM_PARAMETERS = layout.desc.size();
 
 	pn::vector<ID3D11Buffer*> vertex_buffers;
@@ -460,42 +485,42 @@ void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout
 
 		std::string type = el.SemanticName;
 		if (type == "POSITION") {
-			PushBack(vertex_buffers, cmesh_buffer.positions.Get());
+			PushBack(vertex_buffers, mesh_buffer.positions.Get());
 			PushBack(strides, sizeof(pn::vec3f));
 			PushBack(offsets, 0);
 		}
 		else if (type == "NORMAL") {
-			PushBack(vertex_buffers, cmesh_buffer.normals.Get());
+			PushBack(vertex_buffers, mesh_buffer.normals.Get());
 			PushBack(strides, sizeof(pn::vec3f));
 			PushBack(offsets, 0);
 		}
 		else if ((type == "TEXCOORD") || (type == "TEXCOORD0")) {
-			PushBack(vertex_buffers, cmesh_buffer.uvs.Get());
+			PushBack(vertex_buffers, mesh_buffer.uvs.Get());
 			PushBack(strides, sizeof(pn::vec2f));
 			PushBack(offsets, 0);
 		}
 		else if ((type == "TANGENT") || (type == "TANGENT0")) {
-			PushBack(vertex_buffers, cmesh_buffer.tangents.Get());
+			PushBack(vertex_buffers, mesh_buffer.tangents.Get());
 			PushBack(strides, sizeof(pn::vec3f));
 			PushBack(offsets, 0);
 		}
 		else if (type == "TANGENT1") {
-			PushBack(vertex_buffers, cmesh_buffer.bitangents.Get());
+			PushBack(vertex_buffers, mesh_buffer.bitangents.Get());
 			PushBack(strides, sizeof(pn::vec3f));
 			PushBack(offsets, 0);
 		}
 		else if (type == "TEXCOORD1") {
-			PushBack(vertex_buffers, cmesh_buffer.uv2s.Get());
+			PushBack(vertex_buffers, mesh_buffer.uv2s.Get());
 			PushBack(strides, sizeof(pn::vec2f));
 			PushBack(offsets, 0);
 		}
 		else if (type == "COLOR") {
-			PushBack(vertex_buffers, cmesh_buffer.colors.Get());
+			PushBack(vertex_buffers, mesh_buffer.colors.Get());
 			PushBack(strides, sizeof(pn::vec4f));
 			PushBack(offsets, 0);
 		}
 		else {
-			LogError("Unknown parameter type '{}' in CMeshBuffer", type);
+			LogError("Unknown parameter type '{}' in MeshBuffer", type);
 		}
 	}
 

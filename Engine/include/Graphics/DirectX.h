@@ -290,8 +290,18 @@ dx_texture2d			GetSwapChainBackBuffer(dx_swap_chain swap_chain);
 dx_context				GetContext(dx_device device);
 CD3D11_TEXTURE2D_DESC	GetTextureDesc(dx_texture2d texture);
 
+// ---------- SHADER REFLECTION ----------------
+
 dx_shader_reflection	GetShaderReflector(const pn::bytes& shader_byte_code);
+
 vertex_input_desc		GetVertexInputDescFromShader(const pn::bytes& vs_byte_code);
+vertex_input_desc		GetVertexInputDescFromShader(dx_shader_reflection reflector);
+
+D3D11_SHADER_INPUT_BIND_DESC GetResourceBindingDesc(dx_shader_reflection reflector, const pn::string& name);
+
+unsigned int GetUniformStartSlot(dx_shader_reflection reflector, const pn::string& name);
+
+// ----------- VIEWPORT -----------------------
 
 void					SetViewport(dx_context context, const int width, const int height);
 void					SetRenderTargetViewAndDepthStencilFromSwapChain(dx_device device, 

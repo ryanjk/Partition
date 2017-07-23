@@ -3,12 +3,12 @@
 #define N_WAVES 1
 #define USE_GERSTNER
 
-cbuffer CameraConstants : register(b1) {
+cbuffer camera_constants : register(b1) {
 	float4x4 view;
 	float4x4 proj;
 }
 
-cbuffer InstanceConstants : register(b2) {
+cbuffer instance_constants : register(b2) {
 	float4x4 model;
 }
 
@@ -20,7 +20,7 @@ struct Wave {
 	float2	d; // direction
 };
 
-cbuffer WaveBuffer : register(b3) {
+cbuffer wave : register(b3) {
 	Wave w[N_WAVES];
 }
 

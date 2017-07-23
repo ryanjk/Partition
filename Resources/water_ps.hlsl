@@ -3,16 +3,16 @@
 Texture2D		tex	: register(t0);
 SamplerState	ss	: register(s0);
 
-cbuffer CameraConstants : register(b1) {
+cbuffer camera_constants : register(b1) {
 	float4x4 view;
 	float4x4 proj;
 }
 
-cbuffer InstanceConstants : register(b2) {
+cbuffer instance_constants : register(b2) {
 	float4x4 model;
 }
 
-cbuffer DirectionalLight : register(b3) {
+cbuffer directional_light : register(b3) {
 	float3	direction;
 	float	intensity;
 }

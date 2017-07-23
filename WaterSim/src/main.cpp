@@ -20,29 +20,33 @@
 
 #include <Application\MainLoop.inc>
 
+#define SetVSConstantBuffer(context, name, reflector) context->VSSetConstantBuffers(pn::GetUniformStartSlot(reflector, #name), 1, name.buffer.GetAddressOf())
+
+#define SetPSConstantBuffer(context, name, reflector) context->PSSetConstantBuffers(pn::GetUniformStartSlot(reflector, #name), 1, name.buffer.GetAddressOf())
+
 // -- Uniform buffer data definitions ----
 
-struct alignas(16) global_contants {
+struct alignas(16) global_contants_t {
 	float t = 0.0f;
 	float screen_width;
 	float screen_height;
 };
 
-struct camera_constants {
+struct camera_constants_t {
 	pn::mat4f view;
 	pn::mat4f proj;
 };
 
-struct instance_constants {
+struct instance_constants_t {
 	pn::mat4f model;
 };
 
-struct alignas(16) directional_light {
+struct alignas(16) directional_light_t {
 	pn::vec3f direction;
 	float intensity;
 };
 
-struct alignas(16) wave {
+struct alignas(16) wave_t {
 	float A;
 	float L;
 	float w;
@@ -53,19 +57,24 @@ struct alignas(16) wave {
 using pn::uniform;
 using pn::uniform_array;
 
+// ----- program uniforms ------
 #define N_WAVES 1
-uniform<global_contants>		c;
-uniform<camera_constants>		camera_buffer;
-uniform<instance_constants>		ic;
-uniform<directional_light>		dl;
-uniform_array<wave, N_WAVES>	wb;
+uniform<global_contants_t>		global_constants;
+uniform<camera_constants_t>		camera_constants;
+uniform<instance_constants_t>	instance_constants;
+uniform<directional_light_t>	directional_light;
+uniform_array<wave_t, N_WAVES>	wave;
 
 // --- wave instance data ----
-pn::transform_t					wave_t;
+pn::transform_t					wave_transform;
 pn::vector<pn::mesh_buffer_t>	wave_mesh_buffer;
+
 pn::dx_vertex_shader			wave_vs;
-pn::dx_pixel_shader				wave_ps;
 pn::input_layout_desc			wave_input_layout;
+pn::dx_shader_reflection		wave_vs_reflector;
+
+pn::dx_pixel_shader				wave_ps;
+pn::dx_shader_reflection		wave_ps_reflector;
 
 pn::linear_allocator frame_alloc(1024 * 1024);
 
@@ -92,34 +101,37 @@ void Init() {
 	auto vs_byte_code	= pn::ReadFile(pn::GetResourcePath("water_vs.cso"));
 	wave_vs				= pn::CreateVertexShader(device, vs_byte_code);
 	wave_input_layout	= pn::CreateInputLayout(device, vs_byte_code);
+	wave_vs_reflector	= pn::GetShaderReflector(vs_byte_code);
 
-	wave_ps				= pn::CreatePixelShader(device, pn::GetResourcePath("water_ps.cso"));
+	auto ps_byte_code	= pn::ReadFile(pn::GetResourcePath("water_ps.cso"));
+	wave_ps				= pn::CreatePixelShader(device, ps_byte_code);
+	wave_ps_reflector	= pn::GetShaderReflector(ps_byte_code);
 
-	c.data.screen_width		= static_cast<float>(pn::app::window_desc.width);
-	c.data.screen_height	= static_cast<float>(pn::app::window_desc.height);
+	global_constants.data.screen_width		= static_cast<float>(pn::app::window_desc.width);
+	global_constants.data.screen_height	= static_cast<float>(pn::app::window_desc.height);
 
-	Initialize(device, c);
-	Initialize(device, camera_buffer);
-	Initialize(device, ic);
-	Initialize(device, dl);
-	Initialize(device, wb);
+	Initialize(device, global_constants);
+	Initialize(device, camera_constants);
+	Initialize(device, instance_constants);
+	Initialize(device, directional_light);
+	Initialize(device, wave);
 
-	wave_t.position = { 0, 0, 15 };
-	wave_t.scale	= { 1, 1, 1 };
-	wave_t.rotation = { 0.698f, 0.465f, 0.f };
-	ic.data.model	= TransformToSRT(wave_t);
+	wave_transform.position = { 0, 0, 15 };
+	wave_transform.scale	= { 1, 1, 1 };
+	wave_transform.rotation = { 0.698f, 0.465f, 0.f };
+	instance_constants.data.model	= TransformToSRT(wave_transform);
 
-	camera_buffer.data.view = pn::mat4f::Identity;
+	camera_constants.data.view = pn::mat4f::Identity;
 
-	dl.data.direction = pn::vec3f(0.0f, 0.0f, 1.0f);
-	dl.data.intensity = 1.0f;
+	directional_light.data.direction = pn::vec3f(0.0f, 0.0f, 1.0f);
+	directional_light.data.intensity = 1.0f;
 
 	for (int i = 0; i < N_WAVES; ++i) {
-		wb.data[i].A = 0.615f;
-		wb.data[i].L = 5.615;
-		wb.data[i].w = 0.615;
-		wb.data[i].q = 0;
-		wb.data[i].d = { 0.68f, 0.735f };
+		wave.data[i].A = 0.615f;
+		wave.data[i].L = 5.615;
+		wave.data[i].w = 0.615;
+		wave.data[i].q = 0;
+		wave.data[i].d = { 0.68f, 0.735f };
 	}
 
 	camera = pn::ProjectionMatrix{ pn::ProjectionType::PERSPECTIVE,
@@ -127,7 +139,7 @@ void Init() {
 		0.01f, 1000.0f,
 		70.0f, 0.1f
 	};
-	camera_buffer.data.proj = camera.GetMatrix();
+	camera_constants.data.proj = camera.GetMatrix();
 
 	// --------- INIT CUSTOM ALLOCATORS -----------
 	pn::frame_string::SetFrameAllocator(&frame_alloc);
@@ -139,10 +151,10 @@ void Render() {
 	auto context = pn::GetContext(device);
 
 	// Update global uniforms
-	c.data.t				+= static_cast<float>(pn::app::dt);
+	global_constants.data.t				+= static_cast<float>(pn::app::dt);
 	auto screen_desc		= pn::GetTextureDesc(pn::GetSwapChainBackBuffer(swap_chain));
-	c.data.screen_width		= static_cast<float>(screen_desc.Width);
-	c.data.screen_height	= static_cast<float>(screen_desc.Height);
+	global_constants.data.screen_width		= static_cast<float>(screen_desc.Width);
+	global_constants.data.screen_height	= static_cast<float>(screen_desc.Height);
 
 	// Set render target backbuffer color
 	float color[] = { 0.0f, 0.0f, 0.0f, 1.000f };
@@ -151,58 +163,68 @@ void Render() {
 	context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
 
 	// update uniform buffers that are shared across shaders
-	UpdateBuffer(context, c);
-	UpdateBuffer(context, camera_buffer);
+	UpdateBuffer(context, global_constants);
+	UpdateBuffer(context, camera_constants);
 
 // ------ BEGIN WATER
 
-	// set vertex buffer
-	auto& cmesh_buffer = wave_mesh_buffer[0];
-	pn::SetContextVertexBuffers(context, wave_input_layout, cmesh_buffer);
+	// set vertex buffer (context, mesh_buffer, input_layout, vertex shader)
+	auto& wave_mesh = wave_mesh_buffer[0];
+	pn::SetContextVertexBuffers(context, wave_input_layout, wave_mesh);
 	context->IASetInputLayout(wave_input_layout.ptr.Get());
-	context->IASetIndexBuffer(cmesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
-	context->IASetPrimitiveTopology(cmesh_buffer.topology);
-
-	// set shader
+	context->IASetIndexBuffer(wave_mesh.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
+	context->IASetPrimitiveTopology(wave_mesh.topology);
 	context->VSSetShader(wave_vs.Get(), nullptr, 0);
+
+	// set pixel shader (context, pixel shader)
 	context->PSSetShader(wave_ps.Get(), nullptr, 0);
 
 	// update wave
-	for (int i = 0; i < N_WAVES; ++i) {
-		pn::string w_id = pn::string("w") + std::to_string(i);
-		ImGui::SliderFloat( (w_id + " amp").c_str(), &wb.data[i].A, 0.0f, 10.0f);
-		ImGui::SliderFloat((w_id + " L").c_str(), &wb.data[i].L, 0.0f, 10.0f);
-		ImGui::SliderFloat((w_id + " w").c_str(), &wb.data[i].w, 0.0f, 10.0f);
-		ImGui::SliderFloat((w_id + " Q").c_str(), &wb.data[i].q, 0.0f, 3.0f);
-		ImGui::SliderFloat2((w_id + " d").c_str(), &(wb.data[i].d.x), -1.0f, 1.0f);
-		wb.data[i].d = (wb.data[i].d == pn::vec2f::Zero) ? pn::vec2f::Zero : pn::Normalize(wb.data[i].d);
-	}
+	ImGui::Begin("Waves");
 
 	// update model matrix
-	ImGui::SliderFloat3("position", &wave_t.position.x, -100.0f, 100.0f);
-	ImGui::SliderFloat3("rotation", &wave_t.rotation.x, -pn::TWOPI, pn::TWOPI);
-	ic.data.model = TransformToSRT(wave_t);
+	ImGui::SliderFloat3("position", &wave_transform.position.x, -100.0f, 100.0f);
+	ImGui::SliderFloat3("rotation", &wave_transform.rotation.x, -pn::TWOPI, pn::TWOPI);
+	instance_constants.data.model = TransformToSRT(wave_transform);
+
+	for (int i = 0; i < N_WAVES; ++i) {
+		pn::string w_id = pn::string("w") + std::to_string(i);
+		ImGui::SliderFloat( (w_id + " amp").c_str(), &wave.data[i].A, 0.0f, 10.0f);
+		ImGui::SliderFloat((w_id + " L").c_str(), &wave.data[i].L, 0.0f, 10.0f);
+		ImGui::SliderFloat((w_id + " w").c_str(), &wave.data[i].w, 0.0f, 10.0f);
+		ImGui::SliderFloat((w_id + " Q").c_str(), &wave.data[i].q, 0.0f, 3.0f);
+		ImGui::SliderFloat2((w_id + " d").c_str(), &(wave.data[i].d.x), -1.0f, 1.0f);
+		wave.data[i].d = (wave.data[i].d == pn::vec2f::Zero) ? pn::vec2f::Zero : pn::Normalize(wave.data[i].d);
+	}
+
+	ImGui::End(); // Waves
+
 
 	// update directional light
-	ImGui::SliderFloat3("light dir", &dl.data.direction.x, -1.0f, 1.0f);
-	ImGui::SliderFloat("light power", &dl.data.intensity, 0.0f, 10.0f);
-	dl.data.direction = dl.data.direction == pn::vec3f::Zero ? pn::vec3f::Zero : pn::Normalize(dl.data.direction);
+	ImGui::Begin("Lights");
 
-	// send updates to uniform buffers
-	UpdateBuffer(context, ic);
-	UpdateBuffer(context, dl);
-	UpdateBuffer(context, wb);
+	ImGui::SliderFloat3("light dir", &directional_light.data.direction.x, -1.0f, 1.0f);
+	ImGui::SliderFloat("light power", &directional_light.data.intensity, 0.0f, 10.0f);
+	directional_light.data.direction = directional_light.data.direction == pn::vec3f::Zero ? pn::vec3f::Zero : pn::Normalize(directional_light.data.direction);
+
+	ImGui::End(); // Lights
+
+	// send updates to constant buffers
+	UpdateBuffer(context, instance_constants);
+	UpdateBuffer(context, directional_light);
+	UpdateBuffer(context, wave);
 
 	// set constant buffers in shaders
-	context->VSSetConstantBuffers(0, 1, c.buffer.GetAddressOf());
-	context->VSSetConstantBuffers(1, 1, camera_buffer.buffer.GetAddressOf());
-	context->VSSetConstantBuffers(2, 1, ic.buffer.GetAddressOf());
-	context->VSSetConstantBuffers(3, 1, wb.buffer.GetAddressOf());
+	SetPSConstantBuffer(context, global_constants, wave_ps_reflector);
+	SetPSConstantBuffer(context, camera_constants, wave_ps_reflector);
+	SetPSConstantBuffer(context, instance_constants, wave_ps_reflector);
+	SetPSConstantBuffer(context, directional_light, wave_ps_reflector);
 
-	context->PSSetConstantBuffers(0, 1, c.buffer.GetAddressOf());
-	context->VSSetConstantBuffers(1, 1, camera_buffer.buffer.GetAddressOf());
-	context->PSSetConstantBuffers(2, 1, ic.buffer.GetAddressOf());
-	context->PSSetConstantBuffers(3, 1, dl.buffer.GetAddressOf());
+	SetVSConstantBuffer(context, global_constants, wave_vs_reflector);
+	SetVSConstantBuffer(context, camera_constants, wave_vs_reflector);
+	SetVSConstantBuffer(context, instance_constants, wave_vs_reflector);
+	SetVSConstantBuffer(context, wave, wave_vs_reflector);
+
 
 	pn::DrawIndexed(context, wave_mesh_buffer[0]);
 

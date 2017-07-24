@@ -8,8 +8,9 @@ cbuffer camera_constants : register(b1) {
 	float4x4 proj;
 }
 
-cbuffer instance_constants : register(b2) {
+cbuffer model_constants : register(b2) {
 	float4x4 model;
+	float4x4 mvp;
 }
 
 struct Wave {
@@ -121,10 +122,9 @@ VS_OUT main(VS_IN i) {
 	}
 
 	float4 pos		= float4(x, y, -height, 1.0);
-	pos				= mul(model, pos);
-	o.world_pos		= pos;
-	pos				= mul(view, pos);
-	o.screen_pos	= mul(proj, pos);
+
+	o.world_pos = mul(model, pos);
+	o.screen_pos = mul(mvp, pos);
 
 	float3 normal = normalize(float3(nx, ny, nz));
 	float3x3 btn = {

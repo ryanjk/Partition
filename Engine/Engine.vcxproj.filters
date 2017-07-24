@@ -135,7 +135,7 @@
     <ClInclude Include="include\Component\transform_t.h">
       <Filter>Header Files\Component</Filter>
     </ClInclude>
-    <ClInclude Include="include\Graphics\Uniform.h">
+    <ClInclude Include="include\Graphics\CBuffer.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>

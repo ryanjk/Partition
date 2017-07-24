@@ -8,11 +8,7 @@ cbuffer camera_constants : register(b1) {
 	float4x4 proj;
 }
 
-cbuffer instance_constants : register(b2) {
-	float4x4 model;
-}
-
-cbuffer directional_light : register(b3) {
+cbuffer directional_light : register(b2) {
 	float3	direction;
 	float	intensity;
 }

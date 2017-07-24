@@ -173,17 +173,17 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 	// INIT WINDOWS
 
-	auto& awd = pn::app::window_desc;
-	awd.h_instance = hInstance;
-	awd.width = 1366;
-	awd.height = 768;
-	awd.fullscreen = false;
-	h_wnd = pn::CreateApplicationWindow(awd, WindowProc);
+	auto& awd		= pn::app::window_desc;
+	awd.h_instance	= hInstance;
+	awd.width		= 1366;
+	awd.height		= 768;
+	awd.fullscreen	= false;
+	h_wnd			= pn::CreateApplicationWindow(awd, WindowProc);
 
 	// INIT DIRECTX
 
-	device = pn::CreateDevice();
-	swap_chain = pn::CreateMainWindowSwapChain(device, h_wnd, awd);
+	device		= pn::CreateDevice();
+	swap_chain	= pn::CreateMainWindowSwapChain(device, h_wnd, awd);
 
 	pn::InitTextureFactory(device);
 

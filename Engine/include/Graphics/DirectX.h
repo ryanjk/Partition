@@ -292,30 +292,37 @@ CD3D11_TEXTURE2D_DESC	GetTextureDesc(dx_texture2d texture);
 
 // ---------- SHADER REFLECTION ----------------
 
-dx_shader_reflection	GetShaderReflector(const pn::bytes& shader_byte_code);
+dx_shader_reflection			GetShaderReflector(const pn::bytes& shader_byte_code);
 
-vertex_input_desc		GetVertexInputDescFromShader(const pn::bytes& vs_byte_code);
-vertex_input_desc		GetVertexInputDescFromShader(dx_shader_reflection reflector);
+vertex_input_desc				GetVertexInputDescFromShader(const pn::bytes& vs_byte_code);
+vertex_input_desc				GetVertexInputDescFromShader(dx_shader_reflection reflector);
 
-D3D11_SHADER_INPUT_BIND_DESC GetResourceBindingDesc(dx_shader_reflection reflector, const pn::string& name);
+D3D11_SHADER_INPUT_BIND_DESC	GetResourceBindingDesc(dx_shader_reflection reflector, const pn::string& name);
 
-unsigned int GetUniformStartSlot(dx_shader_reflection reflector, const pn::string& name);
+unsigned int					GetUniformStartSlot(dx_shader_reflection reflector, const pn::string& name);
 
 // ----------- VIEWPORT -----------------------
 
-void					SetViewport(dx_context context, const int width, const int height);
-void					SetRenderTargetViewAndDepthStencilFromSwapChain(dx_device device, 
+void SetViewport(dx_context context, const int width, const int height);
+void SetRenderTargetViewAndDepthStencilFromSwapChain(dx_device device, 
 																		dx_swap_chain swap_chain, 
 																		dx_render_target_view& render_target_view, 
 																		dx_depth_stencil_view& depth_stencil_view);
-void					ResizeRenderTargetViewportCamera(dx_device device, 
+void ResizeRenderTargetViewportCamera(dx_device device, 
 														 unsigned int width, unsigned int height, 
 														 dx_swap_chain& swap_chain, 
 														 dx_render_target_view& render_target_view, 
 														 dx_depth_stencil_view& depth_stencil_view, 
 														 ProjectionMatrix& camera);
 
-void					SetContextVertexBuffers(dx_context context, const input_layout_desc& input_layout, const mesh_buffer_t& mesh_buffer);
+// --------- SHADER STATE ----------------
+
+void SetVertexShader(dx_context context, dx_vertex_shader shader);
+void SetPixelShader(dx_context context, dx_pixel_shader shader);
+
+void SetInputLayout(dx_context context, const input_layout_desc& layout_desc);
+
+void SetVertexBuffers(dx_context context, const input_layout_desc& input_layout, const mesh_buffer_t& mesh_buffer);
 
 // ---------- BLENDING -----------------
 

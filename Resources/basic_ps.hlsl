@@ -3,6 +3,11 @@
 Texture2D tex	: register(t0);
 SamplerState ss : register(s0);
 
+cbuffer directional_light : register(b2) {
+	float3	direction;
+	float	intensity;
+}
+
 struct PS_IN {
 	float4 screen_pos : SV_POSITION;
 	float4 world_pos : POSITION;

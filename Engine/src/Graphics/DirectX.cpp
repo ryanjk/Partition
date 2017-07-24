@@ -35,11 +35,11 @@ dx_device				CreateDevice() {
 	auto GetDeviceFlags = []() {
 		UINT deviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #if defined(DEBUG) || defined(_DEBUG)
-		//deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+		deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 		return deviceFlags;
 	};
-
+	 
 	auto device_flags = GetDeviceFlags();
 	D3D_FEATURE_LEVEL feature_level;
 	dx_device device;
@@ -126,17 +126,17 @@ dx_swap_chain			CreateSwapChain(dx_device device, DXGI_SWAP_CHAIN_DESC swap_chai
 dx_swap_chain			CreateMainWindowSwapChain(dx_device device, const window_handle hwnd, const application_window_desc awd) {
 	DXGI_SWAP_CHAIN_DESC desc;
 	ZeroMemory(&desc, sizeof(DXGI_SWAP_CHAIN_DESC));
-	desc.Windowed = !awd.fullscreen;
-	desc.BufferCount = 2;
-	desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	desc.BufferDesc.Width = awd.width;
-	desc.BufferDesc.Height = awd.height;
-	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	desc.SampleDesc.Count = 1;      //multisampling setting
+	desc.Windowed			= !awd.fullscreen;
+	desc.BufferCount		= 2;
+	desc.BufferDesc.Format	= DXGI_FORMAT_B8G8R8A8_UNORM;
+	desc.BufferDesc.Width	= awd.width;
+	desc.BufferDesc.Height	= awd.height;
+	desc.BufferUsage		= DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	desc.SampleDesc.Count	= 1;      //multisampling setting
 	desc.SampleDesc.Quality = 0;    //vendor-specific flag
-	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-	desc.OutputWindow = hwnd;
-	desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;    // allow full-screen switching
+	desc.SwapEffect			= DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+	desc.OutputWindow		= hwnd;
+	desc.Flags				= DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;    // allow full-screen switching
 
 	return CreateSwapChain(device, desc);
 }
@@ -434,9 +434,9 @@ void SetRenderTargetViewAndDepthStencilFromSwapChain(
 	dx_render_target_view& render_target_view,
 	dx_depth_stencil_view& depth_stencil_view) {
 	auto back_buffer = pn::GetSwapChainBackBuffer(swap_chain);
-	render_target_view = pn::CreateRenderTargetViewFromTexture(device, back_buffer);
-
 	CD3D11_TEXTURE2D_DESC back_buffer_desc = pn::GetTextureDesc(back_buffer);
+
+	render_target_view = pn::CreateRenderTargetViewFromTexture(device, back_buffer);
 
 	CD3D11_TEXTURE2D_DESC depthStencilDesc(
 		DXGI_FORMAT_D24_UNORM_S8_UINT,
@@ -468,7 +468,9 @@ void ResizeRenderTargetViewportCamera(
 	camera.SetViewHeight(static_cast<float>(height));
 }
 
-void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout, const mesh_buffer_t& mesh_buffer) {
+// --------- SHADER STATE -----------------
+
+void SetVertexBuffers(dx_context context, const input_layout_desc& layout, const mesh_buffer_t& mesh_buffer) {
 	const auto NUM_PARAMETERS = layout.desc.size();
 
 	pn::vector<ID3D11Buffer*> vertex_buffers;
@@ -525,6 +527,19 @@ void SetContextVertexBuffers(dx_context context, const input_layout_desc& layout
 	}
 
 	context->IASetVertexBuffers(0, vertex_buffers.size(), const_cast<const pn::vector<ID3D11Buffer*>&>(vertex_buffers).data(), strides.data(), offsets.data());
+	context->IASetIndexBuffer(mesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
+	context->IASetPrimitiveTopology(mesh_buffer.topology);
+}
+
+void SetVertexShader(dx_context context, dx_vertex_shader shader) {
+	context->VSSetShader(shader.Get(), nullptr, 0);
+}
+void SetPixelShader(dx_context context, dx_pixel_shader shader) {
+	context->PSSetShader(shader.Get(), nullptr, 0);
+}
+
+void SetInputLayout(dx_context context, const input_layout_desc& layout_desc) {
+	context->IASetInputLayout(layout_desc.ptr.Get());
 }
 
 // ----------- BLENDING ----------------

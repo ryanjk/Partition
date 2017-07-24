@@ -1,10 +1,14 @@
 #include "GlobalConstants.hlsli"
 
 
-cbuffer InstanceConstants : register(b1) {
-	float4x4 model;
+cbuffer camera_constants : register(b1) {
 	float4x4 view;
 	float4x4 proj;
+}
+
+cbuffer model_constants : register(b2) {
+	float4x4 model;
+	float4x4 mvp;
 }
 
 struct VS_IN {

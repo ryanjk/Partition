@@ -115,7 +115,7 @@ void Render() {
 
 	// set vertex buffer
 	auto& cmesh_buffer = mesh_buffer[0];
-	pn::SetContextVertexBuffers(context, input_layout, cmesh_buffer);
+	pn::SetVertexBuffers(context, input_layout, cmesh_buffer);
 	context->IASetInputLayout(input_layout.ptr.Get());
 	context->IASetIndexBuffer(cmesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
 	context->IASetPrimitiveTopology(cmesh_buffer.topology);

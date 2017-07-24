@@ -163,7 +163,7 @@
     <ClInclude Include="include\Graphics\MeshLoadUtil.h" />
     <ClInclude Include="include\Graphics\ProjectionMatrix.h" />
     <ClInclude Include="include\Graphics\TextureLoadUtil.h" />
-    <ClInclude Include="include\Graphics\Uniform.h" />
+    <ClInclude Include="include\Graphics\CBuffer.h" />
     <ClInclude Include="include\Graphics\Window.h" />
     <ClInclude Include="include\imgui\imconfig.h" />
     <ClInclude Include="include\imgui\imgui.h" />

@@ -174,7 +174,7 @@ void Init() {
 	// init wave object
 	wave_transform.position = { 0, 0, 15 };
 	wave_transform.scale = { 1, 1, 1 };
-	wave_transform.rotation = { 0.698f, 0.465f, 0.f };
+	wave_transform.rotation = { 0.698f, 3.069f, 0.f };
 
 	// init monkey object
 	monkey_transform.position = { 0, 0, 15 };
@@ -276,7 +276,7 @@ void Render() {
 
 	UpdateBuffer(context, model_constants);
 
-	pn::DrawIndexed(context, monkey_mesh);
+	//pn::DrawIndexed(context, monkey_mesh);
 
 // --- END MONKEY
 

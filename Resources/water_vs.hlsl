@@ -121,12 +121,12 @@ VS_OUT main(VS_IN i) {
 		nz		-= sample_wave_nz(wv, p, TIME);
 	}
 
-	float4 pos		= float4(x, y, -height, 1.0);
+	float4 pos		= float4(x, height, y, 1.0);
 
 	o.world_pos = mul(model, pos);
 	o.screen_pos = mul(mvp, pos);
 
-	float3 normal = normalize(float3(nx, ny, nz));
+	float3 normal = normalize(float3(nx, nz, ny));
 	float3x3 btn = {
 		i.b,
 		i.t,

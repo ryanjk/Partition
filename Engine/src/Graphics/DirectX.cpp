@@ -278,7 +278,7 @@ dx_pixel_shader CreatePixelShader(dx_device device, const std::string& filename)
 }
 
 
-input_layout_desc CreateInputLayout(dx_device device, const pn::bytes& vs_byte_code, const vertex_input_desc& desc) {
+input_layout_data_t CreateInputLayout(dx_device device, const pn::bytes& vs_byte_code, const vertex_input_desc& desc) {
 
 	dx_ptr<ID3D11InputLayout> ptr;
 	auto hr = device->CreateInputLayout(
@@ -293,27 +293,27 @@ input_layout_desc CreateInputLayout(dx_device device, const pn::bytes& vs_byte_c
 		LogError("Couldn't create input layout: {}", ErrMsg(hr));
 	}
 
-	auto layout = input_layout_desc(ptr, desc);
+	auto layout = input_layout_data_t(ptr, desc);
 	return layout;
 }
 
-input_layout_desc CreateInputLayout(dx_device device, const pn::bytes& vs_byte_code) {
+input_layout_data_t CreateInputLayout(dx_device device, const pn::bytes& vs_byte_code) {
 	auto desc = GetVertexInputDescFromShader(vs_byte_code);
 	return CreateInputLayout(device, vs_byte_code, desc);
 }
 
-std::pair<dx_vertex_shader, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const pn::bytes& vs_data, const vertex_input_desc& desc) {
+std::pair<dx_vertex_shader, input_layout_data_t> CreateVertexShaderAndInputLayout(dx_device device, const pn::bytes& vs_data, const vertex_input_desc& desc) {
 	auto vertex_shader = CreateVertexShader(device, vs_data);
 	auto input_layout = CreateInputLayout(device, vs_data, desc);
 	return std::make_pair(vertex_shader, input_layout);
 }
 
-std::pair<dx_vertex_shader, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename, const vertex_input_desc& desc) {
+std::pair<dx_vertex_shader, input_layout_data_t> CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename, const vertex_input_desc& desc) {
 	auto vs_data = pn::ReadFile(filename);
 	return CreateVertexShaderAndInputLayout(device, vs_data, desc);
 }
 
-std::pair<dx_vertex_shader, input_layout_desc> CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename) {
+std::pair<dx_vertex_shader, input_layout_data_t> CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename) {
 	auto vs_data = pn::ReadFile(filename);
 	vertex_input_desc desc = GetVertexInputDescFromShader(vs_data);
 	return CreateVertexShaderAndInputLayout(device, vs_data, desc);
@@ -470,7 +470,7 @@ void ResizeRenderTargetViewportCamera(
 
 // --------- SHADER STATE -----------------
 
-void SetVertexBuffers(dx_context context, const input_layout_desc& layout, const mesh_buffer_t& mesh_buffer) {
+void SetVertexBuffers(dx_context context, const input_layout_data_t& layout, const mesh_buffer_t& mesh_buffer) {
 	const auto NUM_PARAMETERS = layout.desc.size();
 
 	pn::vector<ID3D11Buffer*> vertex_buffers;
@@ -538,7 +538,7 @@ void SetPixelShader(dx_context context, dx_pixel_shader shader) {
 	context->PSSetShader(shader.Get(), nullptr, 0);
 }
 
-void SetInputLayout(dx_context context, const input_layout_desc& layout_desc) {
+void SetInputLayout(dx_context context, const input_layout_data_t& layout_desc) {
 	context->IASetInputLayout(layout_desc.ptr.Get());
 }
 

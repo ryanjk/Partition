@@ -26,7 +26,7 @@
 
 // -- Uniform buffer data definitions ----
 
-struct alignas(16) global_contants_t {
+struct alignas(16) global_constants_t {
 	float t = 0.0f;
 	float screen_width;
 	float screen_height;
@@ -60,7 +60,7 @@ using pn::cbuffer_array;
 
 // ----- program uniforms ------
 #define N_WAVES 1
-cbuffer<global_contants_t>		global_constants;
+cbuffer<global_constants_t>		global_constants;
 cbuffer<camera_constants_t>		camera_constants;
 cbuffer<model_constants_t>		model_constants;
 cbuffer<directional_light_t>	directional_light;
@@ -71,7 +71,7 @@ pn::transform_t					wave_transform;
 pn::vector<pn::mesh_buffer_t>	wave_mesh_buffer;
 
 pn::dx_vertex_shader			wave_vs;
-pn::input_layout_desc			wave_input_layout;
+pn::input_layout_data_t			wave_input_layout;
 pn::dx_shader_reflection		wave_vs_reflector;
 
 pn::dx_pixel_shader				wave_ps;
@@ -82,7 +82,7 @@ pn::transform_t					monkey_transform;
 pn::vector<pn::mesh_buffer_t>	monkey_mesh_buffer;
 
 pn::dx_vertex_shader			basic_vs;
-pn::input_layout_desc			basic_input_layout;
+pn::input_layout_data_t			basic_input_layout;
 pn::dx_shader_reflection		basic_vs_reflector;
 
 pn::dx_pixel_shader				basic_ps;
@@ -130,14 +130,14 @@ void Init() {
 	}
 
 	{
-		auto vs_byte_code = pn::ReadFile(pn::GetResourcePath("basic_vs.cso"));
-		basic_vs = pn::CreateVertexShader(device, vs_byte_code);
-		basic_input_layout = pn::CreateInputLayout(device, vs_byte_code);
-		basic_vs_reflector = pn::GetShaderReflector(vs_byte_code);
+		auto vs_byte_code	= pn::ReadFile(pn::GetResourcePath("basic_vs.cso"));
+		basic_vs			= pn::CreateVertexShader(device, vs_byte_code);
+		basic_input_layout	= pn::CreateInputLayout(device, vs_byte_code);
+		basic_vs_reflector	= pn::GetShaderReflector(vs_byte_code);
 
-		auto ps_byte_code = pn::ReadFile(pn::GetResourcePath("basic_ps.cso"));
-		basic_ps = pn::CreatePixelShader(device, ps_byte_code);
-		basic_ps_reflector = pn::GetShaderReflector(ps_byte_code);
+		auto ps_byte_code	= pn::ReadFile(pn::GetResourcePath("basic_ps.cso"));
+		basic_ps			= pn::CreatePixelShader(device, ps_byte_code);
+		basic_ps_reflector	= pn::GetShaderReflector(ps_byte_code);
 	}
 
 	global_constants.data.screen_width	= static_cast<float>(pn::app::window_desc.width);
@@ -241,8 +241,8 @@ void Render() {
 	// update model matrix
 	ImGui::SliderFloat3("position", &wave_transform.position.x, -100.0f, 100.0f);
 	ImGui::SliderFloat3("rotation", &wave_transform.rotation.x, -pn::TWOPI, pn::TWOPI);
-	model_constants.data.model = TransformToSRT(wave_transform);
-	model_constants.data.mvp = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
+	model_constants.data.model	= TransformToSRT(wave_transform);
+	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	for (int i = 0; i < N_WAVES; ++i) {
 		pn::string w_id = pn::string("w") + std::to_string(i);
@@ -271,12 +271,12 @@ void Render() {
 	pn::SetVertexBuffers(context, basic_input_layout, monkey_mesh);
 	pn::SetVertexShader(context, basic_vs);
 
-	model_constants.data.model = TransformToSRT(monkey_transform);
-	model_constants.data.mvp = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
+	model_constants.data.model	= TransformToSRT(monkey_transform);
+	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	UpdateBuffer(context, model_constants);
 
-	//pn::DrawIndexed(context, monkey_mesh);
+	pn::DrawIndexed(context, monkey_mesh);
 
 // --- END MONKEY
 

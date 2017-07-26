@@ -35,7 +35,7 @@ pn::dx_buffer global_constant_buffer;
 pn::dx_buffer instance_constant_buffer;
 
 pn::dx_vertex_shader vertex_shader;
-pn::input_layout_desc input_layout;
+pn::input_layout_data_t input_layout;
 pn::dx_pixel_shader pixel_shader;
 
 pn::vector<pn::mesh_buffer_t> mesh_buffer;

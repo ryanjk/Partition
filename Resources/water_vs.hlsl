@@ -16,7 +16,7 @@ cbuffer model_constants : register(b2) {
 struct Wave {
 	float	A; // amplitude
 	float	L; // speed
-	float	w; // frequency
+	float	w; // wavelength
 	float	q; // factor for Gerstener waves
 	float2	d; // direction
 };
@@ -122,9 +122,8 @@ VS_OUT main(VS_IN i) {
 	}
 
 	float4 pos		= float4(x, height, y, 1.0);
-
-	o.world_pos = mul(model, pos);
-	o.screen_pos = mul(mvp, pos);
+	o.world_pos		= mul(model, pos);
+	o.screen_pos	= mul(mvp, pos);
 
 	float3 normal = normalize(float3(nx, nz, ny));
 	float3x3 btn = {

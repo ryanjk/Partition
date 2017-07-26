@@ -67,7 +67,7 @@ struct input_element_desc {
 	}
 
 	input_element_desc(const D3D11_SIGNATURE_PARAMETER_DESC& d3d_parameter_desc, int input_slot) {
-		this->SemanticName = new char[16];
+		this->SemanticName = new char[NAME_SIZE];
 		strcpy(const_cast<LPSTR>(this->SemanticName), d3d_parameter_desc.SemanticName);
 		this->SemanticIndex = d3d_parameter_desc.SemanticIndex;
 		this->InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
@@ -116,9 +116,9 @@ struct input_element_desc {
 	}
 };
 
-struct input_layout_desc {
-	input_layout_desc() : ptr(nullptr), desc() {}
-	input_layout_desc(dx_input_layout ptr, vertex_input_desc desc) :
+struct input_layout_data_t {
+	input_layout_data_t() : ptr(nullptr), desc() {}
+	input_layout_data_t(dx_input_layout ptr, vertex_input_desc desc) :
 		ptr{ ptr }, desc{ desc } {}
 
 	dx_input_layout ptr;
@@ -137,9 +137,12 @@ struct mesh_t {
 	pn::vector<unsigned int>	indices;
 	D3D_PRIMITIVE_TOPOLOGY		topology;
 
-	mesh_t() : 
-		positions(), colors(), normals(), tangents(), bitangents(), uvs(), uv2s(), indices(), topology()
-	{}
+	mesh_t()						= default;
+	mesh_t(mesh_t&&)				= default;
+
+	mesh_t(const mesh_t&)			= delete;
+	mesh_t operator=(const mesh_t&) = delete;
+
 };
 
 struct mesh_buffer_t {
@@ -212,16 +215,16 @@ dx_vertex_shader		CreateVertexShader(dx_device device, const std::string& filena
 dx_pixel_shader			CreatePixelShader(dx_device device, const pn::bytes& ps_data);
 dx_pixel_shader			CreatePixelShader(dx_device device, const std::string& filename);
 
-input_layout_desc		CreateInputLayout(dx_device device, const pn::bytes& bytes, const vertex_input_desc& desc);
-input_layout_desc		CreateInputLayout(dx_device device, const pn::bytes& bytes);
+input_layout_data_t		CreateInputLayout(dx_device device, const pn::bytes& bytes, const vertex_input_desc& desc);
+input_layout_data_t		CreateInputLayout(dx_device device, const pn::bytes& bytes);
 
-std::pair<dx_vertex_shader, input_layout_desc> 
+std::pair<dx_vertex_shader, input_layout_data_t> 
 						CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename, const vertex_input_desc& desc);
 
-std::pair<dx_vertex_shader, input_layout_desc> 
+std::pair<dx_vertex_shader, input_layout_data_t> 
 						CreateVertexShaderAndInputLayout(dx_device device, const pn::bytes& vs_byte_code, const vertex_input_desc& desc);
 
-std::pair<dx_vertex_shader, input_layout_desc> 
+std::pair<dx_vertex_shader, input_layout_data_t> 
 						CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename);
 
 // -------------- BUFFER CREATION -------------------
@@ -320,9 +323,9 @@ void ResizeRenderTargetViewportCamera(dx_device device,
 void SetVertexShader(dx_context context, dx_vertex_shader shader);
 void SetPixelShader(dx_context context, dx_pixel_shader shader);
 
-void SetInputLayout(dx_context context, const input_layout_desc& layout_desc);
+void SetInputLayout(dx_context context, const input_layout_data_t& layout_desc);
 
-void SetVertexBuffers(dx_context context, const input_layout_desc& input_layout, const mesh_buffer_t& mesh_buffer);
+void SetVertexBuffers(dx_context context, const input_layout_data_t& input_layout, const mesh_buffer_t& mesh_buffer);
 
 // ---------- BLENDING -----------------
 

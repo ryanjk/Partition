@@ -75,6 +75,11 @@ void	PushBack(vector<T>& vec, U&& value, Us&&... args) {
 	PushBack(vec, args...);
 }
 
+template<typename T, typename... Args>
+void	EmplaceBack(vector<T>& vec, Args&&... args) {
+	vec.emplace_back(std::forward<Args>(args)...);
+}
+
 template<typename T>
 auto	Pop(vector<T>& vec) -> decltype(vec.pop_back()) {
 	return vec.pop_back();

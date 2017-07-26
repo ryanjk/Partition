@@ -7,6 +7,8 @@
 #include <IO\FileUtil.h>
 #include <IO\PathUtil.h>
 
+#include <utility>
+
 namespace pn {
 
 unsigned int MeshLoadDataToAssimp(const MeshLoadData& mesh_load_data) {
@@ -67,14 +69,14 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 	}
 	result_mesh.topology = D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	LogDebug("Finished loading mesh {}", mesh->mName.C_Str());
-	return result_mesh;
+	return std::move(result_mesh);
 }
 
 void ProcessAINode(aiNode* node, const aiScene* scene, pn::vector<mesh_t>& meshes) {
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
 		auto* ai_mesh = scene->mMeshes[node->mMeshes[i]];
-		auto mesh = ConvertAIMeshToMesh(ai_mesh, scene);
-		PushBack(meshes, mesh);
+		auto mesh = std::move(ConvertAIMeshToMesh(ai_mesh, scene));
+		EmplaceBack(meshes, std::move(mesh));
 	}
 
 	for (unsigned int i = 0; i < node->mNumChildren; ++i) {

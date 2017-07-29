@@ -119,12 +119,12 @@ void Init() {
 	// --------- CREATE SHADER DATA ---------------
 
 	{
-		auto vs_byte_code	= pn::ReadFile(pn::GetResourcePath("water_vs.cso"));
+		auto vs_byte_code	= pn::CompileVertexShader(pn::GetResourcePath("water.hlsl"));
 		wave_vs				= pn::CreateVertexShader(device, vs_byte_code);
 		wave_input_layout	= pn::CreateInputLayout(device, vs_byte_code);
 		wave_vs_reflector	= pn::GetShaderReflector(vs_byte_code);
 
-		auto ps_byte_code	= pn::ReadFile(pn::GetResourcePath("water_ps.cso"));
+		auto ps_byte_code	= pn::CompilePixelShader(pn::GetResourcePath("water.hlsl"));
 		wave_ps				= pn::CreatePixelShader(device, ps_byte_code);
 		wave_ps_reflector	= pn::GetShaderReflector(ps_byte_code);
 	}

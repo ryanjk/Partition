@@ -259,6 +259,59 @@ vector<mesh_buffer_t>	CreateMeshBuffer(dx_device device, const pn::vector<mesh_t
 
 // -------------- SHADER CREATION -------------
 
+pn::bytes CompileShader(
+	const pn::string& filename,
+	const D3D_SHADER_MACRO* defines,
+	const pn::string& entry_point,
+	const pn::string& shader_type,
+	unsigned int flags) {
+	pn::wstring wfilename(filename.size(), L'#');
+	mbstowcs(wfilename.data(), filename.c_str(), filename.size());
+	ID3DBlob* byte_code = nullptr;
+	ID3DBlob* error_msgs = nullptr;
+	auto hr = D3DCompileFromFile(
+		wfilename.c_str(), 
+		defines, 
+		D3D_COMPILE_STANDARD_FILE_INCLUDE, 
+		entry_point.c_str(),
+		shader_type.c_str(),
+		flags, 0,
+		&byte_code,
+		&error_msgs);
+	if (FAILED(hr)) {
+		LogError("Couldn't compile {}::{}: {}", filename, entry_point, ErrMsg(hr));
+	}
+	if (error_msgs != NULL) {
+		LogError("Compilation errors: {}", (char*)(error_msgs->GetBufferPointer()));
+	}
+	pn::bytes return_bytes;
+	if (byte_code != nullptr) {
+		return_bytes.resize(byte_code->GetBufferSize());
+		memcpy(return_bytes.data(), byte_code->GetBufferPointer(), byte_code->GetBufferSize());
+	}
+	return return_bytes;
+}
+
+pn::bytes		CompileVertexShader(const pn::string& filename, const D3D_SHADER_MACRO* defines, unsigned int flags) {
+	return CompileShader(filename, defines, "VS_main", "vs_5_0", flags);
+}
+
+pn::bytes		CompileVertexShader(const pn::string& filename, const D3D_SHADER_MACRO* defines) {
+	unsigned int flags = 0;
+#ifdef _DEBUG
+	flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_WARNINGS_ARE_ERRORS | D3DCOMPILE_OPTIMIZATION_LEVEL0;
+#else
+	flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
+#endif
+
+	return CompileVertexShader(filename, defines, flags);
+}
+
+
+pn::bytes		CompileVertexShader(const pn::string& filename) {
+	return CompileVertexShader(filename, NULL);
+}
+
 dx_vertex_shader CreateVertexShader(dx_device device, const pn::bytes& bytes) {
 	return CreateShader<ID3D11VertexShader>(device, bytes, std::bind(&ID3D11Device::CreateVertexShader, device.Get(), _1, _2, _3, _4));
 }
@@ -266,6 +319,26 @@ dx_vertex_shader CreateVertexShader(dx_device device, const pn::bytes& bytes) {
 dx_vertex_shader CreateVertexShader(dx_device device, const std::string& filename) {
 	auto vs_data = pn::ReadFile(filename);
 	return CreateVertexShader(device, vs_data);
+}
+
+pn::bytes		CompilePixelShader(const pn::string& filename, const D3D_SHADER_MACRO* defines, unsigned int flags) {
+	return CompileShader(filename, defines, "PS_main", "ps_5_0", flags);
+}
+
+pn::bytes		CompilePixelShader(const pn::string& filename, const D3D_SHADER_MACRO* defines) {
+	unsigned int flags = 0;
+#ifdef _DEBUG
+	flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_WARNINGS_ARE_ERRORS | D3DCOMPILE_OPTIMIZATION_LEVEL0;
+#else
+	flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
+#endif
+
+	return CompilePixelShader(filename, defines, flags);
+}
+
+
+pn::bytes		CompilePixelShader(const pn::string& filename) {
+	return CompilePixelShader(filename, NULL);
 }
 
 dx_pixel_shader CreatePixelShader(dx_device device, const pn::bytes& ps_data) {
@@ -321,7 +394,7 @@ std::pair<dx_vertex_shader, input_layout_data_t> CreateVertexShaderAndInputLayou
 
 // ------------ UTILITY FUNCTIONS -------------
 
-dx_texture2d GetSwapChainBackBuffer(dx_swap_chain swap_chain) {
+dx_texture2d			GetSwapChainBackBuffer(dx_swap_chain swap_chain) {
 	dx_texture2d back_buffer;
 	auto hr = swap_chain->GetBuffer(
 		0,
@@ -336,7 +409,7 @@ dx_texture2d GetSwapChainBackBuffer(dx_swap_chain swap_chain) {
 	return back_buffer;
 }
 
-dx_context GetContext(dx_device device) {
+dx_context				GetContext(dx_device device) {
 	dx_context context;
 	device->GetImmediateContext(&context);
 
@@ -347,7 +420,7 @@ dx_context GetContext(dx_device device) {
 	return context;
 }
 
-CD3D11_TEXTURE2D_DESC GetTextureDesc(dx_texture2d texture) {
+CD3D11_TEXTURE2D_DESC	GetTextureDesc(dx_texture2d texture) {
 	CD3D11_TEXTURE2D_DESC desc;
 	texture->GetDesc(&desc);
 	return desc;
@@ -355,7 +428,7 @@ CD3D11_TEXTURE2D_DESC GetTextureDesc(dx_texture2d texture) {
 
 // --------- SHADER REFLECTION ------------
 
-dx_shader_reflection GetShaderReflector(const pn::bytes& shader_byte_code) {
+dx_shader_reflection			GetShaderReflector(const pn::bytes& shader_byte_code) {
 	dx_shader_reflection reflector = nullptr;
 	auto hr = D3DReflect(shader_byte_code.data(), shader_byte_code.size(), IID_ID3D11ShaderReflection, (void**) reflector.GetAddressOf());
 	if (FAILED(hr)) {
@@ -365,12 +438,12 @@ dx_shader_reflection GetShaderReflector(const pn::bytes& shader_byte_code) {
 	return reflector;
 }
 
-vertex_input_desc GetVertexInputDescFromShader(const pn::bytes& vs_byte_code) {
+vertex_input_desc				GetVertexInputDescFromShader(const pn::bytes& vs_byte_code) {
 	dx_shader_reflection reflector = GetShaderReflector(vs_byte_code);
 	return GetVertexInputDescFromShader(reflector);
 }
 
-vertex_input_desc		GetVertexInputDescFromShader(dx_shader_reflection reflector) {
+vertex_input_desc				GetVertexInputDescFromShader(dx_shader_reflection reflector) {
 	D3D11_SHADER_DESC shader_desc;
 	auto hr = reflector->GetDesc(&shader_desc);
 	if (FAILED(hr)) {
@@ -395,7 +468,7 @@ vertex_input_desc		GetVertexInputDescFromShader(dx_shader_reflection reflector) 
 	return vertex_desc;
 }
 
-D3D11_SHADER_INPUT_BIND_DESC GetResourceBindingDesc(dx_shader_reflection reflector, const pn::string& name) {
+D3D11_SHADER_INPUT_BIND_DESC	GetResourceBindingDesc(dx_shader_reflection reflector, const pn::string& name) {
 	D3D11_SHADER_INPUT_BIND_DESC binding_desc;
 	ZeroMemory(&binding_desc, sizeof(D3D11_SHADER_INPUT_BIND_DESC));
 	auto hr = reflector->GetResourceBindingDescByName(name.c_str(), &binding_desc);
@@ -406,7 +479,7 @@ D3D11_SHADER_INPUT_BIND_DESC GetResourceBindingDesc(dx_shader_reflection reflect
 	return binding_desc;
 }
 
-unsigned int GetUniformStartSlot(dx_shader_reflection reflector, const pn::string& name) {
+unsigned int					GetUniformStartSlot(dx_shader_reflection reflector, const pn::string& name) {
 	auto binding_desc = GetResourceBindingDesc(reflector, name);
 	assert(binding_desc.Type == D3D_SHADER_INPUT_TYPE::D3D_SIT_CBUFFER);
 	return binding_desc.BindPoint;
@@ -544,7 +617,7 @@ void SetInputLayout(dx_context context, const input_layout_data_t& layout_desc) 
 
 // ----------- BLENDING ----------------
 
-dx_blend_state CreateBlendState(dx_device device) {
+dx_blend_state	CreateBlendState(dx_device device) {
 	D3D11_BLEND_DESC blend_desc;
 	ZeroMemory(&blend_desc, sizeof(D3D11_BLEND_DESC));
 	blend_desc.IndependentBlendEnable					= false;
@@ -560,7 +633,7 @@ dx_blend_state CreateBlendState(dx_device device) {
 	return CreateBlendState(device, blend_desc);
 }
 
-dx_blend_state CreateBlendState(dx_device device, const D3D11_BLEND_DESC& blend_desc) {
+dx_blend_state	CreateBlendState(dx_device device, const D3D11_BLEND_DESC& blend_desc) {
 	pn::dx_blend_state blend_state;
 	auto hr = device->CreateBlendState(&blend_desc, blend_state.GetAddressOf());
 	if (FAILED(hr)) {
@@ -569,7 +642,7 @@ dx_blend_state CreateBlendState(dx_device device, const D3D11_BLEND_DESC& blend_
 	return blend_state;
 }
 
-void SetBlendState(dx_device device, dx_blend_state blend_state) {
+void			SetBlendState(dx_device device, dx_blend_state blend_state) {
 	GetContext(device)->OMSetBlendState(blend_state.Get(), 0, 0xffffffff);
 }
 

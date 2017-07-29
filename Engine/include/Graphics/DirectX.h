@@ -3,6 +3,7 @@
 #include <d3d11_1.h>
 #include <dxgi1_3.h>
 #include <d3d11shader.h>
+#include <d3dcompiler.h>
 
 #include <wrl.h> // ComPtr
 
@@ -186,6 +187,13 @@ mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh);
 
 // -------------- SHADER CREATION -------------
 
+pn::bytes CompileShader(
+	const pn::string& filename,
+	const D3D_SHADER_MACRO* defines,
+	const pn::string& entry_point,
+	const pn::string& shader_type,
+	unsigned int flags);
+
 template<typename ID3D11ShaderType, typename DeviceShaderFunc>
 auto					CreateShader(dx_device device, const pn::bytes& bytes, DeviceShaderFunc CreateShader) {
 
@@ -209,23 +217,31 @@ auto					CreateShader(dx_device device, const pn::bytes& bytes, DeviceShaderFunc
 	return shader;
 }
 
+pn::bytes				CompileVertexShader(const pn::string& filename, const D3D_SHADER_MACRO* defines, unsigned int flags);
+pn::bytes				CompileVertexShader(const pn::string& filename, const D3D_SHADER_MACRO* defines);
+pn::bytes				CompileVertexShader(const pn::string& filename);
+
 dx_vertex_shader		CreateVertexShader(dx_device device, const pn::bytes& bytes);
-dx_vertex_shader		CreateVertexShader(dx_device device, const std::string& filename);
+dx_vertex_shader		CreateVertexShader(dx_device device, const pn::string& filename);
+
+pn::bytes				CompilePixelShader(const pn::string& filename, const D3D_SHADER_MACRO* defines, unsigned int flags);
+pn::bytes				CompilePixelShader(const pn::string& filename, const D3D_SHADER_MACRO* defines);
+pn::bytes				CompilePixelShader(const pn::string& filename);
 
 dx_pixel_shader			CreatePixelShader(dx_device device, const pn::bytes& ps_data);
-dx_pixel_shader			CreatePixelShader(dx_device device, const std::string& filename);
+dx_pixel_shader			CreatePixelShader(dx_device device, const pn::string& filename);
 
 input_layout_data_t		CreateInputLayout(dx_device device, const pn::bytes& bytes, const vertex_input_desc& desc);
 input_layout_data_t		CreateInputLayout(dx_device device, const pn::bytes& bytes);
 
 std::pair<dx_vertex_shader, input_layout_data_t> 
-						CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename, const vertex_input_desc& desc);
+						CreateVertexShaderAndInputLayout(dx_device device, const pn::string& filename, const vertex_input_desc& desc);
 
 std::pair<dx_vertex_shader, input_layout_data_t> 
 						CreateVertexShaderAndInputLayout(dx_device device, const pn::bytes& vs_byte_code, const vertex_input_desc& desc);
 
 std::pair<dx_vertex_shader, input_layout_data_t> 
-						CreateVertexShaderAndInputLayout(dx_device device, const std::string& filename);
+						CreateVertexShaderAndInputLayout(dx_device device, const pn::string& filename);
 
 // -------------- BUFFER CREATION -------------------
 

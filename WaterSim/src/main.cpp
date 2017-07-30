@@ -137,14 +137,14 @@ void Init() {
 	camera_constants.data.view = pn::mat4f::Identity;
 
 	// init wave object
-	wave_transform.position = { 0, 0, 15 };
-	wave_transform.scale = { 1, 1, 1 };
+	wave_transform.position	= { 0, 0, 15 };
+	wave_transform.scale	= { 1, 1, 1 };
 	wave_transform.rotation = { 0.698f, 3.069f, 0.f };
 
 	// init monkey object
-	monkey_transform.position = { 0, 0, 15 };
-	monkey_transform.scale = { 1,1,1 };
-	monkey_transform.rotation = { 0,0,0 };
+	monkey_transform.position	= { 0, 0, 15 };
+	monkey_transform.scale		= { 1, 1, 1 };
+	monkey_transform.rotation	= { 0, 0, 0 };
 
 	// --------- INIT CUSTOM ALLOCATORS -----------
 	pn::frame_string::SetFrameAllocator(&frame_alloc);
@@ -202,7 +202,7 @@ void Render() {
 	// update model matrix
 	ImGui::SliderFloat3("position", &wave_transform.position.x, -100.0f, 100.0f);
 	ImGui::SliderFloat3("rotation", &wave_transform.rotation.x, -pn::TWOPI, pn::TWOPI);
-	model_constants.data.model	= TransformToSRT(wave_transform);
+	model_constants.data.model	= LocalToWorldSRT(wave_transform);
 	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	for (int i = 0; i < N_WAVES; ++i) {
@@ -232,7 +232,7 @@ void Render() {
 	auto& monkey_mesh			= monkey_mesh_buffer[0];
 	pn::SetVertexBuffers(context, basic_program.input_layout_data, monkey_mesh);
 
-	model_constants.data.model	= TransformToSRT(monkey_transform);
+	model_constants.data.model	= LocalToWorldSRT(monkey_transform);
 	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	UpdateBuffer(context, model_constants);

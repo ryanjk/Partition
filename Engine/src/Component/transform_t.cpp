@@ -2,8 +2,18 @@
 
 namespace pn {
 
+pn::mat4f LocalToWorldSRT(const transform_t& transform) {
+	auto cur_srt = TransformToSRT(transform);
+	auto* cur_parent = transform.parent;
+	while (cur_parent != nullptr) {
+		cur_srt *= TransformToSRT(*cur_parent);
+		cur_parent = cur_parent->parent;
+	}
+	return cur_srt;
+}
+
 pn::mat4f TransformToSRT(const transform_t& transform) {
-	return pn::SRTMatrix(transform.scale, transform.rotation, transform.position);
+	return SRTMatrix(transform.scale, transform.rotation, transform.position);
 }
 
 } // namespace pn

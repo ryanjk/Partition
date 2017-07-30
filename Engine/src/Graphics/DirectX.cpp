@@ -302,12 +302,12 @@ pn::bytes CompileShader(
 shader_program_t		CompileShaderProgram(dx_device device, const pn::string& filename, const D3D_SHADER_MACRO* defines, unsigned int flags) {
 	shader_program_t program;
 
-	auto vs_byte_code						= pn::CompileVertexShader(pn::GetResourcePath(filename), defines, flags);
+	auto vs_byte_code						= pn::CompileVertexShader(filename, defines, flags);
 	program.vertex_shader_data.shader		= pn::CreateVertexShader(device, vs_byte_code);
 	program.input_layout_data				= pn::CreateInputLayout(device, vs_byte_code);
 	program.vertex_shader_data.reflection	= pn::GetShaderReflector(vs_byte_code);
 
-	auto ps_byte_code						= pn::CompilePixelShader(pn::GetResourcePath(filename), defines, flags);
+	auto ps_byte_code						= pn::CompilePixelShader(filename, defines, flags);
 	program.pixel_shader_data.shader		= pn::CreatePixelShader(device, ps_byte_code);
 	program.pixel_shader_data.reflection	= pn::GetShaderReflector(ps_byte_code);
 

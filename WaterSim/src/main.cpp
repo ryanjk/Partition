@@ -12,6 +12,7 @@
 
 #include <UI\UIUtil.h>
 #include <UI\EditorUI.h>
+#include <UI\EditStruct.h>
 
 #include <Component\transform_t.h>
 
@@ -33,6 +34,16 @@ struct alignas(16) wave_t {
 	float q;
 	pn::vec2f d;
 };
+
+template<>
+void pn::gui::EditStruct(wave_t& wave) {
+	DragFloat("amplitude##", &wave.A, 0.0f, 10.0f);
+	DragFloat("speed##", &wave.L, 0.0f, 10.0f);
+	DragFloat("wavelength##", &wave.w, 0.0f, 10.0f);
+	DragFloat("steepness##", &wave.q, 0.0f, 3.0f);
+	DragFloat2("direction##", &(wave.d.x), -1.0f, 1.0f);
+	wave.d = (wave.d == pn::vec2f::Zero) ? pn::vec2f::Zero : pn::Normalize(wave.d);
+}
 
 // ----- program uniforms ------
 #define N_WAVES 1
@@ -105,8 +116,8 @@ void Init() {
 
 	// --------- CREATE SHADER DATA ---------------
 
-	wave_program	= pn::CompileShaderProgram(device, "water.hlsl");
-	basic_program	= pn::CompileShaderProgram(device, "basic.hlsl");
+	wave_program	= pn::CompileShaderProgram(device, pn::GetResourcePath("water.hlsl"));
+	basic_program	= pn::CompileShaderProgram(device, pn::GetResourcePath("basic.hlsl"));
 
 	global_constants.data.screen_width	= static_cast<float>(pn::app::window_desc.width);
 	global_constants.data.screen_height	= static_cast<float>(pn::app::window_desc.height);
@@ -200,19 +211,14 @@ void Render() {
 	ImGui::Begin("Waves");
 
 	// update model matrix
-	ImGui::SliderFloat3("position", &wave_transform.position.x, -100.0f, 100.0f);
-	ImGui::SliderFloat3("rotation", &wave_transform.rotation.x, -pn::TWOPI, pn::TWOPI);
+	pn::gui::EditStruct(wave_transform);
 	model_constants.data.model	= LocalToWorldSRT(wave_transform);
 	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	for (int i = 0; i < N_WAVES; ++i) {
-		pn::string w_id = pn::string("w") + std::to_string(i);
-		ImGui::SliderFloat((w_id + " amp").c_str(), &wave.data[i].A, 0.0f, 10.0f);
-		ImGui::SliderFloat((w_id + " L").c_str(), &wave.data[i].L, 0.0f, 10.0f);
-		ImGui::SliderFloat((w_id + " w").c_str(), &wave.data[i].w, 0.0f, 10.0f);
-		ImGui::SliderFloat((w_id + " Q").c_str(), &wave.data[i].q, 0.0f, 3.0f);
-		ImGui::SliderFloat2((w_id + " d").c_str(), &(wave.data[i].d.x), -1.0f, 1.0f);
-		wave.data[i].d = (wave.data[i].d == pn::vec2f::Zero) ? pn::vec2f::Zero : pn::Normalize(wave.data[i].d);
+		ImGui::PushID(i);
+		pn::gui::EditStruct(wave.data[i]);
+		ImGui::PopID();
 	}
 
 	ImGui::End(); // Waves

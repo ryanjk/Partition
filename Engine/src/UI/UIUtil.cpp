@@ -1,6 +1,16 @@
 #include <UI\UIUtil.h>
 
+#include <Input\Input.h>
+
+// -------- VARIABLES ---------
+
 int g_debugVariableCount = 0;
+
+const float NORMAL_DRAG_SPEED = 0.1f;
+const float SLOW_DRAG_SPEED = 0.01f;
+
+
+// ------ FUNCTIONS ----------
 
 pn::string GetDefaultVariableName(int id) {
 	pn::string s = pn::string("v") + std::to_string(id);
@@ -24,3 +34,31 @@ void	ImGuiCall<pn::mat4f*, float, ui::transform_t>(const pn::string & name, pn::
 	//ImGui::SliderFloat4((name + " rotation").c_str(), (float*) &rotation, min, max);
 	//*value = DirectX::XMMatrixScalingFromVector(scale) * DirectX::XMMatrixRotationQuaternion(rotation) * DirectX::XMMatrixTranslationFromVector(translation);
 }
+
+namespace pn {
+
+namespace gui {
+
+float GetDragSpeed() {
+	float DRAG_SPEED = NORMAL_DRAG_SPEED;
+	if (pn::input::GetKeyState(pn::input::input_key::CONTROL) == pn::input::key_state::PRESSED) DRAG_SPEED = SLOW_DRAG_SPEED;
+	return DRAG_SPEED;
+}
+
+bool DragFloat(const char* label, float* v, float min, float max, float speed_modifer, const char* display_format, float power) {
+	return ImGui::DragFloat(label, v, GetDragSpeed() * speed_modifer, min, max, display_format, power);
+}
+bool DragFloat2(const char* label, float* v, float min, float max, float speed_modifier, const char* display_format, float power) {
+	return ImGui::DragFloat2(label, v, GetDragSpeed() * speed_modifier, min, max, display_format, power);
+}
+bool DragFloat3(const char* label, float* v, float min, float max, float speed_modifer, const char* display_format, float power) {
+	return ImGui::DragFloat3(label, v, GetDragSpeed() * speed_modifer, min, max, display_format, power);
+}
+bool DragFloat4(const char* label, float* v, float min, float max, float speed_modifer, const char* display_format, float power) {
+	return ImGui::DragFloat4(label, v, GetDragSpeed() * speed_modifer, min, max, display_format, power);
+}
+
+} // namespace gui
+
+
+} // namespace pn

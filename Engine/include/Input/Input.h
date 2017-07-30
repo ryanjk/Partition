@@ -74,20 +74,20 @@ struct input_state_t {
 
 // -------- FUNCTIONS --------------
 
-void			InitInput();
-void			InputOnEndOfFrame();
+void				InitInput();
+void				InputOnEndOfFrame();
 
-void			SetKeyState(const unsigned int vkey, const key_state state);
-key_state		GetKeyState(const input_key vkey);
+void				SetKeyState(const unsigned int vkey, const key_state state);
+key_state			GetKeyState(const input_key vkey);
 
-void			SetMousePos(const mouse_pos_t mouse_pos);
-mouse_pos_t		GetMousePos();
+void				SetMousePos(const mouse_pos_t mouse_pos);
+mouse_pos_t			GetMousePos();
 
-void			SetMouseWheelState(const mouse_wheel_state state);
-mouse_wheel_state GetMouseWheelState();
+void				SetMouseWheelState(const mouse_wheel_state state);
+mouse_wheel_state	GetMouseWheelState();
 
-void			AddInputCharacter(const unsigned char c);
-const string&	GetInputCharacters();
+void				AddInputCharacter(const unsigned char c);
+const string&		GetInputCharacters();
 
 
 } // namespace input

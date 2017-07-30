@@ -158,6 +158,7 @@
   <ItemGroup>
     <ClInclude Include="include\Application\Global.h" />
     <ClInclude Include="include\Application\MainLoop.inc" />
+    <ClInclude Include="include\Component\render_data_t.h" />
     <ClInclude Include="include\Component\transform_t.h" />
     <ClInclude Include="include\Graphics\DirectX.h" />
     <ClInclude Include="include\Graphics\MeshLoadUtil.h" />
@@ -176,6 +177,7 @@
     <ClInclude Include="include\IO\FileUtil.h" />
     <ClInclude Include="include\IO\PathUtil.h" />
     <ClInclude Include="include\UI\EditorUI.h" />
+    <ClInclude Include="include\UI\EditStruct.h" />
     <ClInclude Include="include\UI\UIUtil.h" />
     <ClInclude Include="include\Utilities\frame_string.h" />
     <ClInclude Include="include\Utilities\Logging.h" />
@@ -185,6 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application\Global.cpp" />
+    <ClCompile Include="src\Component\render_data_t.cpp" />
     <ClCompile Include="src\Component\transform_t.cpp" />
     <ClCompile Include="src\Graphics\DirectX.cpp" />
     <ClCompile Include="src\Graphics\MeshLoadUtil.cpp" />

@@ -138,6 +138,12 @@
     <ClInclude Include="include\Graphics\CBuffer.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="include\UI\EditStruct.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Component\render_data_t.h">
+      <Filter>Header Files\Component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\imgui\imgui.cpp">
@@ -192,6 +198,9 @@
       <Filter>Source Files\Input</Filter>
     </ClCompile>
     <ClCompile Include="src\Component\transform_t.cpp">
+      <Filter>Source Files\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Component\render_data_t.cpp">
       <Filter>Source Files\Component</Filter>
     </ClCompile>
   </ItemGroup>

@@ -6,6 +6,8 @@
 #include <Utilities\UtilityTypes.h>
 #include <Utilities\Math.h>
 
+#include <Component\transform_t.h>
+
 #include <type_traits>
 
 // ------ MACROS --------
@@ -54,3 +56,16 @@ void		VDB(const pn::string& name, T value, M min, M max, S s) {
 	}
 	ImGuiCall(variable_name, value, min, max, s);
 }
+
+namespace pn {
+
+namespace gui {
+
+bool DragFloat(const char* label, float* v, float min, float max, float speed_modifier = 1.0f, const char* display_format = "%.3f", float power = 1.0f);
+bool DragFloat2(const char* label, float* v, float min, float max, float speed_modifier = 1.0f, const char* display_format = "%.3f", float power = 1.0f);
+bool DragFloat3(const char* label, float* v, float min, float max, float speed_modifier = 1.0f, const char* display_format = "%.3f", float power = 1.0f);
+bool DragFloat4(const char* label, float* v, float min, float max, float speed_modifier = 1.0f, const char* display_format = "%.3f", float power = 1.0f);
+
+} // namespace gui
+
+} // namespace pn::gui

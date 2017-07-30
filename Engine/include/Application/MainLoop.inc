@@ -3,6 +3,7 @@
 #include <Graphics\Window.h>
 #include <Graphics\DirectX.h>
 #include <Graphics\TextureLoadUtil.h>
+#include <Graphics\CBuffer.h>
 
 #include <Utilities\Logging.h>
 #include <Utilities\Memory.h>
@@ -20,6 +21,28 @@
 #include <chrono>
 
 using namespace pn::input;
+
+// -- Uniform buffer data definitions ----
+
+struct alignas(16) global_constants_t {
+	float t = 0.0f;
+	float screen_width;
+	float screen_height;
+};
+
+struct camera_constants_t {
+	pn::mat4f view;
+	pn::mat4f proj;
+};
+
+struct model_constants_t {
+	pn::mat4f model;
+	pn::mat4f mvp;
+};
+
+pn::cbuffer<global_constants_t>		global_constants;
+pn::cbuffer<camera_constants_t>		camera_constants;
+pn::cbuffer<model_constants_t>		model_constants;
 
 // --------- VARIABLES -------------
 pn::dx_device				device;
@@ -191,6 +214,10 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 	auto context = pn::GetContext(device);
 	pn::SetViewport(context, awd.width, awd.height);
+
+	pn::Initialize(device, global_constants);
+	pn::Initialize(device, camera_constants);
+	pn::Initialize(device, model_constants);
 
 	// ------ SET UP IMGUI ------------------------------
 

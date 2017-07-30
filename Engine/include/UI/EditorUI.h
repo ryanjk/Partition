@@ -10,6 +10,9 @@
 
 using std::conditional_t;
 
+template<typename T, typename F>
+using to_type = std::conditional_t<true, T, F>;
+
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
 namespace pn {
@@ -23,6 +26,12 @@ struct StringValue {
 
 	StringValue(const string& s) : data(s) {}
 	StringValue(const char* s) : data(s) {}
+	StringValue(int s) : data(std::to_string(s)) {}
+	StringValue(unsigned int s) : data(std::to_string(s)) {}
+	StringValue(float s) : data(std::to_string(s)) {}
+	StringValue(double s) : data(std::to_string(s)) {}
+	StringValue(char s) : data(std::to_string(s)) {}
+	StringValue(unsigned char s) : data(std::to_string(s)) {}
 
 	operator string() { return data; }
 
@@ -55,8 +64,8 @@ extern map<int, function_map> functions;
 
 template<typename R, typename... Args>
 void RegisterCommand(const pn::string& name, std::function<R(Args...)> f) {
-	std::function<StringValue(conditional_t<true, StringValue, Args>...)> command = [=](conditional_t<true, StringValue, Args>... args) {
-		return StringValue(std::to_string(f(static_cast<Args>(args)...)));
+	std::function<StringValue(to_type<StringValue, Args>...)> command = [=](to_type<StringValue, Args>... args) {
+		return StringValue(f(static_cast<Args>(args)...));
 	};
 	const int nargs = sizeof...(Args);
 	if (!Contains(functions, nargs)) {

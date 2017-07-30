@@ -2,17 +2,7 @@
 
 // ------ CONSTANT BUFFERS -------
 
-cbuffer camera_constants : register(b1) {
-	float4x4 view;
-	float4x4 proj;
-}
-
-cbuffer model_constants : register(b2) {
-	float4x4 model;
-	float4x4 mvp;
-}
-
-cbuffer directional_light : register(b3) {
+cbuffer directional_light {
 	float3	direction;
 	float	intensity;
 }
@@ -26,7 +16,7 @@ struct Wave {
 };
 
 #define N_WAVES 1
-cbuffer wave : register(b3) {
+cbuffer wave : register(b4) {
 	Wave w[N_WAVES];
 }
 
@@ -107,8 +97,8 @@ VS_OUT VS_main(VS_IN i) {
 	}
 
 	float4 pos = float4(x, height, y, 1.0);
-	o.world_pos = mul(model, pos);
-	o.screen_pos = mul(mvp, pos);
+	o.world_pos = mul(MODEL, pos);
+	o.screen_pos = mul(MVP, pos);
 
 	float3 normal = normalize(float3(nx, nz, ny));
 	float3x3 btn = {
@@ -117,8 +107,8 @@ VS_OUT VS_main(VS_IN i) {
 		i.n
 	};
 	o.n = float4(normalize(mul(btn, normal)), 0);
-	o.n = mul(model, o.n);
-	o.n = mul(view, o.n);
+	o.n = mul(MODEL, o.n);
+	o.n = mul(VIEW, o.n);
 
 	o.uv = i.uv;
 	return o;
@@ -128,7 +118,7 @@ VS_OUT VS_main(VS_IN i) {
 
 float4 PS_main(VS_OUT i) : SV_TARGET {
 	float3 shade = max(0.0, dot(i.n.xyz, -direction)) * intensity;
-	float4 view_pos = float4(view[3][0], view[3][1], view[3][2], 1);
+	float4 view_pos = float4(VIEW[3][0], VIEW[3][1], VIEW[3][2], 1);
 
 	float view_angle = max(0.0, dot(normalize(view_pos - i.world_pos), i.n));
 	float4 spec = pow(view_angle, 10000);

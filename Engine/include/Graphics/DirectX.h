@@ -16,6 +16,9 @@
 
 namespace pn {
 
+// -------- CONSTANTS --------------
+extern const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS;
+
 // ------------ TYPEDEFS -------------
 
 template<typename T>
@@ -161,10 +164,22 @@ struct mesh_buffer_t {
 };
 
 struct texture_t {
-	dx_resource resource;
-	dx_resource_view resource_view;
+	dx_resource			resource;
+	dx_resource_view	resource_view;
 
 	texture_t() : resource(nullptr), resource_view(nullptr) {}
+};
+
+template<typename DxShaderPtrT>
+struct shader_data_t {
+	DxShaderPtrT			shader;
+	dx_shader_reflection	reflection;
+};
+
+struct shader_program_t {
+	input_layout_data_t				input_layout_data;
+	shader_data_t<dx_vertex_shader> vertex_shader_data;
+	shader_data_t<dx_pixel_shader>	pixel_shader_data;
 };
 
 // ------------------- FUNCTIONS ----------------------
@@ -187,12 +202,14 @@ mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh);
 
 // -------------- SHADER CREATION -------------
 
-pn::bytes CompileShader(
+pn::bytes				CompileShader(
 	const pn::string& filename,
 	const D3D_SHADER_MACRO* defines,
 	const pn::string& entry_point,
 	const pn::string& shader_type,
 	unsigned int flags);
+
+shader_program_t		CompileShaderProgram(dx_device device, const pn::string& filename, const D3D_SHADER_MACRO* defines = nullptr, unsigned int flags = DEFAULT_SHADER_COMPILATION_FLAGS);
 
 template<typename ID3D11ShaderType, typename DeviceShaderFunc>
 auto					CreateShader(dx_device device, const pn::bytes& bytes, DeviceShaderFunc CreateShader) {
@@ -217,16 +234,12 @@ auto					CreateShader(dx_device device, const pn::bytes& bytes, DeviceShaderFunc
 	return shader;
 }
 
-pn::bytes				CompileVertexShader(const pn::string& filename, const D3D_SHADER_MACRO* defines, unsigned int flags);
-pn::bytes				CompileVertexShader(const pn::string& filename, const D3D_SHADER_MACRO* defines);
-pn::bytes				CompileVertexShader(const pn::string& filename);
+pn::bytes				CompileVertexShader(const pn::string& filename, const D3D_SHADER_MACRO* defines = nullptr, unsigned int flags = DEFAULT_SHADER_COMPILATION_FLAGS);
 
 dx_vertex_shader		CreateVertexShader(dx_device device, const pn::bytes& bytes);
 dx_vertex_shader		CreateVertexShader(dx_device device, const pn::string& filename);
 
-pn::bytes				CompilePixelShader(const pn::string& filename, const D3D_SHADER_MACRO* defines, unsigned int flags);
-pn::bytes				CompilePixelShader(const pn::string& filename, const D3D_SHADER_MACRO* defines);
-pn::bytes				CompilePixelShader(const pn::string& filename);
+pn::bytes				CompilePixelShader(const pn::string& filename, const D3D_SHADER_MACRO* defines = nullptr, unsigned int flags = DEFAULT_SHADER_COMPILATION_FLAGS);
 
 dx_pixel_shader			CreatePixelShader(dx_device device, const pn::bytes& ps_data);
 dx_pixel_shader			CreatePixelShader(dx_device device, const pn::string& filename);
@@ -336,12 +349,25 @@ void ResizeRenderTargetViewportCamera(dx_device device,
 
 // --------- SHADER STATE ----------------
 
+void SetShaderProgram(dx_context context, shader_program_t& shader_program);
+
 void SetVertexShader(dx_context context, dx_vertex_shader shader);
 void SetPixelShader(dx_context context, dx_pixel_shader shader);
 
 void SetInputLayout(dx_context context, const input_layout_data_t& layout_desc);
 
 void SetVertexBuffers(dx_context context, const input_layout_data_t& input_layout, const mesh_buffer_t& mesh_buffer);
+
+void SetVSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
+void SetPSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
+
+#define SetProgramVSConstantBuffer(context, name, program) pn::SetVSConstantBuffer(context, #name, program.vertex_shader_data.reflection, name.buffer)
+
+#define SetProgramPSConstantBuffer(context, name, program) pn::SetPSConstantBuffer(context, #name, program.pixel_shader_data.reflection, name.buffer)
+
+#define SetProgramConstantBuffer(context, name, program)	\
+SetProgramVSConstantBuffer(context, name, program);			\
+SetProgramPSConstantBuffer(context, name, program);
 
 // ---------- BLENDING -----------------
 
@@ -352,5 +378,7 @@ void			SetBlendState(dx_device device, dx_blend_state blend_state);
 // -------- DRAWING FUNCTIONS ---------------
 
 void DrawIndexed(dx_context context, const mesh_buffer_t& mesh_buffer, unsigned int start_vertex_location = 0, unsigned int base_vertex_location = 0);
+
+
 
 } // namespace pn

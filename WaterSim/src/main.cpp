@@ -3,7 +3,6 @@
 #include <Graphics\MeshLoadUtil.h>
 #include <Graphics\TextureLoadUtil.h>
 #include <Graphics\ProjectionMatrix.h>
-#include <Graphics\CBuffer.h>
 
 #include <Utilities\Logging.h>
 #include <Utilities\frame_string.h>
@@ -20,27 +19,7 @@
 
 #include <Application\MainLoop.inc>
 
-#define SetVSConstantBuffer(context, name, reflector) context->VSSetConstantBuffers(pn::GetUniformStartSlot(reflector, #name), 1, name.buffer.GetAddressOf())
-
-#define SetPSConstantBuffer(context, name, reflector) context->PSSetConstantBuffers(pn::GetUniformStartSlot(reflector, #name), 1, name.buffer.GetAddressOf())
-
 // -- Uniform buffer data definitions ----
-
-struct alignas(16) global_constants_t {
-	float t = 0.0f;
-	float screen_width;
-	float screen_height;
-};
-
-struct camera_constants_t {
-	pn::mat4f view;
-	pn::mat4f proj;
-};
-
-struct model_constants_t {
-	pn::mat4f model;
-	pn::mat4f mvp;
-};
 
 struct alignas(16) directional_light_t {
 	pn::vec3f direction;
@@ -55,27 +34,16 @@ struct alignas(16) wave_t {
 	pn::vec2f d;
 };
 
-using pn::cbuffer;
-using pn::cbuffer_array;
-
 // ----- program uniforms ------
 #define N_WAVES 1
-cbuffer<global_constants_t>		global_constants;
-cbuffer<camera_constants_t>		camera_constants;
-cbuffer<model_constants_t>		model_constants;
-cbuffer<directional_light_t>	directional_light;
-cbuffer_array<wave_t, N_WAVES>	wave;
+
+pn::cbuffer<directional_light_t>	directional_light;
+pn::cbuffer_array<wave_t, N_WAVES>	wave;
 
 // --- wave instance data ----
 pn::transform_t					wave_transform;
 pn::vector<pn::mesh_buffer_t>	wave_mesh_buffer;
-
-pn::dx_vertex_shader			wave_vs;
-pn::input_layout_data_t			wave_input_layout;
-pn::dx_shader_reflection		wave_vs_reflector;
-
-pn::dx_pixel_shader				wave_ps;
-pn::dx_shader_reflection		wave_ps_reflector;
+pn::shader_program_t			wave_program;
 
 // ---- monkey instance data -----
 pn::transform_t					monkey_transform;
@@ -94,7 +62,32 @@ pn::linear_allocator frame_alloc(1024 * 1024);
 // ---- misc d3d11 state -----
 pn::dx_blend_state blend_state;
 
+pn::string recomp() {
+	auto vs_byte_code = pn::CompileVertexShader(pn::GetResourcePath("water.hlsl"));
+	if (pn::Size(vs_byte_code) > 0) {
+		wave_program.vertex_shader_data.shader		= pn::CreateVertexShader(device, vs_byte_code);
+		wave_program.input_layout_data				= pn::CreateInputLayout(device, vs_byte_code);
+		wave_program.vertex_shader_data.reflection	= pn::GetShaderReflector(vs_byte_code);
+	}
+	else {
+		return "Compilation error, check log.";
+	}
+
+	auto ps_byte_code = pn::CompilePixelShader(pn::GetResourcePath("water.hlsl"));
+	if (pn::Size(ps_byte_code) > 0) {
+		wave_program.pixel_shader_data.shader		= pn::CreatePixelShader(device, ps_byte_code);
+		wave_program.pixel_shader_data.reflection	= pn::GetShaderReflector(ps_byte_code);
+	}
+	else {
+		return "Compilation error, check log.";
+	}
+
+	return "Successfully recompiled.";
+}
+
 void Init() {
+
+	REGISTER_COMMAND(recomp, pn::string, void);
 
 	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
 	pn::SetResourceDirectoryName("Resources");
@@ -107,8 +100,8 @@ void Init() {
 	}
 
 	{
-		auto mesh = pn::LoadMesh(pn::GetResourcePath("monkey.fbx"));
-		monkey_mesh_buffer = pn::CreateMeshBuffer(device, mesh);
+		auto mesh			= pn::LoadMesh(pn::GetResourcePath("monkey.fbx"));
+		monkey_mesh_buffer	= pn::CreateMeshBuffer(device, mesh);
 	}
 
 	// ------- SET BLENDING STATE ------------
@@ -119,23 +112,16 @@ void Init() {
 	// --------- CREATE SHADER DATA ---------------
 
 	{
-		auto vs_byte_code	= pn::CompileVertexShader(pn::GetResourcePath("water.hlsl"));
-		wave_vs				= pn::CreateVertexShader(device, vs_byte_code);
-		wave_input_layout	= pn::CreateInputLayout(device, vs_byte_code);
-		wave_vs_reflector	= pn::GetShaderReflector(vs_byte_code);
-
-		auto ps_byte_code	= pn::CompilePixelShader(pn::GetResourcePath("water.hlsl"));
-		wave_ps				= pn::CreatePixelShader(device, ps_byte_code);
-		wave_ps_reflector	= pn::GetShaderReflector(ps_byte_code);
+		wave_program = pn::CompileShaderProgram(device, "water.hlsl");
 	}
 
 	{
-		auto vs_byte_code	= pn::ReadFile(pn::GetResourcePath("basic_vs.cso"));
+		auto vs_byte_code	= pn::CompileVertexShader(pn::GetResourcePath("basic.hlsl"));
 		basic_vs			= pn::CreateVertexShader(device, vs_byte_code);
 		basic_input_layout	= pn::CreateInputLayout(device, vs_byte_code);
 		basic_vs_reflector	= pn::GetShaderReflector(vs_byte_code);
 
-		auto ps_byte_code	= pn::ReadFile(pn::GetResourcePath("basic_ps.cso"));
+		auto ps_byte_code	= pn::CompilePixelShader(pn::GetResourcePath("basic.hlsl"));
 		basic_ps			= pn::CreatePixelShader(device, ps_byte_code);
 		basic_ps_reflector	= pn::GetShaderReflector(ps_byte_code);
 	}
@@ -143,9 +129,6 @@ void Init() {
 	global_constants.data.screen_width	= static_cast<float>(pn::app::window_desc.width);
 	global_constants.data.screen_height	= static_cast<float>(pn::app::window_desc.height);
 
-	Initialize(device, global_constants);
-	Initialize(device, camera_constants);
-	Initialize(device, model_constants);
 	Initialize(device, directional_light);
 	Initialize(device, wave);
 
@@ -211,29 +194,25 @@ void Render() {
 
 	ImGui::End(); // Lights
 
+	SetProgramConstantBuffer(context, global_constants, wave_program);
+	SetProgramConstantBuffer(context, camera_constants, wave_program);
+	SetProgramConstantBuffer(context, model_constants, wave_program);
+	SetProgramConstantBuffer(context, directional_light, wave_program);
+
 	// update uniform buffers that are shared across shaders
 	UpdateBuffer(context, global_constants);
 	UpdateBuffer(context, camera_constants);
 	UpdateBuffer(context, directional_light);
 
-	SetPSConstantBuffer(context, global_constants, wave_ps_reflector);
-	SetPSConstantBuffer(context, camera_constants, wave_ps_reflector);
-	SetPSConstantBuffer(context, model_constants, wave_ps_reflector);
-	SetPSConstantBuffer(context, directional_light, wave_ps_reflector);
-
-	SetVSConstantBuffer(context, global_constants, wave_vs_reflector);
-	SetVSConstantBuffer(context, camera_constants, wave_vs_reflector);
-	SetVSConstantBuffer(context, model_constants, wave_vs_reflector);
 
 // ------ BEGIN WATER
 
-	SetVSConstantBuffer(context, wave, wave_vs_reflector);
+	SetProgramConstantBuffer(context, wave, wave_program);
+
+	pn::SetShaderProgram(context, wave_program);
 
 	auto& wave_mesh = wave_mesh_buffer[0];
-	pn::SetInputLayout(context, wave_input_layout);
-	pn::SetVertexBuffers(context, wave_input_layout, wave_mesh);
-	pn::SetVertexShader(context, wave_vs);
-	pn::SetPixelShader(context, wave_ps);
+	pn::SetVertexBuffers(context, wave_program.input_layout_data, wave_mesh);
 
 	// update wave
 	ImGui::Begin("Waves");
@@ -266,17 +245,19 @@ void Render() {
 
 // ----- BEGIN MONKEY
 
-	auto& monkey_mesh = monkey_mesh_buffer[0];
-	pn::SetInputLayout(context, basic_input_layout);
-	pn::SetVertexBuffers(context, basic_input_layout, monkey_mesh);
+	/*pn::SetInputLayout(context, basic_input_layout);
 	pn::SetVertexShader(context, basic_vs);
+	pn::SetPixelShader(context, basic_ps);
+
+	auto& monkey_mesh			= monkey_mesh_buffer[0];
+	pn::SetVertexBuffers(context, basic_input_layout, monkey_mesh);
 
 	model_constants.data.model	= TransformToSRT(monkey_transform);
 	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	UpdateBuffer(context, model_constants);
 
-	pn::DrawIndexed(context, monkey_mesh);
+	pn::DrawIndexed(context, monkey_mesh); */
 
 // --- END MONKEY
 

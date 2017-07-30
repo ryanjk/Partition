@@ -6,6 +6,7 @@
 #include <d3dcompiler.h>
 
 #include <IO\FileUtil.h>
+#include <IO\PathUtil.h>
 
 using namespace std::placeholders;
 
@@ -25,6 +26,12 @@ static const D3D_FEATURE_LEVEL SUPPORTED_D3D_FEATURE_LEVELS[] = {
 static const D3D_FEATURE_LEVEL BAD_LEVELS[] = {
 	D3D_FEATURE_LEVEL_12_0
 };
+
+#ifdef _DEBUG
+const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_DEBUG | D3DCOMPILE_WARNINGS_ARE_ERRORS | D3DCOMPILE_OPTIMIZATION_LEVEL0;
+#else
+const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_OPTIMIZATION_LEVEL3;
+#endif
 
 // --------------- FUNCTIONS --------------------
 
@@ -292,24 +299,23 @@ pn::bytes CompileShader(
 	return return_bytes;
 }
 
+shader_program_t		CompileShaderProgram(dx_device device, const pn::string& filename, const D3D_SHADER_MACRO* defines, unsigned int flags) {
+	shader_program_t program;
+
+	auto vs_byte_code						= pn::CompileVertexShader(pn::GetResourcePath(filename), defines, flags);
+	program.vertex_shader_data.shader		= pn::CreateVertexShader(device, vs_byte_code);
+	program.input_layout_data				= pn::CreateInputLayout(device, vs_byte_code);
+	program.vertex_shader_data.reflection	= pn::GetShaderReflector(vs_byte_code);
+
+	auto ps_byte_code						= pn::CompilePixelShader(pn::GetResourcePath(filename), defines, flags);
+	program.pixel_shader_data.shader		= pn::CreatePixelShader(device, ps_byte_code);
+	program.pixel_shader_data.reflection	= pn::GetShaderReflector(ps_byte_code);
+
+	return program;
+}
+
 pn::bytes		CompileVertexShader(const pn::string& filename, const D3D_SHADER_MACRO* defines, unsigned int flags) {
 	return CompileShader(filename, defines, "VS_main", "vs_5_0", flags);
-}
-
-pn::bytes		CompileVertexShader(const pn::string& filename, const D3D_SHADER_MACRO* defines) {
-	unsigned int flags = 0;
-#ifdef _DEBUG
-	flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_WARNINGS_ARE_ERRORS | D3DCOMPILE_OPTIMIZATION_LEVEL0;
-#else
-	flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
-#endif
-
-	return CompileVertexShader(filename, defines, flags);
-}
-
-
-pn::bytes		CompileVertexShader(const pn::string& filename) {
-	return CompileVertexShader(filename, NULL);
 }
 
 dx_vertex_shader CreateVertexShader(dx_device device, const pn::bytes& bytes) {
@@ -323,22 +329,6 @@ dx_vertex_shader CreateVertexShader(dx_device device, const std::string& filenam
 
 pn::bytes		CompilePixelShader(const pn::string& filename, const D3D_SHADER_MACRO* defines, unsigned int flags) {
 	return CompileShader(filename, defines, "PS_main", "ps_5_0", flags);
-}
-
-pn::bytes		CompilePixelShader(const pn::string& filename, const D3D_SHADER_MACRO* defines) {
-	unsigned int flags = 0;
-#ifdef _DEBUG
-	flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_WARNINGS_ARE_ERRORS | D3DCOMPILE_OPTIMIZATION_LEVEL0;
-#else
-	flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
-#endif
-
-	return CompilePixelShader(filename, defines, flags);
-}
-
-
-pn::bytes		CompilePixelShader(const pn::string& filename) {
-	return CompilePixelShader(filename, NULL);
 }
 
 dx_pixel_shader CreatePixelShader(dx_device device, const pn::bytes& ps_data) {
@@ -543,6 +533,12 @@ void ResizeRenderTargetViewportCamera(
 
 // --------- SHADER STATE -----------------
 
+void SetShaderProgram(dx_context context, shader_program_t& shader_program) {
+	pn::SetInputLayout(context, shader_program.input_layout_data);
+	pn::SetVertexShader(context, shader_program.vertex_shader_data.shader);
+	pn::SetPixelShader(context, shader_program.pixel_shader_data.shader);
+}
+
 void SetVertexBuffers(dx_context context, const input_layout_data_t& layout, const mesh_buffer_t& mesh_buffer) {
 	const auto NUM_PARAMETERS = layout.desc.size();
 
@@ -613,6 +609,17 @@ void SetPixelShader(dx_context context, dx_pixel_shader shader) {
 
 void SetInputLayout(dx_context context, const input_layout_data_t& layout_desc) {
 	context->IASetInputLayout(layout_desc.ptr.Get());
+}
+
+void SetVSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer) {
+	unsigned int start_slot = GetUniformStartSlot(reflection, buffer_name);
+	if (start_slot == 0) return;
+	context->VSSetConstantBuffers(start_slot, 1, buffer.GetAddressOf());
+}
+void SetPSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer) {
+	unsigned int start_slot = GetUniformStartSlot(reflection, buffer_name);
+	if (start_slot == 0) return;
+	context->PSSetConstantBuffers(start_slot, 1, buffer.GetAddressOf());
 }
 
 // ----------- BLENDING ----------------

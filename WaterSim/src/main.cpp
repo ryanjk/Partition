@@ -48,13 +48,7 @@ pn::shader_program_t			wave_program;
 // ---- monkey instance data -----
 pn::transform_t					monkey_transform;
 pn::vector<pn::mesh_buffer_t>	monkey_mesh_buffer;
-
-pn::dx_vertex_shader			basic_vs;
-pn::input_layout_data_t			basic_input_layout;
-pn::dx_shader_reflection		basic_vs_reflector;
-
-pn::dx_pixel_shader				basic_ps;
-pn::dx_shader_reflection		basic_ps_reflector;
+pn::shader_program_t			basic_program;
 
 // ---- misc --------
 pn::linear_allocator frame_alloc(1024 * 1024);
@@ -111,20 +105,8 @@ void Init() {
 
 	// --------- CREATE SHADER DATA ---------------
 
-	{
-		wave_program = pn::CompileShaderProgram(device, "water.hlsl");
-	}
-
-	{
-		auto vs_byte_code	= pn::CompileVertexShader(pn::GetResourcePath("basic.hlsl"));
-		basic_vs			= pn::CreateVertexShader(device, vs_byte_code);
-		basic_input_layout	= pn::CreateInputLayout(device, vs_byte_code);
-		basic_vs_reflector	= pn::GetShaderReflector(vs_byte_code);
-
-		auto ps_byte_code	= pn::CompilePixelShader(pn::GetResourcePath("basic.hlsl"));
-		basic_ps			= pn::CreatePixelShader(device, ps_byte_code);
-		basic_ps_reflector	= pn::GetShaderReflector(ps_byte_code);
-	}
+	wave_program	= pn::CompileShaderProgram(device, "water.hlsl");
+	basic_program	= pn::CompileShaderProgram(device, "basic.hlsl");
 
 	global_constants.data.screen_width	= static_cast<float>(pn::app::window_desc.width);
 	global_constants.data.screen_height	= static_cast<float>(pn::app::window_desc.height);
@@ -139,9 +121,9 @@ void Init() {
 	// init wave data
 	for (int i = 0; i < N_WAVES; ++i) {
 		wave.data[i].A = 0.615f;
-		wave.data[i].L = 5.615;
-		wave.data[i].w = 0.615;
-		wave.data[i].q = 0;
+		wave.data[i].L = 5.615f;
+		wave.data[i].w = 0.615f;
+		wave.data[i].q = 0.0f;
 		wave.data[i].d = { 0.68f, 0.735f };
 	}
 
@@ -245,19 +227,17 @@ void Render() {
 
 // ----- BEGIN MONKEY
 
-	/*pn::SetInputLayout(context, basic_input_layout);
-	pn::SetVertexShader(context, basic_vs);
-	pn::SetPixelShader(context, basic_ps);
+	pn::SetShaderProgram(context, basic_program);
 
 	auto& monkey_mesh			= monkey_mesh_buffer[0];
-	pn::SetVertexBuffers(context, basic_input_layout, monkey_mesh);
+	pn::SetVertexBuffers(context, basic_program.input_layout_data, monkey_mesh);
 
 	model_constants.data.model	= TransformToSRT(monkey_transform);
 	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	UpdateBuffer(context, model_constants);
 
-	pn::DrawIndexed(context, monkey_mesh); */
+	pn::DrawIndexed(context, monkey_mesh);
 
 // --- END MONKEY
 

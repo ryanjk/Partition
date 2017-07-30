@@ -2,7 +2,7 @@
 
 // ------ CONSTANT BUFFERS -------
 
-cbuffer directional_light {
+cbuffer directional_light : register(b4) {
 	float3	direction;
 	float	intensity;
 }
@@ -16,7 +16,7 @@ struct Wave {
 };
 
 #define N_WAVES 1
-cbuffer wave : register(b4) {
+cbuffer wave : register(b5) {
 	Wave w[N_WAVES];
 }
 

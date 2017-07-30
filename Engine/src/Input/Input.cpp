@@ -49,19 +49,9 @@ void InputOnEndOfFrame() {
 	}
 }
 
-void SetKeyState(int vkey, key_state state) {
+void SetKeyState(const unsigned int vkey, key_state state) {
 	assert(vkey < 256);
 	input_state.keys[vkey] = state;
-
-	/*if (state == key_state::JUST_PRESSED) {
-		Log("Key action {}: {}", vkey, "Just pressed");
-	} else if (state == key_state::JUST_RELEASED) {
-		Log("Key action {}: {}", vkey, "Just released");
-	} else if (state == key_state::PRESSED) {
-		Log("Key action {}: {}", vkey, "pressed");
-	} else if (state == key_state::RELEASED) {
-		Log("Key action {}: {}", vkey, "released");
-	} */
 }
 
 key_state GetKeyState(const input_key vkey) {
@@ -78,22 +68,13 @@ mouse_pos_t GetMousePos() {
 
 void SetMouseWheelState(const mouse_wheel_state state) {
 	input_state.mouse_wheel = state;
-	if (state == mouse_wheel_state::NO_CHANGE) {
-		Log("Mouse wheel no change");
-	}
-	else if (state == mouse_wheel_state::SCROLL_DOWN) {
-		Log("Mouse wheel scrolled down");
-	}
-	else {
-		Log("Mouse wheel scrolled up");
-	}
 }
 
 mouse_wheel_state GetMouseWheelState() {
 	return input_state.mouse_wheel;
 }
 
-void AddInputCharacter(const char c) {
+void AddInputCharacter(const unsigned char c) {
 	Insert(input_characters, c);
 }
 

@@ -2,17 +2,7 @@
 
 // ---- CONSTANT BUFFERS --------
 
-cbuffer camera_constants {
-	float4x4 view;
-	float4x4 proj;
-}
-
-cbuffer model_constants {
-	float4x4 model;
-	float4x4 mvp;
-}
-
-cbuffer directional_light {
+cbuffer directional_light : register(b4) {
 	float3	direction;
 	float	intensity;
 }
@@ -37,14 +27,14 @@ struct VS_OUT {
 VS_OUT VS_main(VS_IN i) {
 	VS_OUT o;
 	float4 pos = float4(i.pos, 1.0);
-	pos = mul(model, pos);
+	pos = mul(MODEL, pos);
 	o.world_pos = pos;
-	pos = mul(view, pos);
-	o.screen_pos = mul(proj, pos);
+	pos = mul(VIEW, pos);
+	o.screen_pos = mul(PROJECTION, pos);
 
 	o.n = float4(i.n, 0.0);
-	o.n = mul(model, o.n);
-	o.n = mul(view, o.n);
+	o.n = mul(MODEL, o.n);
+	o.n = mul(VIEW, o.n);
 
 	o.uv = i.uv;
 	return o;
@@ -54,7 +44,7 @@ VS_OUT VS_main(VS_IN i) {
 
 float4 PS_main(VS_OUT i) : SV_TARGET{
 	float3 shade = max(0.0, dot(i.n.xyz, -direction)) * intensity;
-	float4 view_pos = float4(view[3][0], view[3][1], view[3][2], 1);
+	float4 view_pos = float4(VIEW[3][0], VIEW[3][1], VIEW[3][2], 1);
 
 	float view_angle = max(0.0, dot(normalize(view_pos - i.world_pos), i.n));
 	float4 spec = pow(view_angle, 10000);

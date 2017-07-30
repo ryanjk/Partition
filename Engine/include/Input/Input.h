@@ -77,7 +77,7 @@ struct input_state_t {
 void			InitInput();
 void			InputOnEndOfFrame();
 
-void			SetKeyState(const int vkey, const key_state state);
+void			SetKeyState(const unsigned int vkey, const key_state state);
 key_state		GetKeyState(const input_key vkey);
 
 void			SetMousePos(const mouse_pos_t mouse_pos);
@@ -86,7 +86,7 @@ mouse_pos_t		GetMousePos();
 void			SetMouseWheelState(const mouse_wheel_state state);
 mouse_wheel_state GetMouseWheelState();
 
-void			AddInputCharacter(const char c);
+void			AddInputCharacter(const unsigned char c);
 const string&	GetInputCharacters();
 
 

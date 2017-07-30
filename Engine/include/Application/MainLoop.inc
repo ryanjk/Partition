@@ -165,7 +165,7 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 		break;
 	
 	case WM_CHAR:
-		pn::input::AddInputCharacter((unsigned short) wParam);
+		pn::input::AddInputCharacter(static_cast<unsigned char>(wParam));
 		break;
 	
 	case WM_QUIT:

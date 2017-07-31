@@ -12,8 +12,7 @@
 namespace pn {
 
 unsigned int MeshLoadDataToAssimp(const MeshLoadData& mesh_load_data) {
-	unsigned int assimp_post_process;
-
+	unsigned int assimp_post_process = 0;
 	if (mesh_load_data.convert_left) assimp_post_process |= (aiProcess_MakeLeftHanded | aiProcess_FlipUVs | aiProcess_FlipWindingOrder);
 	if (mesh_load_data.triangulate) assimp_post_process |= aiProcess_Triangulate;
 
@@ -22,6 +21,7 @@ unsigned int MeshLoadDataToAssimp(const MeshLoadData& mesh_load_data) {
 
 pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 	LogDebug("Loading mesh {}", mesh->mName.C_Str());
+	
 	pn::mesh_t result_mesh;
 
 	const unsigned int VERTEX_COUNT = mesh->mNumVertices;
@@ -50,13 +50,13 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 		if (mesh->GetNumUVChannels() >= 2) {
 			Resize(result_mesh.uv2s, VERTEX_COUNT);
 		}
-	}
 
-	for (unsigned int i = 0; i < VERTEX_COUNT; ++i) {
-		std::memcpy(&result_mesh.uvs[i], &(mesh->mTextureCoords[0][i]), sizeof(pn::vec2f));
+		for (unsigned int i = 0; i < VERTEX_COUNT; ++i) {
+			std::memcpy(&result_mesh.uvs[i], &(mesh->mTextureCoords[0][i]), sizeof(pn::vec2f));
 
-		if (mesh->GetNumUVChannels() >= 2) {
-			std::memcpy(&result_mesh.uv2s[i], &(mesh->mTextureCoords[1][i]), sizeof(pn::vec2f));
+			if (mesh->GetNumUVChannels() >= 2) {
+				std::memcpy(&result_mesh.uv2s[i], &(mesh->mTextureCoords[1][i]), sizeof(pn::vec2f));
+			}
 		}
 	}
 
@@ -100,6 +100,10 @@ pn::vector<mesh_t> LoadMesh(const std::string& filename, const MeshLoadData& mes
 		MeshLoadDataToAssimp(mesh_load_data),
 		nullptr
 	);
+	if (!ai_scene) {
+		LogError("Assimp: Couldn't read file: {}", importer.GetErrorString());
+		return {};
+	}
 	pn::vector<mesh_t> meshes;
 	ConvertAISceneToMeshes(ai_scene, meshes);
 	return meshes;

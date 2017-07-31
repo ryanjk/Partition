@@ -158,6 +158,7 @@
   <ItemGroup>
     <ClInclude Include="include\Application\Global.h" />
     <ClInclude Include="include\Application\MainLoop.inc" />
+    <ClInclude Include="include\Application\ResourceDatabase.h" />
     <ClInclude Include="include\Component\render_data_t.h" />
     <ClInclude Include="include\Component\transform_t.h" />
     <ClInclude Include="include\Graphics\DirectX.h" />
@@ -187,6 +188,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application\Global.cpp" />
+    <ClCompile Include="src\Application\ResourceDatabase.cpp" />
     <ClCompile Include="src\Component\render_data_t.cpp" />
     <ClCompile Include="src\Component\transform_t.cpp" />
     <ClCompile Include="src\Graphics\DirectX.cpp" />

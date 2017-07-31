@@ -449,7 +449,6 @@ vertex_input_desc				GetVertexInputDescFromShader(dx_shader_reflection reflector
 		if (FAILED(hr)) {
 			LogError("Couldn't get input parameter description from reflector");
 		}
-		LogDebug("Creating element description");
 		input_element_desc element_desc(param_desc, i);
 
 		pn::PushBack(vertex_desc, element_desc);

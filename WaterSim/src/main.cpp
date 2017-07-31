@@ -100,6 +100,11 @@ void Init() {
 	// ---------- LOAD RESOURCES ----------------
 
 	{
+		auto cube_family = pn::LoadMesh(pn::GetResourcePath("cube_family.fbx"));
+		//monkey_mesh_buffer = pn::CreateMeshBuffer(device, mesh);
+	}
+
+	{
 		auto mesh			= pn::LoadMesh(pn::GetResourcePath("water.fbx"));
 		wave_mesh_buffer	= pn::CreateMeshBuffer(device, mesh);
 	}

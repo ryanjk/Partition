@@ -119,6 +119,12 @@ void	Insert(map<K,V>& m, K&& key, V&& value) {
 }
 
 template<typename K, typename V>
+void	Remove(map<K, V>& m, const K& key) {
+	if (!Contains(m, key)) return;
+	m.erase(key);
+}
+
+template<typename K, typename V>
 auto	Get(const map<K,V>& m, const K& key) {
 	return m.at(key);
 }

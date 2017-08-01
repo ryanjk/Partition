@@ -222,15 +222,15 @@ dx_sampler_state		CreateSamplerState(dx_device device) {
 mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh) {
 	mesh_buffer_t mesh_buffer;
 
-	if (mesh.positions.empty()) {
+	if (mesh.vertices.empty()) {
 		LogError("Mesh has no vertices");
 		return mesh_buffer;
 	}
 
-	mesh_buffer.positions = CreateVertexBuffer(device, mesh.positions);
-	mesh_buffer.indices = CreateIndexBuffer(device, mesh.indices);
+	mesh_buffer.vertices	= CreateVertexBuffer(device, mesh.vertices);
+	mesh_buffer.indices		= CreateIndexBuffer(device, mesh.indices);
 	mesh_buffer.index_count = static_cast<unsigned int>(mesh.indices.size());
-	mesh_buffer.topology = mesh.topology;
+	mesh_buffer.topology	= mesh.topology;
 
 	if (!mesh.normals.empty()) {
 		mesh_buffer.normals = CreateVertexBuffer(device, mesh.normals);
@@ -555,7 +555,7 @@ void SetVertexBuffers(dx_context context, const input_layout_data_t& layout, con
 
 		std::string type = el.SemanticName;
 		if (type == "POSITION") {
-			PushBack(vertex_buffers, mesh_buffer.positions.Get());
+			PushBack(vertex_buffers, mesh_buffer.vertices.Get());
 			PushBack(strides, sizeof(pn::vec3f));
 			PushBack(offsets, 0);
 		}

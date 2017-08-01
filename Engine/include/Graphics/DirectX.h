@@ -130,7 +130,7 @@ struct input_layout_data_t {
 };
 
 struct mesh_t {
-	pn::vector<pn::vec3f>		positions;
+	pn::vector<pn::vec3f>		vertices;
 	pn::vector<pn::vec4f>		colors;
 	pn::vector<pn::vec3f>		normals;
 	pn::vector<pn::vec3f>		tangents;
@@ -150,7 +150,7 @@ struct mesh_t {
 };
 
 struct mesh_buffer_t {
-	dx_buffer				positions;
+	dx_buffer				vertices;
 	dx_buffer				colors;
 	dx_buffer				normals;
 	dx_buffer				tangents;

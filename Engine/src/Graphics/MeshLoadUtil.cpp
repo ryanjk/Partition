@@ -1,5 +1,7 @@
 #include <Graphics\MeshLoadUtil.h>
 
+#include <Component\transform_t.h>
+
 #include <assimp\Importer.hpp>
 #include <assimp\scene.h>
 #include <assimp\postprocess.h>
@@ -19,14 +21,35 @@ unsigned int MeshLoadDataToAssimp(const MeshLoadData& mesh_load_data) {
 	return assimp_post_process;
 }
 
+pn::mat4f AiMatrixToMat4f(const aiMatrix4x4& m) {
+	return mat4f(
+		m.a1, m.a2, m.a3, m.a4,
+		m.b1, m.b2, m.b3, m.b4,
+		m.c1, m.c2, m.c3, m.c4,
+		m.d1, m.d2, m.d3, m.d4
+	);
+}
+
+vec3f aiVector3DToVec3f(const aiVector3D& v) {
+	return vec3f(v.x, v.y, v.z);
+}
+
+quaternion aiQuaternionToQuaternion(const aiQuaternion& q) {
+	return quaternion(q.x, q.y, q.z, q.w);
+}
+
+pn::transform_t aiDataToTransform(const aiVector3D& scale, const aiQuaternion& quaternion, const aiVector3D& translation) {
+	return {};
+}
+
 pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 	LogDebug("Loading mesh {}", mesh->mName.C_Str());
 	
 	pn::mesh_t result_mesh;
 
 	const unsigned int VERTEX_COUNT = mesh->mNumVertices;
-	Resize(result_mesh.positions, VERTEX_COUNT);
-	std::memcpy(&(result_mesh.positions[0]), mesh->mVertices, VERTEX_COUNT * sizeof(pn::vec3f));
+	Resize(result_mesh.vertices, VERTEX_COUNT);
+	std::memcpy(&(result_mesh.vertices[0]), mesh->mVertices, VERTEX_COUNT * sizeof(pn::vec3f));
 
 	if (mesh->HasNormals()) {
 		Resize(result_mesh.normals, VERTEX_COUNT);
@@ -73,9 +96,14 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 }
 
 void ProcessAINode(aiNode* node, const aiScene* scene, pn::vector<mesh_t>& meshes) {
+	aiVector3D scale, translation;
+	aiQuaternion rotation;
+	node->mTransformation.Decompose(scale, rotation, translation);
+
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
 		auto* ai_mesh = scene->mMeshes[node->mMeshes[i]];
 		auto mesh = std::move(ConvertAIMeshToMesh(ai_mesh, scene));
+		// change to add to mesh db, while keeping a reference to it in a mesh tree
 		EmplaceBack(meshes, std::move(mesh));
 	}
 

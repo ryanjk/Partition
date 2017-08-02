@@ -37,6 +37,27 @@ public:
 		Assert::IsTrue(r2 == vec3f(0.0f, 0.0f, 1.0f));
 	}
 
+	TEST_METHOD(QuaternionToEulerTest) {
+		for (float x = -TWOPI; x <= TWOPI; x += 0.1f) {
+			for (float y = -TWOPI; y <= TWOPI; y += 0.1f) {
+				for (float z = -TWOPI; z <= TWOPI; z += 0.1f) {
+					vec3f v(x,y,z);
+					auto q = EulerToQuaternion(v);
+					auto e = QuaternionToEuler(q);
+					Assert::IsTrue(IsRadianEqual(v.x, e.x, 0.01f));
+					Assert::IsTrue(IsRadianEqual(v.y, e.y, 0.01f));
+					Assert::IsTrue(IsRadianEqual(v.z, e.z, 0.01f));
+				}
+			}
+		}
+		/*vec3f v(2.0f, -1.32f, 5.82f);
+		auto q = EulerToQuaternion(v);
+		auto e = QuaternionToEuler(q);
+		Assert::IsTrue(IsRadianEqual(v.x, e.x, 0.0001f));
+		Assert::IsTrue(IsRadianEqual(v.y, e.y, 0.0001f));
+		Assert::IsTrue(IsRadianEqual(v.z, e.z, 0.0001f)); */
+	}
+
 	TEST_METHOD(QuaternionToRotationMatrixTest) {
 
 		{

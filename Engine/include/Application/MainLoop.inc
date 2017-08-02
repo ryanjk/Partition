@@ -225,7 +225,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	pn::gui::InitEditorUI();
 
 	bool	display_imgui		= true;
-	bool	show_test_window	= false;
+	bool	show_test_window	= true;
 	bool	show_command_line	= false;
 	bool	show_main_menu		= true;
 

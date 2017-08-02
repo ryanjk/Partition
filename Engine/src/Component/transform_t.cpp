@@ -1,6 +1,7 @@
 #include <Component\transform_t.h>
 
 #include <UI\UIUtil.h>
+#include <Utilities\Logging.h>
 
 namespace pn {
 
@@ -23,7 +24,16 @@ namespace gui {
 template<>
 void EditStruct(pn::transform_t& transform) {
 	DragFloat3("position", &transform.position.x, -INFINITY, INFINITY);
-	DragFloat3("rotation", &transform.rotation.x, -INFINITY, INFINITY, 0.1f);
+	
+	auto euler = QuaternionToEuler(transform.rotation);
+
+	float xr = ImGui::DeltaDragFloat("pitch", &euler.x);
+	Log("{}", xr);
+	//bool yr = ImGui::Button(std::to_string(euler.y).c_str());
+	//bool zr = ImGui::Button(std::to_string(euler.z).c_str());
+
+	//DragFloat3("rotation", &transform.rotation.x, -INFINITY, INFINITY, 0.1f);
+	
 	DragFloat3("scale", &transform.scale.x, -INFINITY, INFINITY);
 }
 

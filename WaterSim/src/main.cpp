@@ -155,12 +155,12 @@ void Init() {
 	// init wave object
 	wave_transform.position	= { 0, 0, 15 };
 	wave_transform.scale	= { 1, 1, 1 };
-	wave_transform.rotation = { 0.698f, 3.069f, 0.f };
+	wave_transform.rotation = pn::EulerToQuaternion( 0.698f, 3.069f, 0.f );
 
 	// init monkey object
 	monkey_transform.position	= { 0, 0, 15 };
 	monkey_transform.scale		= { 1, 1, 1 };
-	monkey_transform.rotation	= { 0, 0, 0 };
+	monkey_transform.rotation	= pn::EulerToQuaternion( 0, 0, 0 );
 
 	// --------- INIT CUSTOM ALLOCATORS -----------
 	pn::frame_string::SetFrameAllocator(&frame_alloc);

@@ -407,9 +407,27 @@ inline quaternion	Inverse(const quaternion& q) {
 }
 
 inline vec4f		QuaternionToAxisAngle(const quaternion& q) {
-	const float angle = 2.0f*acosf(q.w);
-	const vec3f axis = vec3f(q.x, q.y, q.z) / (sqrt(1 - q.w*q.w));
+	const float angle	= 2.0f*acosf(q.w);
+	const vec3f axis	= vec3f(q.x, q.y, q.z) / (sqrt(1 - q.w*q.w));
 	return vec4f(axis, angle);
+}
+inline vec3f		QuaternionToEuler(const quaternion& q) {
+	float ysqr	= q.y * q.y;
+
+	float t0	= 2.0f * (q.w * q.x + q.y * q.z);
+	float t1	= 1.0f - 2.0f * (q.x * q.x + ysqr);
+	float pitch	= atan2(t0, t1);
+
+	float t2	= 2.0f * (q.w * q.y - q.z * q.x);
+	t2			= ((t2 > 1.0f) ? 1.0f : t2);
+	t2			= ((t2 < -1.0f) ? -1.0f : t2);
+	float yaw = asin(t2);
+
+	float t3	= 2.0f * (q.w * q.z + q.x * q.y);
+	float t4	= 1.0f - 2.0f * (ysqr + q.z * q.z);
+	float roll	= atan2(t3, t4);
+
+	return { pitch, yaw, roll };
 }
 mat4f				QuaternionToRotationMatrix(const quaternion& q);
 
@@ -422,9 +440,11 @@ inline quaternion	AxisAngleToQuaternion(const vec4f& axis_angle) {
 	return AxisAngleToQuaternion(axis_angle.xyz(), axis_angle.w);
 }
 inline quaternion	EulerToQuaternion(const float xr, const float yr, const float zr) {
-	return AxisAngleToQuaternion(vec3f::UnitX, xr) * 
+	return 
+		AxisAngleToQuaternion(vec3f::UnitX, xr) * 
 		AxisAngleToQuaternion(vec3f::UnitY, yr) * 
-		AxisAngleToQuaternion(vec3f::UnitZ, zr);
+		AxisAngleToQuaternion(vec3f::UnitZ, zr)
+		;
 }
 inline quaternion	EulerToQuaternion(const vec3f& euler_angles) {
 	return EulerToQuaternion(euler_angles.x, euler_angles.y, euler_angles.z);

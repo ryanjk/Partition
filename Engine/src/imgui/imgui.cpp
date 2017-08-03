@@ -6962,6 +6962,49 @@ float ImGui::DeltaDragFloat(const char* label, float* v, float v_speed, float v_
 	return return_delta;
 }
 
+float ImGui::DeltaDragFloatN(const char* label, float* v, int components, float v_speed, float v_min, float v_max, const char* display_format, float power)
+{
+	ImGuiWindow* window = GetCurrentWindow();
+	if (window->SkipItems)
+		return false;
+
+	ImGuiContext& g = *GImGui;
+	float return_delta = 0.0f;
+	BeginGroup();
+	PushID(label);
+	PushMultiItemsWidths(components);
+	for (int i = 0; i < components; i++)
+	{
+		PushID(i);
+		return_delta += DeltaDragFloat("##v", &v[i], v_speed, v_min, v_max, display_format, power);
+		SameLine(0, g.Style.ItemInnerSpacing.x);
+		PopID();
+		PopItemWidth();
+	}
+	PopID();
+
+	TextUnformatted(label, FindRenderedTextEnd(label));
+	EndGroup();
+
+	return return_delta;
+}
+
+float ImGui::DeltaDragFloat2(const char* label, float v[2], float v_speed, float v_min, float v_max, const char* display_format, float power)
+{
+	return DeltaDragFloatN(label, v, 2, v_speed, v_min, v_max, display_format, power);
+}
+
+float ImGui::DeltaDragFloat3(const char* label, float v[3], float v_speed, float v_min, float v_max, const char* display_format, float power)
+{
+	return DeltaDragFloatN(label, v, 3, v_speed, v_min, v_max, display_format, power);
+}
+
+float ImGui::DeltaDragFloat4(const char* label, float v[4], float v_speed, float v_min, float v_max, const char* display_format, float power)
+{
+	return DeltaDragFloatN(label, v, 4, v_speed, v_min, v_max, display_format, power);
+}
+
+
 // ------ IMGUI COMPONENTS --------
 
 bool ImGui::DragBehavior(const ImRect& frame_bb, ImGuiID id, float* v, float v_speed, float v_min, float v_max, int decimal_precision, float power)

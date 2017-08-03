@@ -281,6 +281,9 @@ namespace ImGui
 	// ------- CUSTOM WIDGETS ----------
 
 	IMGUI_API float			DeltaDragFloat(const char* label, float* v, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* display_format = "%.3f", float power = 1.0f);
+	IMGUI_API float         DeltaDragFloat2(const char* label, float v[2], float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* display_format = "%.3f", float power = 1.0f);
+	IMGUI_API float         DeltaDragFloat3(const char* label, float v[3], float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* display_format = "%.3f", float power = 1.0f);
+	IMGUI_API float         DeltaDragFloat4(const char* label, float v[4], float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* display_format = "%.3f", float power = 1.0f);
 
 	// ------- END CUSTOM WIDGETS ------
 

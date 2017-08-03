@@ -750,6 +750,8 @@ namespace ImGui
 
 	IMGUI_API float			DeltaDragBehavior(const ImRect& frame_bb, ImGuiID id, float* v, float v_speed, float v_min, float v_max, int decimal_precision, float power);
 
+	IMGUI_API float         DeltaDragFloatN(const char* label, float* v, int components, float v_speed, float v_min, float v_max, const char* display_format, float power);
+
 	// ------ END CUSTOM FUNCTIONS ---
 
     IMGUI_API bool          DragBehavior(const ImRect& frame_bb, ImGuiID id, float* v, float v_speed, float v_min, float v_max, int decimal_precision, float power);

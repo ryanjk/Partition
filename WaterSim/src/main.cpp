@@ -158,7 +158,7 @@ void Init() {
 	wave_transform.rotation = pn::EulerToQuaternion( 0.698f, 3.069f, 0.f );
 
 	// init monkey object
-	monkey_transform.position	= { 0, 0, 15 };
+	monkey_transform.position	= { 0, 0, 3 };
 	monkey_transform.scale		= { 1, 1, 1 };
 	monkey_transform.rotation	= pn::EulerToQuaternion( 0, 0, 0 );
 
@@ -232,7 +232,7 @@ void Render() {
 	UpdateBuffer(context, model_constants);
 	UpdateBuffer(context, wave);
 
-	pn::DrawIndexed(context, wave_mesh);
+	//pn::DrawIndexed(context, wave_mesh);
 
 // ----- END WATER
 
@@ -243,6 +243,7 @@ void Render() {
 	auto& monkey_mesh			= monkey_mesh_buffer[0];
 	pn::SetVertexBuffers(context, basic_program.input_layout_data, monkey_mesh);
 
+	pn::gui::EditStruct(monkey_transform);
 	model_constants.data.model	= LocalToWorldSRT(monkey_transform);
 	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 

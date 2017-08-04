@@ -7,17 +7,67 @@
 
 namespace pn {
 
-pn::mat4f LocalToWorldSRT(const transform_t& transform) {
-	auto cur_srt = TransformToSRT(transform);
+pn::mat4f LocalToWorldMatrix(const transform_t& transform) {
+	auto cur_srt = TransformToMatrix(transform);
 	auto* cur_parent = transform.parent;
 	while (cur_parent != nullptr) {
-		cur_srt *= TransformToSRT(*cur_parent);
+		cur_srt *= TransformToMatrix(*cur_parent);
 		cur_parent = cur_parent->parent;
 	}
 	return cur_srt;
 }
 
-pn::mat4f TransformToSRT(const transform_t& transform) {
+pn::mat4f WorldToLocalMatrix(const transform_t& transform) {
+	return Inverse(LocalToWorldMatrix(transform));
+}
+
+pn::vec3f TransformPoint(const transform_t& transform, const pn::vec3f& point) {
+	return TransformPoint(transform, vec4f(point, 1.0f)).xyz();
+}
+pn::vec3f TransformDirection(const transform_t& transform, const pn::vec3f& direction) {
+	return TransformDirection(transform, vec4f(direction, 0.0f)).xyz();
+}
+pn::vec3f TransformVector(const transform_t& transform, const pn::vec3f& vector) {
+	return TransformVector(transform, vec4f(vector, 0.0f)).xyz();
+}
+
+pn::vec4f TransformPoint(const transform_t& transform, const pn::vec4f& point) {
+	assert(point.w == 1.0f);
+	return point * LocalToWorldMatrix(transform);
+}
+pn::vec4f TransformDirection(const transform_t& transform, const pn::vec4f& direction) {
+	assert(direction.w == 0.0f);
+	return Normalize(direction * LocalToWorldMatrix(transform));
+}
+pn::vec4f TransformVector(const transform_t& transform, const pn::vec4f& vector) {
+	assert(vector.w == 0.0f);
+	return vector * LocalToWorldMatrix(transform);
+}
+
+pn::vec3f InverseTransformPoint(const transform_t& transform, const pn::vec3f& point) {
+	return InverseTransformPoint(transform, vec4f(point, 1.0f)).xyz();
+}
+pn::vec3f InverseTransformDirection(const transform_t& transform, const pn::vec3f& direction) {
+	return InverseTransformDirection(transform, vec4f(direction, 0.0f)).xyz();
+}
+pn::vec3f InverseTransformVector(const transform_t& transform, const pn::vec3f& vector) {
+	return InverseTransformVector(transform, vec4f(vector, 0.0f)).xyz();
+}
+
+pn::vec4f InverseTransformPoint(const transform_t& transform, const pn::vec4f& point) {
+	assert(point.w == 1.0f);
+	return point * WorldToLocalMatrix(transform);
+}
+pn::vec4f InverseTransformDirection(const transform_t& transform, const pn::vec4f& direction) {
+	assert(direction.w == 0.0f);
+	return Normalize(direction * WorldToLocalMatrix(transform));
+}
+pn::vec4f InverseTransformVector(const transform_t& transform, const pn::vec4f& vector) {
+	assert(vector.w == 0.0f);
+	return vector * WorldToLocalMatrix(transform);
+}
+
+pn::mat4f TransformToMatrix(const transform_t& transform) {
 	return SRTMatrix(transform.scale, transform.rotation, transform.position);
 }
 
@@ -31,6 +81,7 @@ void EditStruct(pn::transform_t& transform) {
 
 	auto euler = QuaternionToEuler(transform.rotation);
 	
+	// this is a mess, lots of inlining imgui functions
 	using namespace ImGui;
 	const char* label = "rotation";
 	ImGuiContext& g = *GImGui;
@@ -52,7 +103,7 @@ void EditStruct(pn::transform_t& transform) {
 		PushID(0);
 		float xr = ImGui::DeltaDragFloat("##v", &euler.x);
 		if (xr != 0.0f)
-			transform.rotation *= AxisAngleToQuaternion(Normalize((vec4f::UnitX * (TransformToSRT(transform))).xyz()), xr*ROT_SCALE);
+			transform.rotation *= AxisAngleToQuaternion(TransformDirection(transform, vec3f::UnitX), xr*ROT_SCALE);
 		SameLine(0, g.Style.ItemInnerSpacing.x);
 		PopID();
 		PopItemWidth();
@@ -62,7 +113,7 @@ void EditStruct(pn::transform_t& transform) {
 		PushID(1);
 		float xy = ImGui::DeltaDragFloat("##v", &euler.y);
 		if (xy != 0.0f)
-			transform.rotation *= AxisAngleToQuaternion(Normalize((vec4f::UnitY * (TransformToSRT(transform))).xyz()), xy*ROT_SCALE);
+			transform.rotation *= AxisAngleToQuaternion(TransformDirection(transform, vec3f::UnitY), xy*ROT_SCALE);
 		SameLine(0, g.Style.ItemInnerSpacing.x);
 		PopID();
 		PopItemWidth();
@@ -72,7 +123,7 @@ void EditStruct(pn::transform_t& transform) {
 		PushID(2);
 		float xz = ImGui::DeltaDragFloat("##v", &euler.z);
 		if (xz != 0.0f)
-			transform.rotation *= AxisAngleToQuaternion(Normalize((vec4f::UnitZ * (TransformToSRT(transform))).xyz()), xz*ROT_SCALE);
+			transform.rotation *= AxisAngleToQuaternion(TransformDirection(transform, vec3f::UnitZ), xz*ROT_SCALE);
 		SameLine(0, g.Style.ItemInnerSpacing.x);
 		PopID();
 		PopItemWidth();

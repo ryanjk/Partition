@@ -13,8 +13,26 @@ struct transform_t {
 	transform_t*	parent		= nullptr;
 };
 
-pn::mat4f LocalToWorldSRT(const transform_t& transform);
-pn::mat4f TransformToSRT(const transform_t& transform);
+pn::mat4f LocalToWorldMatrix(const transform_t& transform);
+pn::mat4f WorldToLocalMatrix(const transform_t& transform);
+
+pn::vec3f TransformPoint(const transform_t& transform, const pn::vec3f& point);
+pn::vec3f TransformDirection(const transform_t& transform, const pn::vec3f& direction);
+pn::vec3f TransformVector(const transform_t& transform, const pn::vec3f& vector);
+
+pn::vec4f TransformPoint(const transform_t& transform, const pn::vec4f& point);
+pn::vec4f TransformDirection(const transform_t& transform, const pn::vec4f& direction);
+pn::vec4f TransformVector(const transform_t& transform, const pn::vec4f& vector);
+
+pn::vec3f InverseTransformPoint(const transform_t& transform, const pn::vec3f& point);
+pn::vec3f InverseTransformDirection(const transform_t& transform, const pn::vec3f& direction);
+pn::vec3f InverseTransformVector(const transform_t& transform, const pn::vec3f& vector);
+
+pn::vec4f InverseTransformPoint(const transform_t& transform, const pn::vec4f& point);
+pn::vec4f InverseTransformDirection(const transform_t& transform, const pn::vec4f& direction);
+pn::vec4f InverseTransformVector(const transform_t& transform, const pn::vec4f& vector);
+
+pn::mat4f TransformToMatrix(const transform_t& transform);
 
 namespace gui {
 

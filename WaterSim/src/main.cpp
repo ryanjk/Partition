@@ -110,7 +110,7 @@ void Init() {
 	}
 
 	{
-		auto mesh			= pn::LoadMesh(pn::GetResourcePath("monkey.fbx"));
+		auto mesh			= pn::LoadMesh(pn::GetResourcePath("sphere.fbx"));
 		monkey_mesh_buffer	= pn::CreateMeshBuffer(device, mesh);
 	}
 
@@ -217,7 +217,7 @@ void Render() {
 
 	// update model matrix
 	pn::gui::EditStruct(wave_transform);
-	model_constants.data.model	= LocalToWorldSRT(wave_transform);
+	model_constants.data.model	= LocalToWorldMatrix(wave_transform);
 	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	for (int i = 0; i < N_WAVES; ++i) {
@@ -244,7 +244,7 @@ void Render() {
 	pn::SetVertexBuffers(context, basic_program.input_layout_data, monkey_mesh);
 
 	pn::gui::EditStruct(monkey_transform);
-	model_constants.data.model	= LocalToWorldSRT(monkey_transform);
+	model_constants.data.model	= LocalToWorldMatrix(monkey_transform);
 	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	UpdateBuffer(context, model_constants);

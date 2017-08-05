@@ -3,6 +3,7 @@
 #include <Graphics\Window.h>
 #include <Graphics\DirectX.h>
 #include <Graphics\TextureLoadUtil.h>
+#include <Graphics\MeshLoadUtil.h>
 #include <Graphics\CBuffer.h>
 
 #include <Utilities\Logging.h>
@@ -218,6 +219,10 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	pn::Initialize(device, global_constants);
 	pn::Initialize(device, camera_constants);
 	pn::Initialize(device, model_constants);
+
+	// ------- POST DX INIT ---------
+
+	pn::InitMeshLoadUtil(device);
 
 	// ------ SET UP IMGUI ------------------------------
 

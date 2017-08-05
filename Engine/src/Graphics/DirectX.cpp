@@ -233,24 +233,24 @@ mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh) {
 	mesh_buffer.topology	= mesh.topology;
 
 	if (!mesh.normals.empty()) {
-		mesh_buffer.normals = CreateVertexBuffer(device, mesh.normals);
+		mesh_buffer.normals		= CreateVertexBuffer(device, mesh.normals);
 	}
 
 	if (!mesh.tangents.empty()) {
-		mesh_buffer.tangents = CreateVertexBuffer(device, mesh.tangents);
-		mesh_buffer.bitangents = CreateVertexBuffer(device, mesh.bitangents);
+		mesh_buffer.tangents	= CreateVertexBuffer(device, mesh.tangents);
+		mesh_buffer.bitangents	= CreateVertexBuffer(device, mesh.bitangents);
 	}
 
 	if (!mesh.colors.empty()) {
-		mesh_buffer.colors = CreateVertexBuffer(device, mesh.colors);
+		mesh_buffer.colors		= CreateVertexBuffer(device, mesh.colors);
 	}
 
 	if (!mesh.uvs.empty()) {
-		mesh_buffer.uvs = CreateVertexBuffer(device, mesh.uvs);
+		mesh_buffer.uvs			= CreateVertexBuffer(device, mesh.uvs);
 	}
 
 	if (!mesh.uv2s.empty()) {
-		mesh_buffer.uv2s = CreateVertexBuffer(device, mesh.uv2s);
+		mesh_buffer.uv2s		= CreateVertexBuffer(device, mesh.uv2s);
 	}
 
 	return mesh_buffer;

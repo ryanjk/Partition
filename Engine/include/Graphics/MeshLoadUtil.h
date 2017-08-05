@@ -17,6 +17,8 @@ struct MeshLoadData {
 
 // ---------- FUNCTIONS --------------------
 
+void InitMeshLoadUtil(dx_device device);
+
 pn::vector<mesh_t>	LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data);
 pn::vector<mesh_t>	LoadMesh(const std::string& filename);
 

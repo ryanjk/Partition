@@ -9,11 +9,23 @@
 #include <IO\FileUtil.h>
 #include <IO\PathUtil.h>
 
+#include <Application\ResourceDatabase.h>
+
 #include <utility>
 
 namespace pn {
 
-unsigned int MeshLoadDataToAssimp(const MeshLoadData& mesh_load_data) {
+// ----- VARIABLES ---------
+
+dx_device device;
+
+// ------ FUNCTIONS -----------
+
+void			InitMeshLoadUtil(dx_device d) {
+	device = d;
+}
+
+unsigned int	MeshLoadDataToAssimp(const MeshLoadData& mesh_load_data) {
 	unsigned int assimp_post_process = 0;
 	if (mesh_load_data.convert_left) assimp_post_process |= (aiProcess_MakeLeftHanded | aiProcess_FlipUVs | aiProcess_FlipWindingOrder);
 	if (mesh_load_data.triangulate) assimp_post_process |= aiProcess_Triangulate;
@@ -39,7 +51,18 @@ quaternion aiQuaternionToQuaternion(const aiQuaternion& q) {
 }
 
 pn::transform_t aiDataToTransform(const aiVector3D& scale, const aiQuaternion& quaternion, const aiVector3D& translation) {
-	return {};
+	transform_t transform;
+	transform.position	= aiVector3DToVec3f(translation);
+	transform.rotation	= aiQuaternionToQuaternion(quaternion);
+	transform.scale		= aiVector3DToVec3f(scale);
+	return transform;
+}
+
+pn::transform_t aiMatrixToTransform(const aiMatrix4x4& aiMatrix) {
+	aiVector3D scale, translation;
+	aiQuaternion rotation;
+	aiMatrix.Decompose(scale, rotation, translation);
+	return aiDataToTransform(scale, rotation, translation);
 }
 
 pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
@@ -96,14 +119,16 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 }
 
 void ProcessAINode(aiNode* node, const aiScene* scene, pn::vector<mesh_t>& meshes) {
-	aiVector3D scale, translation;
-	aiQuaternion rotation;
-	node->mTransformation.Decompose(scale, rotation, translation);
+	auto transform = aiMatrixToTransform(node->mTransformation);
 
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
-		auto* ai_mesh = scene->mMeshes[node->mMeshes[i]];
-		auto mesh = std::move(ConvertAIMeshToMesh(ai_mesh, scene));
-		// change to add to mesh db, while keeping a reference to it in a mesh tree
+		auto* ai_mesh		= scene->mMeshes[node->mMeshes[i]];
+		auto mesh			= std::move(ConvertAIMeshToMesh(ai_mesh, scene));
+		auto mesh_buffer	= CreateMeshBuffer(device, mesh);
+		auto mesh_id		= rdb::AddResource(rdb::meshes, std::move(mesh_buffer));
+
+		// need to set up connection to parent and children somehow
+
 		EmplaceBack(meshes, std::move(mesh));
 	}
 

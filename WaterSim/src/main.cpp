@@ -232,7 +232,7 @@ void Render() {
 	UpdateBuffer(context, model_constants);
 	UpdateBuffer(context, wave);
 
-	//pn::DrawIndexed(context, wave_mesh);
+	pn::DrawIndexed(context, wave_mesh);
 
 // ----- END WATER
 
@@ -249,7 +249,7 @@ void Render() {
 
 	UpdateBuffer(context, model_constants);
 
-	pn::DrawIndexed(context, monkey_mesh);
+	//pn::DrawIndexed(context, monkey_mesh);
 
 // --- END MONKEY
 

@@ -1,16 +1,19 @@
 #pragma once
 
 #include <Utilities\Math.h>
+#include <Utilities\UtilityTypes.h>
 
 #include <UI\EditStruct.h>
 
 namespace pn {
 
 struct transform_t {
-	pn::vec3f		position	= { 0, 0, 0 };
-	pn::quaternion	rotation	= { 0, 0, 0, 1 };
-	pn::vec3f		scale		= { 1, 1, 1 };
-	transform_t*	parent		= nullptr;
+	using transform_ref = transform_t*;
+	pn::vec3f					position	= { 0, 0, 0 };
+	pn::quaternion				rotation	= { 0, 0, 0, 1 };
+	pn::vec3f					scale		= { 1, 1, 1 };
+	transform_ref				parent		= nullptr;
+	pn::vector<transform_ref>	children;
 };
 
 pn::mat4f LocalToWorldMatrix(const transform_t& transform);

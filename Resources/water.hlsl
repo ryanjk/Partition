@@ -117,12 +117,15 @@ VS_OUT VS_main(VS_IN i) {
 // ------- PIXEL SHADER ---------
 
 float4 PS_main(VS_OUT i) : SV_TARGET {
-	float3 shade = max(0.0, dot(i.n.xyz, -direction)) * intensity;
-	float4 view_pos = float4(VIEW[3][0], VIEW[3][1], VIEW[3][2], 1);
+	float ndotl = max(0.0, dot(i.n.xyz, -direction));
+float3 shade = ndotl * intensity;
 
-	float view_angle = max(0.0, dot(normalize(view_pos - i.world_pos), i.n));
-	float4 spec = pow(view_angle, 10000);
-	float4 color = float4(i.uv, 0, 1);
+float4 view_pos = float4(VIEW[3][0], VIEW[3][1], VIEW[3][2], 1);
+float4 view_dir = normalize(view_pos - i.world_pos);
+float3 reflected = 2 * ndotl * i.n.xyz + direction;
+float view_angle = max(0.0, dot(view_dir, float4(reflected, 0)));
+float4 spec = pow(view_angle, 1000);
 
-	return float4(shade*(color.rgb + spec.rgb), 1);
+float4 color = float4(i.uv, 0, 1);
+return float4(shade*(color.rgb + spec.rgb), 1);
 }

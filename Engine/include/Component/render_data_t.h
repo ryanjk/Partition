@@ -4,11 +4,13 @@
 
 #include <Graphics\DirectX.h>
 
+#include <Application\ResourceDatabase.h>
+
 namespace pn {
 
 struct render_data_t {
-	mesh_buffer_t*		mesh;
-	shader_program_t*	shader_program;
+	pn::rdb::resource_id_t	mesh_id;
+	pn::rdb::resource_id_t	material_id;
 };
 
 } // namespace pn

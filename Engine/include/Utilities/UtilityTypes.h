@@ -82,8 +82,11 @@ void	EmplaceBack(vector<T>& vec, Args&&... args) {
 }
 
 template<typename T>
-auto	Pop(vector<T>& vec) -> decltype(vec.pop_back()) {
-	return vec.pop_back();
+T		Pop(vector<T>& vec) {
+	assert(Size(vec) > 0);
+	T back = vec.back();
+	vec.pop_back();
+	return back;
 }
 
 template<typename T, typename SizeType>

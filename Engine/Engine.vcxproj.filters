@@ -150,6 +150,9 @@
     <ClInclude Include="include\Application\ResourceDatabaseTypes.h">
       <Filter>Header Files\Application</Filter>
     </ClInclude>
+    <ClInclude Include="include\Utilities\Profile.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\imgui\imgui.cpp">
@@ -211,6 +214,9 @@
     </ClCompile>
     <ClCompile Include="src\Application\ResourceDatabase.cpp">
       <Filter>Source Files\Application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utilities\Profile.cpp">
+      <Filter>Source Files\Utilities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

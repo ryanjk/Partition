@@ -6,6 +6,7 @@
 
 #include <Utilities\Logging.h>
 #include <Utilities\frame_string.h>
+#include <Utilities\Profile.h>
 
 #include <IO\FileUtil.h>
 #include <IO\PathUtil.h>
@@ -98,6 +99,8 @@ void Init() {
 	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
 	pn::SetResourceDirectoryName("Resources");
 
+	Log("Size of resource id: {} bytes", sizeof(pn::rdb::resource_id_t));
+
 	// ---------- LOAD RESOURCES ----------------
 
 	{
@@ -105,19 +108,29 @@ void Init() {
 		//monkey_mesh_buffer = pn::CreateMeshBuffer(device, mesh);
 	}
 
+	pn::StartProfile("Loading all meshes");
+
 	{
-		auto mesh_handle	= pn::LoadMesh(pn::GetResourcePath("water.fbx"));
+		pn::StartProfile("Loading wave mesh");
+		auto mesh_handle = pn::LoadMesh(pn::GetResourcePath("water.fbx"));
+		pn::EndProfile();
+
 		while (wave_mesh_buffer.index_count == 0) {
 			wave_mesh_buffer	= pn::rdb::GetMeshResource(mesh_handle++);
 		}
 	}
 
 	{
-		auto mesh_handle	= pn::LoadMesh(pn::GetResourcePath("sphere.fbx"));
+		pn::StartProfile("Loading sphere mesh");
+		auto mesh_handle = pn::LoadMesh(pn::GetResourcePath("sphere.fbx"));
+		pn::EndProfile();
+
 		while (monkey_mesh_buffer.index_count == 0) {
 			monkey_mesh_buffer = pn::rdb::GetMeshResource(mesh_handle++);
 		}
 	}
+
+	pn::EndProfile();
 
 	// ------- SET BLENDING STATE ------------
 

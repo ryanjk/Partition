@@ -185,6 +185,7 @@
     <ClInclude Include="include\Utilities\Logging.h" />
     <ClInclude Include="include\Utilities\Math.h" />
     <ClInclude Include="include\Utilities\Memory.h" />
+    <ClInclude Include="include\Utilities\Profile.h" />
     <ClInclude Include="include\Utilities\UtilityTypes.h" />
   </ItemGroup>
   <ItemGroup>
@@ -207,6 +208,7 @@
     <ClCompile Include="src\UI\UIUtil.cpp" />
     <ClCompile Include="src\Utilities\Logging.cpp" />
     <ClCompile Include="src\Utilities\Math.cpp" />
+    <ClCompile Include="src\Utilities\Profile.cpp" />
     <ClCompile Include="src\Utilities\UtilityTypes.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

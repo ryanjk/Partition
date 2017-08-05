@@ -70,6 +70,9 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 	
 	pn::mesh_t result_mesh;
 
+	result_mesh.name.resize(mesh->mName.length);
+	memcpy(result_mesh.name.data(), mesh->mName.data, mesh->mName.length);
+
 	const unsigned int VERTEX_COUNT = mesh->mNumVertices;
 	Resize(result_mesh.vertices, VERTEX_COUNT);
 	std::memcpy(&(result_mesh.vertices[0]), mesh->mVertices, VERTEX_COUNT * sizeof(pn::vec3f));
@@ -118,35 +121,45 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 	return std::move(result_mesh);
 }
 
-void ProcessAINode(aiNode* node, const aiScene* scene, pn::vector<mesh_t>& meshes) {
+pn::rdb::resource_id_t ProcessAINode(aiNode* node, const aiScene* scene, pn::rdb::resource_id_t parent_id) {
 	auto transform = aiMatrixToTransform(node->mTransformation);
+	Log("Processing aiNode {}", node->mName.C_Str());
 
-	for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
-		auto* ai_mesh		= scene->mMeshes[node->mMeshes[i]];
-		auto mesh			= std::move(ConvertAIMeshToMesh(ai_mesh, scene));
-		auto mesh_buffer	= CreateMeshBuffer(device, mesh);
-		auto mesh_id		= rdb::AddResource(rdb::meshes, std::move(mesh_buffer));
-
-		// need to set up connection to parent and children somehow
-
-		EmplaceBack(meshes, std::move(mesh));
+	pn::rdb::resource_id_t mesh_id = 0;
+	if (node->mNumMeshes == 0) {
+		pn::mesh_buffer_t empty_mesh{};
+		mesh_id = rdb::AddMeshResource(empty_mesh);
+		rdb::AddMeshTransform(mesh_id, transform);
+		rdb::AddMeshChild(parent_id, mesh_id);
+	}
+	else {
+		for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
+			auto* ai_mesh		= scene->mMeshes[node->mMeshes[i]];
+			auto mesh			= std::move(ConvertAIMeshToMesh(ai_mesh, scene));
+			auto mesh_buffer	= CreateMeshBuffer(device, mesh);
+			mesh_id				= rdb::AddMeshResource(mesh_buffer);
+			rdb::AddMeshTransform(mesh_id, transform);
+			rdb::AddMeshChild(parent_id, mesh_id);
+		}
 	}
 
 	for (unsigned int i = 0; i < node->mNumChildren; ++i) {
-		ProcessAINode(node->mChildren[i], scene, meshes);
+		ProcessAINode(node->mChildren[i], scene, mesh_id);
 	}
+
+	return mesh_id;
 }
 
-auto ConvertAISceneToMeshes(const aiScene* ai_scene, pn::vector<mesh_t>& meshes) {
-	ProcessAINode(ai_scene->mRootNode, ai_scene, meshes);
+auto ConvertAISceneToMeshes(const aiScene* ai_scene) {
+	return ProcessAINode(ai_scene->mRootNode, ai_scene, 0);
 }
 
-pn::vector<mesh_t> LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data) {
+pn::rdb::resource_id_t LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data) {
 	Assimp::Importer importer;
 	auto file_data = pn::ReadResource(filename);
 	if (file_data.empty()) {
 		LogError("MeshLoad: Couldn't load file {}", filename);
-		return {};
+		return 0;
 	}
 	const auto* ai_scene = importer.ReadFileFromMemory(
 		file_data.data(), file_data.size(),
@@ -155,14 +168,12 @@ pn::vector<mesh_t> LoadMesh(const std::string& filename, const MeshLoadData& mes
 	);
 	if (!ai_scene) {
 		LogError("Assimp: Couldn't read file: {}", importer.GetErrorString());
-		return {};
+		return 0;
 	}
-	pn::vector<mesh_t> meshes;
-	ConvertAISceneToMeshes(ai_scene, meshes);
-	return meshes;
+	return ConvertAISceneToMeshes(ai_scene);
 }
 
-pn::vector<mesh_t> LoadMesh(const std::string& filename) {
+pn::rdb::resource_id_t LoadMesh(const std::string& filename) {
 	MeshLoadData default_load_data;
 	default_load_data.convert_left = true;
 	default_load_data.triangulate = true;

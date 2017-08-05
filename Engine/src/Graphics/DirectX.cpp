@@ -227,6 +227,7 @@ mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh) {
 		return mesh_buffer;
 	}
 
+	mesh_buffer.name		= mesh.name;
 	mesh_buffer.vertices	= CreateVertexBuffer(device, mesh.vertices);
 	mesh_buffer.indices		= CreateIndexBuffer(device, mesh.indices);
 	mesh_buffer.index_count = static_cast<unsigned int>(mesh.indices.size());

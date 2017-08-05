@@ -18,6 +18,7 @@
 
 #include <chrono>
 
+#include <Application\ResourceDatabase.h>
 #include <Application\MainLoop.inc>
 
 // -- Uniform buffer data definitions ----
@@ -53,12 +54,12 @@ pn::cbuffer_array<wave_t, N_WAVES>	wave;
 
 // --- wave instance data ----
 pn::transform_t					wave_transform;
-pn::vector<pn::mesh_buffer_t>	wave_mesh_buffer;
+pn::mesh_buffer_t				wave_mesh_buffer;
 pn::shader_program_t			wave_program;
 
 // ---- monkey instance data -----
 pn::transform_t					monkey_transform;
-pn::vector<pn::mesh_buffer_t>	monkey_mesh_buffer;
+pn::mesh_buffer_t				monkey_mesh_buffer;
 pn::shader_program_t			basic_program;
 
 // ---- misc --------
@@ -105,13 +106,17 @@ void Init() {
 	}
 
 	{
-		auto mesh			= pn::LoadMesh(pn::GetResourcePath("water.fbx"));
-		wave_mesh_buffer	= pn::CreateMeshBuffer(device, mesh);
+		auto mesh_handle	= pn::LoadMesh(pn::GetResourcePath("water.fbx"));
+		while (wave_mesh_buffer.index_count == 0) {
+			wave_mesh_buffer	= pn::rdb::GetMeshResource(mesh_handle++);
+		}
 	}
 
 	{
-		auto mesh			= pn::LoadMesh(pn::GetResourcePath("sphere.fbx"));
-		monkey_mesh_buffer	= pn::CreateMeshBuffer(device, mesh);
+		auto mesh_handle	= pn::LoadMesh(pn::GetResourcePath("sphere.fbx"));
+		while (monkey_mesh_buffer.index_count == 0) {
+			monkey_mesh_buffer = pn::rdb::GetMeshResource(mesh_handle++);
+		}
 	}
 
 	// ------- SET BLENDING STATE ------------
@@ -209,7 +214,7 @@ void Render() {
 
 	pn::SetShaderProgram(context, wave_program);
 
-	auto& wave_mesh = wave_mesh_buffer[0];
+	auto& wave_mesh = wave_mesh_buffer;
 	pn::SetVertexBuffers(context, wave_program.input_layout_data, wave_mesh);
 
 	// update wave
@@ -240,7 +245,7 @@ void Render() {
 
 	pn::SetShaderProgram(context, basic_program);
 
-	auto& monkey_mesh			= monkey_mesh_buffer[0];
+	auto& monkey_mesh			= monkey_mesh_buffer;
 	pn::SetVertexBuffers(context, basic_program.input_layout_data, monkey_mesh);
 
 	pn::gui::EditStruct(monkey_transform);

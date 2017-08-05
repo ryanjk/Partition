@@ -1,42 +1,34 @@
 #pragma once
 
+#include <Application\ResourceDatabaseTypes.h>
+
+#include <Component\transform_t.h>
+
 #include <Utilities\UtilityTypes.h>
 
 #include <Graphics\DirectX.h>
 
 namespace pn::rdb {
 
-// -------- TYPEDEFS ----------
-
-using resource_id_t		= unsigned long long;
-
-template<typename V>
-using resource_map_t	= map<resource_id_t, V>;
-
-// ------- VARIABLES ------------
-
-extern resource_map_t<shader_program_t>		shaders;
-extern resource_map_t<mesh_buffer_t>		meshes;
+// ----- TYPEDEFS ----------
+using mesh_resource_t	= pn::mesh_buffer_t;
+using mesh_transform_t	= pn::transform_t;
+using mesh_children_t	= pn::vector<resource_id_t>;
 
 // -------- FUNCTIONS ------------
 
-resource_id_t	GetNextAssetId();
+// ----- MESH DATA FUNCTIONS -----------
 
-template<typename V>
-resource_id_t	AddResource(resource_map_t<V>& resource_map, V&& value) {
-	auto key = GetNextAssetId();
-	pn::Insert(resource_map, std::forward<resource_id_t>(key), std::forward<V>(value));
-	return key;
-}
+resource_id_t		AddMeshResource(mesh_resource_t& mesh);
+void				RemoveMeshResource(const resource_id_t key);
+mesh_resource_t		GetMeshResource(const resource_id_t key);
 
-template<typename V>
-void	RemoveResource(resource_map_t<V>& resource_map, const resource_id_t& key) {
-	pn::Remove(resource_map, key);
-}
+void				AddMeshTransform(const resource_id_t mesh_id, const mesh_transform_t& transform);
+void				RemoveMeshTransform(const resource_id_t mesh_id, const mesh_transform_t& transform);
+mesh_transform_t	GetMeshTransform(const resource_id_t mesh_id);
 
-template<typename V>
-auto	GetResource(const resource_map_t<V>& resource_map, const resource_id_t& key) {
-	return pn::Get(resource_map, key);
-}
+void				AddMeshChild(const resource_id_t mesh_id, const resource_id_t child_id);
+void				RemoveMeshChild(const resource_id_t mesh_id, const resource_id_t child_id);
+mesh_children_t		GetMeshChildren(const resource_id_t mesh_id);
 
 } // namespace pn::rdb

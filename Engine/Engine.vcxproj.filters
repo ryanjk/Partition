@@ -147,6 +147,9 @@
     <ClInclude Include="include\Application\ResourceDatabase.h">
       <Filter>Header Files\Application</Filter>
     </ClInclude>
+    <ClInclude Include="include\Application\ResourceDatabaseTypes.h">
+      <Filter>Header Files\Application</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\imgui\imgui.cpp">

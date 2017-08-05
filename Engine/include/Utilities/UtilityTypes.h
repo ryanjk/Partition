@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include <Utilities\Memory.h>
+#include <Utilities\Logging.h>
 
 namespace pn {
 
@@ -65,13 +66,13 @@ inline const char*		CString(const string& s) {
 // ------- VECTOR FUNCTIONS -----------
 
 template<typename T, typename U>
-void	PushBack(vector<T>& vec, U&& value) {
-	vec.push_back(std::forward<U>(value));
+void	PushBack(vector<T>& vec, const U& value) {
+	vec.push_back(value);
 }
 
 template<typename T, typename U, typename... Us>
-void	PushBack(vector<T>& vec, U&& value, Us&&... args) {
-	vec.push_back(std::forward<U>(value));
+void	PushBack(vector<T>& vec, const U& value, const Us&... args) {
+	vec.push_back(value);
 	PushBack(vec, args...);
 }
 
@@ -105,6 +106,11 @@ auto	Get(vector<T>& v, size_t i) -> decltype(v[i]) {
 	return v[i];
 }
 
+template<typename T>
+auto	Erase(vector<T>& v, const T& el) {
+	LogError("Vector erase not implemented yet");
+}
+
 // -------- MAP FUNCTIONS ------------
 
 template<typename K, typename V>
@@ -113,9 +119,9 @@ bool	Contains(const map<K,V>& m, const K& key) {
 }
 
 template<typename K, typename V>
-void	Insert(map<K,V>& m, K&& key, V&& value) {
+void	Insert(map<K,V>& m, const K key, const V& value) {
 	if (Contains(m, key)) return;
-	m.insert(std::make_pair(std::forward<K>(key), std::forward<V>(value)));
+	m.insert(std::make_pair(key, value));
 }
 
 template<typename K, typename V>
@@ -126,7 +132,7 @@ void	Remove(map<K, V>& m, const K& key) {
 
 template<typename K, typename V>
 auto	Get(const map<K,V>& m, const K& key) {
-	return m.at(key);
+	return m.at(key);	
 }
 
 

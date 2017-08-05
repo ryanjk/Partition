@@ -15,6 +15,7 @@
 
 #include <chrono>
 
+#include <Application\ResourceDatabase.h>
 #include <Application\MainLoop.inc>
 
 struct alignas(16) GlobalConstantBufferData {
@@ -38,7 +39,7 @@ pn::dx_vertex_shader vertex_shader;
 pn::input_layout_data_t input_layout;
 pn::dx_pixel_shader pixel_shader;
 
-pn::vector<pn::mesh_buffer_t> mesh_buffer;
+pn::mesh_buffer_t mesh_buffer;
 
 pn::vec3f pos(0, 0, 4);
 pn::vec3f scale(1, 1, 1);
@@ -57,7 +58,7 @@ void Init() {
 	// ---------- LOAD RESOURCES ----------------
 
 	auto mesh = pn::LoadMesh(pn::GetResourcePath("monkey.fbx"));
-	mesh_buffer = pn::CreateMeshBuffer(device, mesh);
+	mesh_buffer = pn::rdb::GetMeshResource(mesh);
 
 	tex = pn::LoadTexture2D(pn::GetResourcePath("image.png"));
 	sampler_state = pn::CreateSamplerState(device);
@@ -114,7 +115,7 @@ void Render() {
 	context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
 
 	// set vertex buffer
-	auto& cmesh_buffer = mesh_buffer[0];
+	auto& cmesh_buffer = mesh_buffer;
 	pn::SetVertexBuffers(context, input_layout, cmesh_buffer);
 	context->IASetInputLayout(input_layout.ptr.Get());
 	context->IASetIndexBuffer(cmesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
@@ -168,7 +169,7 @@ void Render() {
 	context->PSSetShaderResources(0, 1, tex.resource_view.GetAddressOf());
 	context->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
 
-	context->DrawIndexed(mesh_buffer[0].index_count, 0, 0);
+	context->DrawIndexed(mesh_buffer.index_count, 0, 0);
 }
 
 void MainLoopBegin() {

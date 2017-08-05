@@ -7,6 +7,8 @@
 
 #include <wrl.h> // ComPtr
 
+#include <Application\ResourceDatabaseTypes.h>
+
 #include <Graphics\Window.h>
 #include <Graphics\ProjectionMatrix.h>
 
@@ -141,6 +143,8 @@ struct mesh_t {
 	pn::vector<unsigned int>	indices;
 	D3D_PRIMITIVE_TOPOLOGY		topology;
 
+	pn::string					name;
+
 	mesh_t()						= default;
 	mesh_t(mesh_t&&)				= default;
 
@@ -161,6 +165,9 @@ struct mesh_buffer_t {
 	dx_buffer				indices;
 	unsigned int			index_count;
 	D3D_PRIMITIVE_TOPOLOGY	topology;
+
+	pn::rdb::resource_id_t	id;
+	pn::string				name;
 };
 
 struct texture_t {

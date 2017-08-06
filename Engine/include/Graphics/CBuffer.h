@@ -21,12 +21,12 @@ struct cbuffer {
 // ------- FUNCTIONS ------------
 
 template<typename T, int N>
-void Initialize(pn::dx_device device, cbuffer_array<T, N>& uni) {
+void InitializeCBuffer(pn::dx_device device, cbuffer_array<T, N>& uni) {
 	uni.buffer = pn::CreateConstantBuffer(device, &uni.data, 1);
 }
 
 template<typename T>
-void Initialize(pn::dx_device device, cbuffer<T>& uni) {
+void InitializeCBuffer(pn::dx_device device, cbuffer<T>& uni) {
 	uni.buffer = pn::CreateConstantBuffer(device, &uni.data, 1);
 }
 

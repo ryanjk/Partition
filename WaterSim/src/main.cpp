@@ -145,8 +145,8 @@ void Init() {
 	global_constants.data.screen_width	= static_cast<float>(pn::app::window_desc.width);
 	global_constants.data.screen_height	= static_cast<float>(pn::app::window_desc.height);
 
-	Initialize(device, directional_light);
-	Initialize(device, wave);
+	InitializeCBuffer(device, directional_light);
+	InitializeCBuffer(device, wave);
 
 	// init lights
 	directional_light.data.direction = pn::vec3f(0.0f, 0.0f, 1.0f);

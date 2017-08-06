@@ -11,6 +11,8 @@
 
 #include <Application\ResourceDatabase.h>
 
+#include <Utilities\Profile.h>
+
 #include <utility>
 
 namespace pn {
@@ -123,7 +125,6 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 
 pn::rdb::resource_id_t ProcessAINode(aiNode* node, const aiScene* scene, pn::rdb::resource_id_t parent_id) {
 	auto transform = aiMatrixToTransform(node->mTransformation);
-	Log("Processing aiNode {}", node->mName.C_Str());
 
 	pn::rdb::resource_id_t mesh_id = 0;
 	if (node->mNumMeshes == 0) {
@@ -135,8 +136,15 @@ pn::rdb::resource_id_t ProcessAINode(aiNode* node, const aiScene* scene, pn::rdb
 	else {
 		for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
 			auto* ai_mesh		= scene->mMeshes[node->mMeshes[i]];
+			
+			//StartProfile("aiMesh to Mesh");
 			auto mesh			= std::move(ConvertAIMeshToMesh(ai_mesh, scene));
+			//EndProfile();
+			
+			//StartProfile("Mesh to MeshBuffer");
 			auto mesh_buffer	= CreateMeshBuffer(device, mesh);
+			//EndProfile();
+
 			mesh_id				= rdb::AddMeshResource(mesh_buffer);
 			rdb::AddMeshTransform(mesh_id, transform);
 			rdb::AddMeshChild(parent_id, mesh_id);

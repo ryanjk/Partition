@@ -20,6 +20,6 @@ extern float time_since_application_start;
 void Exit();
 bool ShouldExit();
 
-}
+} // namespace app
 
-}
+} // namespace pn

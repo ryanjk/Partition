@@ -216,9 +216,9 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	auto context = pn::GetContext(device);
 	pn::SetViewport(context, awd.width, awd.height);
 
-	pn::Initialize(device, global_constants);
-	pn::Initialize(device, camera_constants);
-	pn::Initialize(device, model_constants);
+	pn::InitializeCBuffer(device, global_constants);
+	pn::InitializeCBuffer(device, camera_constants);
+	pn::InitializeCBuffer(device, model_constants);
 
 	// ------- POST DX INIT ---------
 

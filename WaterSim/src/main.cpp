@@ -54,14 +54,18 @@ pn::cbuffer<directional_light_t>	directional_light;
 pn::cbuffer_array<wave_t, N_WAVES>	wave;
 
 // --- wave instance data ----
-pn::transform_t					wave_transform;
-pn::mesh_buffer_t				wave_mesh_buffer;
-pn::shader_program_t			wave_program;
+pn::transform_t			wave_transform;
+pn::mesh_buffer_t		wave_mesh_buffer;
+pn::shader_program_t	wave_program;
 
 // ---- monkey instance data -----
-pn::transform_t					monkey_transform;
-pn::mesh_buffer_t				monkey_mesh_buffer;
-pn::shader_program_t			basic_program;
+pn::transform_t			monkey_transform;
+pn::mesh_buffer_t		monkey_mesh_buffer;
+pn::shader_program_t	basic_program;
+
+// ----- texture data ---------
+pn::texture_t			tex;
+pn::dx_sampler_state	sampler_state;
 
 // ---- misc --------
 pn::linear_allocator frame_alloc(1024 * 1024);
@@ -115,9 +119,8 @@ void Init() {
 		auto mesh_handle = pn::LoadMesh(pn::GetResourcePath("water.fbx"));
 		pn::EndProfile();
 
-		while (wave_mesh_buffer.index_count == 0) {
-			wave_mesh_buffer	= pn::rdb::GetMeshResource(mesh_handle++);
-		}
+		wave_mesh_buffer	= pn::rdb::GetMeshResource("Plane");
+		
 	}
 
 	{
@@ -131,6 +134,11 @@ void Init() {
 	}
 
 	pn::EndProfile();
+
+	// --------- LOAD TEXTURES -------------
+
+	tex				= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
+	sampler_state	= pn::CreateSamplerState(device);
 
 	// ------- SET BLENDING STATE ------------
 
@@ -204,8 +212,8 @@ void Render() {
 	// update directional light
 	ImGui::Begin("Lights");
 
-	ImGui::SliderFloat3("light dir", &directional_light.data.direction.x, -1.0f, 1.0f);
-	ImGui::SliderFloat("light power", &directional_light.data.intensity, 0.0f, 10.0f);
+	pn::gui::DragFloat3("light dir", &directional_light.data.direction.x, -1.0f, 1.0f);
+	pn::gui::DragFloat("light power", &directional_light.data.intensity, 0.0f, 10.0f);
 	directional_light.data.direction = directional_light.data.direction == pn::vec3f::Zero ? pn::vec3f::Zero : pn::Normalize(directional_light.data.direction);
 
 	ImGui::End(); // Lights
@@ -232,7 +240,6 @@ void Render() {
 
 	// update wave
 	ImGui::Begin("Waves");
-
 	// update model matrix
 	pn::gui::EditStruct(wave_transform);
 	model_constants.data.model	= LocalToWorldMatrix(wave_transform);
@@ -243,8 +250,10 @@ void Render() {
 		pn::gui::EditStruct(wave.data[i]);
 		ImGui::PopID();
 	}
-
 	ImGui::End(); // Waves
+
+	SetProgramShaderResources(context, tex, wave_program);
+	context->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
 
 	// send updates to constant buffers
 	UpdateBuffer(context, model_constants);

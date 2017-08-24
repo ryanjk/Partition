@@ -1,6 +1,6 @@
 #include "GlobalConstants.hlsli"
 
-Texture2D tex	: register(t0);
+Texture2D   tex	: register(t0);
 SamplerState ss : register(s0);
 
 cbuffer directional_light : register(b2) {

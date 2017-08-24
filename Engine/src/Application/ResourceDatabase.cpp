@@ -4,7 +4,7 @@ namespace pn::rdb {
 
 // ------- VARIABLES ------------
 
-resource_id_t							asset_count = 1; // keep 0 reserved as NULL value
+resource_id_t									asset_count = 1; // keep 0 reserved as NULL value
 
 pn::map<mesh_resource_id_t, mesh_resource_t>	meshes{};
 pn::map<mesh_resource_id_t, transform_t>		mesh_transforms{};
@@ -27,6 +27,14 @@ void				RemoveMeshResource(const mesh_resource_id_t key) {
 }
 mesh_resource_t		GetMeshResource(const mesh_resource_id_t key) {
 	return pn::Get(meshes, key);
+}
+mesh_resource_t		GetMeshResource(const pn::string& name) {
+	for (const auto& mesh : meshes) {
+		auto& mesh_resource = mesh.second;
+		if (mesh_resource.name == name) return mesh_resource;
+	}
+	LogError("Couldn't find requested mesh in rdb: {}", name);
+	assert(false);
 }
 
 void				AddMeshTransform(const mesh_resource_id_t mesh_id, const mesh_transform_t& transform) {

@@ -338,7 +338,7 @@ vertex_input_desc				GetVertexInputDescFromShader(dx_shader_reflection reflector
 
 D3D11_SHADER_INPUT_BIND_DESC	GetResourceBindingDesc(dx_shader_reflection reflector, const pn::string& name);
 
-unsigned int					GetUniformStartSlot(dx_shader_reflection reflector, const pn::string& name);
+unsigned int					GetShaderResourceStartSlot(dx_shader_reflection reflector, const pn::string& name);
 
 // ----------- VIEWPORT -----------------------
 
@@ -368,6 +368,9 @@ void SetVertexBuffers(dx_context context, const input_layout_data_t& input_layou
 void SetVSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
 void SetPSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
 
+void SetVSShaderResources(dx_context context, const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
+void SetPSShaderResources(dx_context context, const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
+
 #define SetProgramVSConstantBuffer(context, name, program) pn::SetVSConstantBuffer(context, #name, program.vertex_shader_data.reflection, name.buffer)
 
 #define SetProgramPSConstantBuffer(context, name, program) pn::SetPSConstantBuffer(context, #name, program.pixel_shader_data.reflection, name.buffer)
@@ -375,6 +378,14 @@ void SetPSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_s
 #define SetProgramConstantBuffer(context, name, program)	\
 SetProgramVSConstantBuffer(context, name, program);			\
 SetProgramPSConstantBuffer(context, name, program);
+
+#define SetProgramVSShaderResources(context, name, program) pn::SetVSShaderResources(context, #name, program.vertex_shader_data.reflection, name.resource_view)
+
+#define SetProgramPSShaderResources(context, name, program) pn::SetPSShaderResources(context, #name, program.pixel_shader_data.reflection, name.resource_view)
+
+#define SetProgramShaderResources(context, name, program)	\
+SetProgramVSShaderResources(context, name, program);		\
+SetProgramPSShaderResources(context, name, program);
 
 // ---------- BLENDING -----------------
 

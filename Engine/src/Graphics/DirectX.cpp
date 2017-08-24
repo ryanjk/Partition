@@ -463,15 +463,14 @@ D3D11_SHADER_INPUT_BIND_DESC	GetResourceBindingDesc(dx_shader_reflection reflect
 	ZeroMemory(&binding_desc, sizeof(D3D11_SHADER_INPUT_BIND_DESC));
 	auto hr = reflector->GetResourceBindingDescByName(name.c_str(), &binding_desc);
 	if (FAILED(hr)) {
-		// Failure could be fine if cbuffer is optimized out of shader
+		// Failure could be fine if cbuffer or resource is optimized out of shader
 		//LogError("Couldn't get resource binding desc: {}", ErrMsg(hr));
 	}
 	return binding_desc;
 }
 
-unsigned int					GetUniformStartSlot(dx_shader_reflection reflector, const pn::string& name) {
+unsigned int					GetShaderResourceStartSlot(dx_shader_reflection reflector, const pn::string& name) {
 	auto binding_desc = GetResourceBindingDesc(reflector, name);
-	assert(binding_desc.Type == D3D_SHADER_INPUT_TYPE::D3D_SIT_CBUFFER);
 	return binding_desc.BindPoint;
 }
 
@@ -612,14 +611,25 @@ void SetInputLayout(dx_context context, const input_layout_data_t& layout_desc) 
 }
 
 void SetVSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer) {
-	unsigned int start_slot = GetUniformStartSlot(reflection, buffer_name);
+	unsigned int start_slot = GetShaderResourceStartSlot(reflection, buffer_name);
 	if (start_slot == 0) return;
 	context->VSSetConstantBuffers(start_slot, 1, buffer.GetAddressOf());
 }
 void SetPSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer) {
-	unsigned int start_slot = GetUniformStartSlot(reflection, buffer_name);
+	unsigned int start_slot = GetShaderResourceStartSlot(reflection, buffer_name);
 	if (start_slot == 0) return;
 	context->PSSetConstantBuffers(start_slot, 1, buffer.GetAddressOf());
+}
+
+void SetVSShaderResources(dx_context context, const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view) {
+	unsigned int start_slot = GetShaderResourceStartSlot(reflection, resource_name);
+	if (start_slot == 0) return;
+	context->VSSetShaderResources(start_slot, 1, resource_view.GetAddressOf());
+}
+void SetPSShaderResources(dx_context context, const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view) {
+	unsigned int start_slot = GetShaderResourceStartSlot(reflection, resource_name);
+	if (start_slot == 0) return;
+	context->PSSetShaderResources(start_slot, 1, resource_view.GetAddressOf());
 }
 
 // ----------- BLENDING ----------------

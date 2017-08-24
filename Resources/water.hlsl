@@ -1,5 +1,8 @@
 #include "GlobalConstants.hlsli"
 
+Texture2D   tex	: register(t1);
+SamplerState ss : register(s1);
+
 // ------ CONSTANT BUFFERS -------
 
 cbuffer directional_light : register(b4) {
@@ -106,7 +109,8 @@ VS_OUT VS_main(VS_IN i) {
 		i.t,
 		i.n
 	};
-	o.n = float4(normalize(mul(btn, normal)), 0);
+	//o.n = float4(normalize(mul(btn, normal)), 0);
+	o.n = float4(normal, 0);
 	o.n = mul(MODEL, o.n);
 	o.n = mul(VIEW, o.n);
 
@@ -117,15 +121,15 @@ VS_OUT VS_main(VS_IN i) {
 // ------- PIXEL SHADER ---------
 
 float4 PS_main(VS_OUT i) : SV_TARGET {
-	float ndotl = max(0.0, dot(i.n.xyz, -direction));
-float3 shade = ndotl * intensity;
+	float3 n = normalize(i.n.xyz);
+	float ndotl = max(0.0, dot(n, -direction));
+	float3 shade = ndotl * intensity;
+	float4 view_pos = float4(VIEW[3][0], VIEW[3][1], VIEW[3][2], 1);
+	float4 view_dir = normalize(view_pos - i.world_pos);
+	float3 reflected = 2 * ndotl * n + direction;
+	float view_angle = max(0.0, dot(view_dir, float4(reflected, 0)));
+	float4 spec = pow(view_angle, 1000);
 
-float4 view_pos = float4(VIEW[3][0], VIEW[3][1], VIEW[3][2], 1);
-float4 view_dir = normalize(view_pos - i.world_pos);
-float3 reflected = 2 * ndotl * i.n.xyz + direction;
-float view_angle = max(0.0, dot(view_dir, float4(reflected, 0)));
-float4 spec = pow(view_angle, 1000);
-
-float4 color = float4(i.uv, 0, 1);
-return float4(shade*(color.rgb + spec.rgb), 1);
+	float4 color = tex.Sample(ss, i.uv);
+	return float4(shade*(color.rgb + spec.rgb), 1);
 }

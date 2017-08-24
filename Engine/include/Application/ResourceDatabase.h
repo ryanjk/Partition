@@ -22,6 +22,7 @@ using mesh_children_t	= pn::vector<mesh_resource_id_t>;
 mesh_resource_id_t		AddMeshResource(mesh_resource_t& mesh);
 void				RemoveMeshResource(const mesh_resource_id_t key);
 mesh_resource_t		GetMeshResource(const mesh_resource_id_t key);
+mesh_resource_t		GetMeshResource(const pn::string& name);
 
 void				AddMeshTransform(const mesh_resource_id_t mesh_id, const mesh_transform_t& transform);
 void				RemoveMeshTransform(const mesh_resource_id_t mesh_id, const mesh_transform_t& transform);

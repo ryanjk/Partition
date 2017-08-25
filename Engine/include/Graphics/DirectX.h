@@ -368,9 +368,6 @@ void SetVertexBuffers(dx_context context, const input_layout_data_t& input_layou
 void SetVSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
 void SetPSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
 
-void SetVSShaderResources(dx_context context, const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
-void SetPSShaderResources(dx_context context, const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
-
 #define SetProgramVSConstantBuffer(context, name, program) pn::SetVSConstantBuffer(context, #name, program.vertex_shader_data.reflection, name.buffer)
 
 #define SetProgramPSConstantBuffer(context, name, program) pn::SetPSConstantBuffer(context, #name, program.pixel_shader_data.reflection, name.buffer)
@@ -379,6 +376,9 @@ void SetPSShaderResources(dx_context context, const pn::string& resource_name, d
 SetProgramVSConstantBuffer(context, name, program);			\
 SetProgramPSConstantBuffer(context, name, program);
 
+void SetVSShaderResources(dx_context context, const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
+void SetPSShaderResources(dx_context context, const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
+
 #define SetProgramVSShaderResources(context, name, program) pn::SetVSShaderResources(context, #name, program.vertex_shader_data.reflection, name.resource_view)
 
 #define SetProgramPSShaderResources(context, name, program) pn::SetPSShaderResources(context, #name, program.pixel_shader_data.reflection, name.resource_view)
@@ -386,6 +386,17 @@ SetProgramPSConstantBuffer(context, name, program);
 #define SetProgramShaderResources(context, name, program)	\
 SetProgramVSShaderResources(context, name, program);		\
 SetProgramPSShaderResources(context, name, program);
+
+void SetVSSamplers(dx_context context, const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state);
+void SetPSSamplers(dx_context context, const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state);
+
+#define SetProgramVSSamplers(context, name, program) pn::SetVSSamplers(context, #name, program.vertex_shader_data.reflection, name)
+
+#define SetProgramPSSamplers(context, name, program) pn::SetPSSamplers(context, #name, program.pixel_shader_data.reflection, name)
+
+#define SetProgramSamplers(context, name, program)	\
+SetProgramVSSamplers(context, name, program);		\
+SetProgramPSSamplers(context, name, program);
 
 // ---------- BLENDING -----------------
 

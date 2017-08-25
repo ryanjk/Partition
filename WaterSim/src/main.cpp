@@ -253,7 +253,7 @@ void Render() {
 	ImGui::End(); // Waves
 
 	SetProgramShaderResources(context, tex, wave_program);
-	context->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
+	SetProgramSamplers(context, sampler_state, wave_program);
 
 	// send updates to constant buffers
 	UpdateBuffer(context, model_constants);

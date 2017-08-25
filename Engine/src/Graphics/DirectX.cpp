@@ -538,6 +538,13 @@ void SetShaderProgram(dx_context context, shader_program_t& shader_program) {
 	pn::SetPixelShader(context, shader_program.pixel_shader_data.shader);
 }
 
+void SetVertexShader(dx_context context, dx_vertex_shader shader) {
+	context->VSSetShader(shader.Get(), nullptr, 0);
+}
+void SetPixelShader(dx_context context, dx_pixel_shader shader) {
+	context->PSSetShader(shader.Get(), nullptr, 0);
+}
+
 void SetVertexBuffers(dx_context context, const input_layout_data_t& layout, const mesh_buffer_t& mesh_buffer) {
 	const auto NUM_PARAMETERS = layout.desc.size();
 
@@ -599,13 +606,6 @@ void SetVertexBuffers(dx_context context, const input_layout_data_t& layout, con
 	context->IASetPrimitiveTopology(mesh_buffer.topology);
 }
 
-void SetVertexShader(dx_context context, dx_vertex_shader shader) {
-	context->VSSetShader(shader.Get(), nullptr, 0);
-}
-void SetPixelShader(dx_context context, dx_pixel_shader shader) {
-	context->PSSetShader(shader.Get(), nullptr, 0);
-}
-
 void SetInputLayout(dx_context context, const input_layout_data_t& layout_desc) {
 	context->IASetInputLayout(layout_desc.ptr.Get());
 }
@@ -630,6 +630,17 @@ void SetPSShaderResources(dx_context context, const pn::string& resource_name, d
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, resource_name);
 	if (start_slot == 0) return;
 	context->PSSetShaderResources(start_slot, 1, resource_view.GetAddressOf());
+}
+
+void SetVSSamplers(dx_context context, const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state) {
+	unsigned int start_slot = GetShaderResourceStartSlot(reflection, sampler_name);
+	if (start_slot == 0) return;
+	context->VSSetSamplers(start_slot, 1, sampler_state.GetAddressOf());
+}
+void SetPSSamplers(dx_context context, const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state) {
+	unsigned int start_slot = GetShaderResourceStartSlot(reflection, sampler_name);
+	if (start_slot == 0) return;
+	context->PSSetSamplers(start_slot, 1, sampler_state.GetAddressOf());
 }
 
 // ----------- BLENDING ----------------

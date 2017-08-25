@@ -119,13 +119,13 @@ void Init() {
 		auto mesh_handle = pn::LoadMesh(pn::GetResourcePath("water.fbx"));
 		pn::EndProfile();
 
-		wave_mesh_buffer	= pn::rdb::GetMeshResource("Plane");
+		wave_mesh_buffer = pn::rdb::GetMeshResource("Plane");
 		
 	}
 
 	{
-		pn::StartProfile("Loading sphere mesh");
-		auto mesh_handle = pn::LoadMesh(pn::GetResourcePath("sphere.fbx"));
+		pn::StartProfile("Loading monkey mesh");
+		auto mesh_handle = pn::LoadMesh(pn::GetResourcePath("monkey.fbx"));
 		pn::EndProfile();
 
 		while (monkey_mesh_buffer.index_count == 0) {
@@ -243,6 +243,7 @@ void Render() {
 	// update model matrix
 	pn::gui::EditStruct(wave_transform);
 	model_constants.data.model	= LocalToWorldMatrix(wave_transform);
+	model_constants.data.model_view_inverse_transpose = pn::Transpose(pn::Inverse(model_constants.data.model * camera_constants.data.view));
 	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	for (int i = 0; i < N_WAVES; ++i) {
@@ -265,18 +266,24 @@ void Render() {
 
 // ----- BEGIN MONKEY
 
+	SetProgramConstantBuffer(context, global_constants, basic_program);
+	SetProgramConstantBuffer(context, camera_constants, basic_program);
+	SetProgramConstantBuffer(context, model_constants, basic_program);
+	SetProgramConstantBuffer(context, directional_light, basic_program);
+
 	pn::SetShaderProgram(context, basic_program);
 
 	auto& monkey_mesh			= monkey_mesh_buffer;
 	pn::SetVertexBuffers(context, basic_program.input_layout_data, monkey_mesh);
 
 	pn::gui::EditStruct(monkey_transform);
-	model_constants.data.model	= LocalToWorldMatrix(monkey_transform);
-	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
+	model_constants.data.model							= LocalToWorldMatrix(monkey_transform);
+	model_constants.data.model_view_inverse_transpose	= pn::Transpose(pn::Inverse(model_constants.data.model * camera_constants.data.view));
+	model_constants.data.mvp							= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	UpdateBuffer(context, model_constants);
 
-	//pn::DrawIndexed(context, monkey_mesh);
+	pn::DrawIndexed(context, monkey_mesh);
 
 // --- END MONKEY
 

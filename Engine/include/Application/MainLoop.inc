@@ -38,6 +38,7 @@ struct camera_constants_t {
 
 struct model_constants_t {
 	pn::mat4f model;
+	pn::mat4f model_view_inverse_transpose;
 	pn::mat4f mvp;
 };
 

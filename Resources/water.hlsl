@@ -104,15 +104,9 @@ VS_OUT VS_main(VS_IN i) {
 	o.screen_pos = mul(MVP, pos);
 
 	float3 normal = normalize(float3(nx, nz, ny));
-	float3x3 btn = {
-		i.b,
-		i.t,
-		i.n
-	};
-	//o.n = float4(normalize(mul(btn, normal)), 0);
-	o.n = float4(normal, 0);
-	o.n = mul(MODEL, o.n);
-	o.n = mul(VIEW, o.n);
+	o.n = float4(normal, 0.0);
+	o.n = mul(MODEL_VIEW_INVERSE_TRANSPOSE, o.n);
+	o.n = normalize(o.n);
 
 	o.uv = i.uv;
 	return o;
@@ -121,15 +115,15 @@ VS_OUT VS_main(VS_IN i) {
 // ------- PIXEL SHADER ---------
 
 float4 PS_main(VS_OUT i) : SV_TARGET {
-	float3 n = normalize(i.n.xyz);
-	float ndotl = max(0.0, dot(n, -direction));
-	float3 shade = ndotl * intensity;
-	float4 view_pos = float4(VIEW[3][0], VIEW[3][1], VIEW[3][2], 1);
-	float4 view_dir = normalize(view_pos - i.world_pos);
-	float3 reflected = 2 * ndotl * n + direction;
-	float view_angle = max(0.0, dot(view_dir, float4(reflected, 0)));
-	float4 spec = pow(view_angle, 1000);
+	float3 n		= normalize(i.n.xyz);
+	float ndotl		= saturate(dot(n, -direction));
+	float3 shade	= ndotl * intensity;
 
-	float4 color = tex.Sample(ss, i.uv);
+	float3 view_pos = float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
+	float3 view_dir = normalize(view_pos - i.world_pos.xyz);
+	float3 halfw	= normalize(view_dir - direction);
+	float4 spec		= pow(saturate(dot(n,halfw)), 1000);
+
+	float4 color	= tex.Sample(ss, i.uv);
 	return float4(shade*(color.rgb + spec.rgb), 1);
 }

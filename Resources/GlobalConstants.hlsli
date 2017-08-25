@@ -13,5 +13,6 @@ cbuffer camera_constants : register(b2) {
 
 cbuffer model_constants : register(b3) {
 	float4x4 MODEL;
+	float4x4 MODEL_VIEW_INVERSE_TRANSPOSE;
 	float4x4 MVP;
 }

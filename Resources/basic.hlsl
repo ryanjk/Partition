@@ -10,16 +10,16 @@ cbuffer directional_light : register(b4) {
 // ----- INPUT / OUTPUT --------
 
 struct VS_IN {
-	float3 n : NORMAL;
-	float3 pos : POSITION;
-	float2 uv : TEXCOORD0;
+	float3 n	: NORMAL;
+	float3 pos	: POSITION;
+	float2 uv	: TEXCOORD0;
 };
 
 struct VS_OUT {
-	float4 screen_pos : SV_POSITION;
-	float4 world_pos : POSITION;
-	float2 uv : TEXCOORD0;
-	float4 n : TEXCOORD1;
+	float4 screen_pos	: SV_POSITION;
+	float4 world_pos	: POSITION;
+	float2 uv			: TEXCOORD0;
+	float4 n			: TEXCOORD1;
 };
 
 // ------- VERTEX SHADER --------
@@ -33,8 +33,7 @@ VS_OUT VS_main(VS_IN i) {
 	o.screen_pos = mul(PROJECTION, pos);
 
 	o.n = float4(i.n, 0.0);
-	o.n = mul(MODEL, o.n);
-	//o.n = mul(VIEW, o.n);
+	o.n = mul(MODEL_VIEW_INVERSE_TRANSPOSE, o.n);
 	o.n = normalize(o.n);
 
 	o.uv = i.uv;
@@ -43,15 +42,15 @@ VS_OUT VS_main(VS_IN i) {
 
 // ----- PIXEL SHADER -------
 
-float4 PS_main(VS_OUT i) : SV_TARGET{
-	float ndotl			= max(0.0, dot(i.n.xyz, -direction));
+float4 PS_main(VS_OUT i) : SV_TARGET {
+	float3 n			= normalize(i.n.xyz);
+	float ndotl			= saturate(dot(n, -direction));
 	float3 shade		= ndotl * intensity;
 
-	float4 view_pos		= float4(VIEW[3][0], VIEW[3][1], VIEW[3][2], 1);
-	float4 view_dir		= normalize(view_pos - i.world_pos);
-	float3 reflected	= 2 * ndotl * i.n.xyz + direction;
-	float view_angle	= max(0.0, dot(view_dir, float4(reflected, 0)));
-	float4 spec			= pow(view_angle, 100);
+	float3 view_pos		= float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
+	float3 view_dir		= normalize(view_pos - i.world_pos.xyz);
+	float3 halfw		= normalize(view_dir - direction);
+	float4 spec			= pow(saturate(dot(n,halfw)), 1000);
 
 	float4 color		= float4(1, 0, 0, 1);
 	return float4(shade*(color.rgb + spec.rgb), 1);

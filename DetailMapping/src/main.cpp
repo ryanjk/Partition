@@ -93,10 +93,12 @@ void Render() {
 
 	// update directional light
 	ImGui::Begin("Lights");
-
-	pn::gui::DragFloat3("light dir", &directional_light.data.direction.x, -1.0f, 1.0f);
+	pn::quaternion light_q = pn::EulerToQuaternion(directional_light.data.direction);
+	pn::gui::DragRotation("light direction", &light_q);
+	directional_light.data.direction = pn::QuaternionToEuler(light_q);
+	//pn::gui::DragFloat3("light dir", &directional_light.data.direction.x, -1.0f, 1.0f);
 	pn::gui::DragFloat("light power", &directional_light.data.intensity, 0.0f, 10.0f);
-	directional_light.data.direction = directional_light.data.direction == pn::vec3f::Zero ? pn::vec3f::Zero : pn::Normalize(directional_light.data.direction);
+	//directional_light.data.direction = directional_light.data.direction == pn::vec3f::Zero ? pn::vec3f::Zero : pn::Normalize(directional_light.data.direction);
 
 	ImGui::End(); // Lights
 

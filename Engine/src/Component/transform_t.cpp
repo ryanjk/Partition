@@ -76,65 +76,12 @@ namespace gui {
 template<>
 void EditStruct(pn::transform_t& transform) {
 	DragFloat3("position", &transform.position.x, -INFINITY, INFINITY);
-	
-	static float ROT_SCALE = 0.01f;
-
-	auto euler = QuaternionToEuler(transform.rotation);
-	
-	// this is a mess, lots of inlining imgui functions
-	using namespace ImGui;
-	const char* label = "rotation";
-	ImGuiContext& g = *GImGui;
-	float return_delta = 0.0f;
-	BeginGroup();
-	PushID(label);
-	ImGuiWindow* window = ImGui::GetCurrentWindow();
-	const ImGuiStyle& style = GImGui->Style;
-	auto w_full = ImGui::CalcItemWidth();
-	int components = 3;
-	const float w_item_one = ImMax(1.0f, (float)(int)((w_full - (style.ItemInnerSpacing.x) * (components - 1)) / (float)components));
-	const float w_item_last = ImMax(1.0f, (float)(int)(w_full - (w_item_one + style.ItemInnerSpacing.x) * (components - 1)));
-	window->DC.ItemWidthStack.push_back(w_item_last);
-	for (int i = 0; i < components - 1; i++)
-		window->DC.ItemWidthStack.push_back(w_item_one);
-	window->DC.ItemWidth = window->DC.ItemWidthStack.back();
-
-	{
-		PushID(0);
-		float xr = ImGui::DeltaDragFloat("##v", &euler.x);
-		if (xr != 0.0f)
-			transform.rotation *= AxisAngleToQuaternion(TransformDirection(transform, vec3f::UnitX), xr*ROT_SCALE);
-		SameLine(0, g.Style.ItemInnerSpacing.x);
-		PopID();
-		PopItemWidth();
-	}
-
-	{
-		PushID(1);
-		float xy = ImGui::DeltaDragFloat("##v", &euler.y);
-		if (xy != 0.0f)
-			transform.rotation *= AxisAngleToQuaternion(TransformDirection(transform, vec3f::UnitY), xy*ROT_SCALE);
-		SameLine(0, g.Style.ItemInnerSpacing.x);
-		PopID();
-		PopItemWidth();
-	}
-
-	{
-		PushID(2);
-		float xz = ImGui::DeltaDragFloat("##v", &euler.z);
-		if (xz != 0.0f)
-			transform.rotation *= AxisAngleToQuaternion(TransformDirection(transform, vec3f::UnitZ), xz*ROT_SCALE);
-		SameLine(0, g.Style.ItemInnerSpacing.x);
-		PopID();
-		PopItemWidth();
-	}
-
-	PopID();
-
-	TextUnformatted(label, FindRenderedTextEnd(label));
-	EndGroup();
-	
-	pn::gui::DragFloat3("scale", &transform.scale.x, -INFINITY, INFINITY);
+	DragRotation("rotation", &transform.rotation,
+				 TransformDirection(transform, vec3f::UnitX),
+				 TransformDirection(transform, vec3f::UnitY),
+				 TransformDirection(transform, vec3f::UnitZ)
+	);
+	DragFloat3("scale", &transform.scale.x, -INFINITY, INFINITY);
 }
 
 } // namespace gui

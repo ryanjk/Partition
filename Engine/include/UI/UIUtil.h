@@ -66,6 +66,8 @@ bool DragFloat2(const char* label, float* v, float min, float max, float speed_m
 bool DragFloat3(const char* label, float* v, float min, float max, float speed_modifier = 1.0f, const char* display_format = "%.3f", float power = 1.0f);
 bool DragFloat4(const char* label, float* v, float min, float max, float speed_modifier = 1.0f, const char* display_format = "%.3f", float power = 1.0f);
 
+void DragRotation(const char* label, quaternion* q, const vec3f x = vec3f::UnitX, const vec3f y = vec3f::UnitY, const vec3f z = vec3f::UnitZ, float speed_modifier = 1.0f);
+
 } // namespace gui
 
 } // namespace pn::gui

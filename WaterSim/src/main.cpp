@@ -58,11 +58,6 @@ pn::transform_t			wave_transform;
 pn::mesh_buffer_t		wave_mesh_buffer;
 pn::shader_program_t	wave_program;
 
-// ---- monkey instance data -----
-pn::transform_t			monkey_transform;
-pn::mesh_buffer_t		monkey_mesh_buffer;
-pn::shader_program_t	basic_program;
-
 // ----- texture data ---------
 pn::texture_t			tex;
 pn::dx_sampler_state	sampler_state;
@@ -124,13 +119,13 @@ void Init() {
 	}
 
 	{
-		pn::StartProfile("Loading monkey mesh");
+		/*pn::StartProfile("Loading monkey mesh");
 		auto mesh_handle = pn::LoadMesh(pn::GetResourcePath("monkey.fbx"));
 		pn::EndProfile();
 
 		while (monkey_mesh_buffer.index_count == 0) {
 			monkey_mesh_buffer = pn::rdb::GetMeshResource(mesh_handle++);
-		}
+		}*/
 	}
 
 	pn::EndProfile();
@@ -148,7 +143,7 @@ void Init() {
 	// --------- CREATE SHADER DATA ---------------
 
 	wave_program	= pn::CompileShaderProgram(device, pn::GetResourcePath("water.hlsl"));
-	basic_program	= pn::CompileShaderProgram(device, pn::GetResourcePath("basic.hlsl"));
+	//basic_program	= pn::CompileShaderProgram(device, pn::GetResourcePath("basic.hlsl"));
 
 	global_constants.data.screen_width	= static_cast<float>(pn::app::window_desc.width);
 	global_constants.data.screen_height	= static_cast<float>(pn::app::window_desc.height);
@@ -182,11 +177,6 @@ void Init() {
 	wave_transform.position	= { 0, 0, 15 };
 	wave_transform.scale	= { 1, 1, 1 };
 	wave_transform.rotation = pn::EulerToQuaternion( 0.698f, 3.069f, 0.f );
-
-	// init monkey object
-	monkey_transform.position	= { 0, 0, 3 };
-	monkey_transform.scale		= { 1, 1, 1 };
-	monkey_transform.rotation	= pn::EulerToQuaternion( 0, 0, 0 );
 
 	// --------- INIT CUSTOM ALLOCATORS -----------
 	pn::frame_string::SetFrameAllocator(&frame_alloc);
@@ -263,29 +253,6 @@ void Render() {
 	pn::DrawIndexed(context, wave_mesh);
 
 // ----- END WATER
-
-// ----- BEGIN MONKEY
-
-	SetProgramConstantBuffer(context, global_constants, basic_program);
-	SetProgramConstantBuffer(context, camera_constants, basic_program);
-	SetProgramConstantBuffer(context, model_constants, basic_program);
-	SetProgramConstantBuffer(context, directional_light, basic_program);
-
-	pn::SetShaderProgram(context, basic_program);
-
-	auto& monkey_mesh			= monkey_mesh_buffer;
-	pn::SetVertexBuffers(context, basic_program.input_layout_data, monkey_mesh);
-
-	pn::gui::EditStruct(monkey_transform);
-	model_constants.data.model							= LocalToWorldMatrix(monkey_transform);
-	model_constants.data.model_view_inverse_transpose	= pn::Transpose(pn::Inverse(model_constants.data.model * camera_constants.data.view));
-	model_constants.data.mvp							= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
-
-	UpdateBuffer(context, model_constants);
-
-	pn::DrawIndexed(context, monkey_mesh);
-
-// --- END MONKEY
 
 }
 

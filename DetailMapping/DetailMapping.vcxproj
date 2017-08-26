@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{6B402D5F-ED22-45FF-A644-C5EAD0AEA36C}</ProjectGuid>
-    <RootNamespace>Test</RootNamespace>
+    <ProjectGuid>{a25fac8a-4d8a-4a01-a394-100743b57d88}</ProjectGuid>
+    <RootNamespace>DetailMapping</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -153,7 +153,9 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="resource\GlobalConstants.hlsli" />
+    <None Include="..\Resources\normal_map.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -342,7 +342,7 @@ unsigned int					GetShaderResourceStartSlot(dx_shader_reflection reflector, cons
 
 // ----------- VIEWPORT -----------------------
 
-void SetViewport(dx_context context, const int width, const int height);
+void SetViewport(dx_context context, const int width, const int height, const int top_left_x = 0, const int top_left_y = 0);
 void SetRenderTargetViewAndDepthStencilFromSwapChain(dx_device device, 
 																		dx_swap_chain swap_chain, 
 																		dx_render_target_view& render_target_view, 

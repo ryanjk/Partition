@@ -478,11 +478,14 @@ unsigned int					GetShaderResourceStartSlot(dx_shader_reflection reflector, cons
 
 // --------- VIEWPORT --------------
 
-void SetViewport(dx_context context, const int width, const int height) {
+void SetViewport(dx_context context, const int width, const int height, const int top_left_x, const int top_left_y) {
 	D3D11_VIEWPORT m_viewport;
 	ZeroMemory(&m_viewport, sizeof(D3D11_VIEWPORT));
-	m_viewport.Height = (float) height;
-	m_viewport.Width = (float) width;
+
+	m_viewport.TopLeftX = (float) top_left_x;
+	m_viewport.TopLeftY = (float) top_left_y;
+	m_viewport.Height	= (float) height;
+	m_viewport.Width	= (float) width;
 	m_viewport.MinDepth = 0;
 	m_viewport.MaxDepth = 1;
 

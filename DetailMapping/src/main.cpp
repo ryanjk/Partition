@@ -137,6 +137,16 @@ void Render() {
 	// send updates to constant buffers
 	UpdateBuffer(context, model_constants);
 
+	pn::SetViewport(context, screen_desc.Width / 2, screen_desc.Height / 2, 0, 0);
+	pn::DrawIndexed(context, plane_mesh);
+
+	pn::SetViewport(context, screen_desc.Width / 2, screen_desc.Height / 2, screen_desc.Width / 2, 0);
+	pn::DrawIndexed(context, plane_mesh);
+
+	pn::SetViewport(context, screen_desc.Width / 2, screen_desc.Height / 2, 0, screen_desc.Height / 2);
+	pn::DrawIndexed(context, plane_mesh);
+
+	pn::SetViewport(context, screen_desc.Width / 2, screen_desc.Height / 2, screen_desc.Width / 2, screen_desc.Height / 2);
 	pn::DrawIndexed(context, plane_mesh);
 
 	//pn::EndProfile();

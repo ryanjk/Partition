@@ -28,7 +28,7 @@ static const D3D_FEATURE_LEVEL BAD_LEVELS[] = {
 };
 
 #ifdef _DEBUG
-const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_DEBUG | D3DCOMPILE_WARNINGS_ARE_ERRORS | D3DCOMPILE_OPTIMIZATION_LEVEL0;
+const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL0;
 #else
 const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #endif
@@ -82,6 +82,8 @@ dx_device				CreateDevice() {
 		LogError("Couldn't query DXGIDevice interface: {}", ErrMsg(hr));
 	}
 	
+	
+
 	hr = gi_device->GetAdapter(adapter.GetAddressOf());
 	if (FAILED(hr)) {
 		LogError("Couldn't get DXGIAdapter: {}", ErrMsg(hr));
@@ -205,7 +207,7 @@ dx_sampler_state		CreateSamplerState(dx_device device, CD3D11_SAMPLER_DESC sampl
 
 dx_sampler_state		CreateSamplerState(dx_device device) {
 	CD3D11_SAMPLER_DESC sampler_desc;
-	sampler_desc.Filter = D3D11_FILTER::D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampler_desc.Filter = D3D11_FILTER::D3D11_FILTER_ANISOTROPIC;
 	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;

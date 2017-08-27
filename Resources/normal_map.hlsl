@@ -1,6 +1,8 @@
 #include "GlobalConstants.hlsli"
 
 Texture2D normal_map	: register(t1);
+Texture2D diffuse_map	: register(t2);
+
 SamplerState ss			: register(s1);
 
 // ---- CONSTANT BUFFERS --------
@@ -72,6 +74,6 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 	float3 halfw = normalize(view_dir - direction);
 	float4 spec = pow(saturate(dot(n,halfw)), 100);
 
-	float4 color = float4(0.2, 1, 1, 1);
+	float3 color = float3(1,1,1);
 	return float4(shade*(color.rgb ), 1);
 }

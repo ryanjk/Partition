@@ -13,6 +13,7 @@ struct alignas(16) directional_light_t {
 
 pn::cbuffer<directional_light_t>	directional_light;
 
+pn::texture_t			diffuse_map;
 pn::texture_t			normal_map;
 pn::dx_sampler_state	ss;
 
@@ -34,6 +35,7 @@ void Init() {
 
 	// --------- LOAD TEXTURES -------------
 
+	diffuse_map = pn::LoadTexture2D(pn::GetResourcePath("metal.png"));
 	normal_map	= pn::LoadTexture2D(pn::GetResourcePath("pad_map.png"));
 	ss			= pn::CreateSamplerState(device);
 
@@ -128,6 +130,7 @@ void Render() {
 	model_constants.data.mvp = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 	ImGui::End(); // Plane
 
+	SetProgramShaderResources(context, diffuse_map, normal_map_program);
 	SetProgramShaderResources(context, normal_map, normal_map_program);
 	SetProgramSamplers(context, ss, normal_map_program);
 

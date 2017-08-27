@@ -25,9 +25,18 @@ texture_t LoadTexture2D(const string& filepath) {
 	
 	dx_resource			resource;
 	dx_resource_view	resource_view;
-
-	auto hr = DirectX::CreateWICTextureFromMemory(_device.Get(), _context.Get(), 
-		(const uint8_t*)(image_data.data()), image_data.size(), resource.GetAddressOf(), resource_view.GetAddressOf());
+	
+	auto hr = DirectX::CreateWICTextureFromMemoryEx(
+		_device.Get(), _context.Get(),
+		(const uint8_t*)(image_data.data()), image_data.size(), 0, 
+		D3D11_USAGE::D3D11_USAGE_DEFAULT,
+		D3D11_BIND_SHADER_RESOURCE,
+		0,
+		0,
+		DirectX::WIC_LOADER_IGNORE_SRGB,
+		resource.GetAddressOf(), resource_view.GetAddressOf()
+	);
+	
 	if (FAILED(hr)) {
 		LogError("Couldn't create texture: {}", ErrMsg(hr));
 	}

@@ -51,18 +51,23 @@ VS_OUT VS_main(VS_IN i) {
 
 // ----- PIXEL SHADER -------
 
+float3 vis(float3 vec) {
+	return (vec + float3(1, 1, 1))*0.5;
+}
+
 float4 PS_main(VS_OUT i) : SV_TARGET{
-	float3 n3 = normalize(i.n);
-	float3x3 btn = transpose(float3x3(i.t, i.b, n3));
-	float3 nmapn = normal_map.Sample(ss, i.uv).xyz;
-	n3 = mul(btn, nmapn);
-	
+	float3 n3		= i.n;
+	float tmp = saturate(dot(i.b, i.t));
+	return float4(tmp,tmp,tmp, 1);
+	float3x3 btn	= (float3x3(i.t, i.b, n3));
+	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
+	//n3				= mul(btn, nmapn);
+	n3				= normalize(n3);
+
 	float4 n4 = float4(n3, 0.0);
 	n4 = mul(MODEL, n4);
 	//n4 = mul(VIEW, n4);
 	//return float4(n4.xyz, 1);
-	n4 = normalize(n4);
-
 	float3 n = n4.xyz;
 
 

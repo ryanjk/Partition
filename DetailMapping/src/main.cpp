@@ -30,13 +30,13 @@ void Init() {
 
 	// ------ LOAD MESH ----------
 
-	pn::LoadMesh(pn::GetResourcePath("water.fbx"));
+	pn::LoadMesh(pn::GetResourcePath("plane.fbx"));
 	plane_mesh_buffer = pn::rdb::GetMeshResource("Plane");
 
 	// --------- LOAD TEXTURES -------------
 
 	diffuse_map = pn::LoadTexture2D(pn::GetResourcePath("metal.png"));
-	normal_map	= pn::LoadTexture2D(pn::GetResourcePath("pad_map.png"));
+	normal_map	= pn::LoadTexture2D(pn::GetResourcePath("metal_normal.png"));
 	ss			= pn::CreateSamplerState(device);
 
 	// ------- SET BLENDING STATE ------------

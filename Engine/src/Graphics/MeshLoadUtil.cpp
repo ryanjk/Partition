@@ -28,7 +28,7 @@ void			InitMeshLoadUtil(dx_device d) {
 }
 
 unsigned int	MeshLoadDataToAssimp(const MeshLoadData& mesh_load_data) {
-	unsigned int assimp_post_process = 0;
+	unsigned int assimp_post_process = aiProcess_CalcTangentSpace;
 	if (mesh_load_data.convert_left) assimp_post_process |= (aiProcess_MakeLeftHanded | aiProcess_FlipUVs | aiProcess_FlipWindingOrder);
 	if (mesh_load_data.triangulate) assimp_post_process |= aiProcess_Triangulate;
 

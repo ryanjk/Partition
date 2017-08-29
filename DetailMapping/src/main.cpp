@@ -69,7 +69,7 @@ void Init() {
 	camera_constants.data.view = pn::mat4f::Identity;
 
 	// init object
-	plane_transform.position = { 0, 0, 15 };
+	plane_transform.position = { 0, 0, 2 };
 	plane_transform.scale = { 1, 1, 1 };
 	plane_transform.rotation = pn::EulerToQuaternion(0, 0, 0.f);
 }

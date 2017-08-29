@@ -564,7 +564,7 @@ void SetVertexBuffers(dx_context context, const input_layout_data_t& layout, con
 
 	for (size_t i = 0; i < layout.desc.size(); ++i) {
 		const auto& el = layout.desc[i];
-
+		unsigned int index = layout.desc[i].SemanticIndex;
 		std::string type = el.SemanticName;
 		if (type == "POSITION") {
 			PushBack(vertex_buffers, mesh_buffer.vertices.Get());
@@ -576,25 +576,35 @@ void SetVertexBuffers(dx_context context, const input_layout_data_t& layout, con
 			PushBack(strides, sizeof(pn::vec3f));
 			PushBack(offsets, 0);
 		}
-		else if ((type == "TEXCOORD") || (type == "TEXCOORD0")) {
-			PushBack(vertex_buffers, mesh_buffer.uvs.Get());
-			PushBack(strides, sizeof(pn::vec2f));
-			PushBack(offsets, 0);
+		else if (type == "TEXCOORD") {
+			if (index == 0) {
+				PushBack(vertex_buffers, mesh_buffer.uvs.Get());
+				PushBack(strides, sizeof(pn::vec2f));
+				PushBack(offsets, 0);
+			}
+			else if (index == 1) {
+				PushBack(vertex_buffers, mesh_buffer.uv2s.Get());
+				PushBack(strides, sizeof(pn::vec2f));
+				PushBack(offsets, 0);
+			}
+			else {
+				LogError("TEXCOORD with index {} not implemented", index);
+			}
 		}
-		else if ((type == "TANGENT") || (type == "TANGENT0")) {
-			PushBack(vertex_buffers, mesh_buffer.tangents.Get());
-			PushBack(strides, sizeof(pn::vec3f));
-			PushBack(offsets, 0);
-		}
-		else if (type == "TANGENT1") {
-			PushBack(vertex_buffers, mesh_buffer.bitangents.Get());
-			PushBack(strides, sizeof(pn::vec3f));
-			PushBack(offsets, 0);
-		}
-		else if (type == "TEXCOORD1") {
-			PushBack(vertex_buffers, mesh_buffer.uv2s.Get());
-			PushBack(strides, sizeof(pn::vec2f));
-			PushBack(offsets, 0);
+		else if (type == "TANGENT") {		
+			if (index == 0) {
+				PushBack(vertex_buffers, mesh_buffer.tangents.Get());
+				PushBack(strides, sizeof(pn::vec3f));
+				PushBack(offsets, 0);
+			}
+			else if (index == 1) {
+				PushBack(vertex_buffers, mesh_buffer.bitangents.Get());
+				PushBack(strides, sizeof(pn::vec3f));
+				PushBack(offsets, 0);
+			}
+			else {
+				LogError("TANGENT with index {} not implemented", index);
+			}
 		}
 		else if (type == "COLOR") {
 			PushBack(vertex_buffers, mesh_buffer.colors.Get());

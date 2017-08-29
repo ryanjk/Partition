@@ -41,9 +41,9 @@ VS_OUT VS_main(VS_IN i) {
 	pos = mul(VIEW, pos);
 	o.screen_pos = mul(PROJECTION, pos);
 
-	o.n = i.n;
-	o.b = i.b;
-	o.t = i.t;
+	o.n = mul(MODEL, i.n);
+	o.t = mul(MODEL, i.t);
+	o.b = mul(MODEL, i.b);
 
 	o.uv = i.uv;
 	return o;
@@ -55,30 +55,32 @@ float3 vis(float3 vec) {
 	return (vec + float3(1, 1, 1))*0.5;
 }
 
+float4 show(float3 vec) { return float4(vec, 1); }
+
 float4 PS_main(VS_OUT i) : SV_TARGET{
-	float3 n3		= i.n;
-	float tmp = saturate(dot(i.b, i.t));
-	return float4(tmp,tmp,tmp, 1);
-	float3x3 btn	= (float3x3(i.t, i.b, n3));
+	float3x3 btn	= (float3x3(i.t, i.b, i.n));
 	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
-	//n3				= mul(btn, nmapn);
+
+	float3 n3		= i.n;
+	n3				= mul(btn, nmapn);
 	n3				= normalize(n3);
 
 	float4 n4 = float4(n3, 0.0);
-	n4 = mul(MODEL, n4);
+	//n4 = mul(MODEL, n4);
 	//n4 = mul(VIEW, n4);
 	//return float4(n4.xyz, 1);
 	float3 n = n4.xyz;
-
+	return float4(n, 1);
 
 	float ndotl = saturate(dot(n, -direction));
 	float3 shade = ndotl * intensity;
+
+	float3 color = float3(1,1,1);
+	return float4(shade*(color.rgb), 1);
 
 	float3 view_pos = float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
 	float3 view_dir = normalize(view_pos - i.world_pos.xyz);
 	float3 halfw = normalize(view_dir - direction);
 	float4 spec = pow(saturate(dot(n,halfw)), 100);
 
-	float3 color = float3(1,1,1);
-	return float4(shade*(color.rgb ), 1);
 }

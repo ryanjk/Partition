@@ -35,11 +35,11 @@ struct VS_OUT {
 
 VS_OUT VS_main(VS_IN i) {
 	VS_OUT o;
-	float4 pos = float4(i.pos, 1.0);
-	pos = mul(MODEL, pos);
-	o.world_pos = pos;
-	pos = mul(VIEW, pos);
-	o.screen_pos = mul(PROJECTION, pos);
+	float4 pos		= float4(i.pos, 1.0);
+	pos				= mul(MODEL, pos);
+	o.world_pos		= pos;
+	pos				= mul(VIEW, pos);
+	o.screen_pos	= mul(PROJECTION, pos);
 
 	o.n = mul(MODEL, i.n);
 	o.t = mul(MODEL, i.t);
@@ -58,8 +58,9 @@ float3 vis(float3 vec) {
 float4 show(float3 vec) { return float4(vec, 1); }
 
 float4 PS_main(VS_OUT i) : SV_TARGET{
-	float3x3 btn	= (float3x3(i.t, i.b, i.n));
+	float3x3 btn	= transpose(float3x3(i.t, i.b, i.n));
 	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
+	nmapn			= (2 * nmapn) - float3(1, 1, 1);
 
 	float3 n3		= i.n;
 	n3				= mul(btn, nmapn);
@@ -70,17 +71,21 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 	//n4 = mul(VIEW, n4);
 	//return float4(n4.xyz, 1);
 	float3 n = n4.xyz;
-	return float4(n, 1);
+	//return float4(n, 1);
 
 	float ndotl = saturate(dot(n, -direction));
 	float3 shade = ndotl * intensity;
 
-	float3 color = float3(1,1,1);
-	return float4(shade*(color.rgb), 1);
+#ifdef USE_DIFFUSE_TEXTURE
+	float3 color = diffuse_map.Sample(ss, float2(i.uv.x, 1 - i.uv.y));
+#else
+	float3 color = float3(.1, .1, .1);
+#endif
 
 	float3 view_pos = float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
 	float3 view_dir = normalize(view_pos - i.world_pos.xyz);
 	float3 halfw = normalize(view_dir - direction);
-	float4 spec = pow(saturate(dot(n,halfw)), 100);
+	float4 spec = pow(saturate(dot(n,halfw)), 10);
 
+	return float4(shade*(color.rgb+0.5*spec.rgb), 1);
 }

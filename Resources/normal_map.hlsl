@@ -2,6 +2,7 @@
 
 Texture2D normal_map	: register(t1);
 Texture2D diffuse_map	: register(t2);
+Texture2D height_map	: register(t3);
 
 SamplerState ss			: register(s1);
 
@@ -11,6 +12,10 @@ cbuffer directional_light : register(b4) {
 	float3	direction;
 	float	intensity;
 }
+
+cbuffer mapping_vars : register(b5) {
+	float height_scale;
+};
 
 // ----- INPUT / OUTPUT --------
 
@@ -41,9 +46,9 @@ VS_OUT VS_main(VS_IN i) {
 	pos				= mul(VIEW, pos);
 	o.screen_pos	= mul(PROJECTION, pos);
 
-	o.n = mul(MODEL, i.n);
-	o.t = mul(MODEL, i.t);
-	o.b = mul(MODEL, i.b);
+	o.n = i.n;
+	o.t = i.t;
+	o.b = i.b;
 
 	o.uv = i.uv;
 	return o;
@@ -58,32 +63,34 @@ float3 vis(float3 vec) {
 float4 show(float3 vec) { return float4(vec, 1); }
 
 float4 PS_main(VS_OUT i) : SV_TARGET{
+	float3 view_pos = float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
+	float3 view_dir = normalize(view_pos - i.world_pos.xyz);
+
+	float height = height_map.Sample(ss, i.uv).x;
+
 	float3x3 btn	= transpose(float3x3(i.t, i.b, i.n));
+	float3 uv_offset = mul(transpose(btn), view_dir);
+
+	i.uv = i.uv - uv_offset.xy / uv_offset.z * (height * height_scale);
+
 	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
-	nmapn			= (2 * nmapn) - float3(1, 1, 1);
+	nmapn			= normalize((2 * nmapn) - float3(1, 1, 1));
 
-	float3 n3		= i.n;
-	n3				= mul(btn, nmapn);
-	n3				= normalize(n3);
-
-	float4 n4 = float4(n3, 0.0);
-	//n4 = mul(MODEL, n4);
-	//n4 = mul(VIEW, n4);
-	//return float4(n4.xyz, 1);
-	float3 n = n4.xyz;
+	float3 n		= i.n;
+	n				= mul(btn, nmapn);
+	n				= mul(MODEL,n);
 	//return float4(n, 1);
 
 	float ndotl = saturate(dot(n, -direction));
 	float3 shade = ndotl * intensity;
 
+#define USE_DIFFUSE_TEXTURE
 #ifdef USE_DIFFUSE_TEXTURE
-	float3 color = diffuse_map.Sample(ss, float2(i.uv.x, 1 - i.uv.y));
+	float3 color = diffuse_map.Sample(ss, i.uv);
 #else
 	float3 color = float3(.1, .1, .1);
 #endif
 
-	float3 view_pos = float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
-	float3 view_dir = normalize(view_pos - i.world_pos.xyz);
 	float3 halfw = normalize(view_dir - direction);
 	float4 spec = pow(saturate(dot(n,halfw)), 10);
 

@@ -207,15 +207,15 @@ dx_sampler_state		CreateSamplerState(dx_device device, CD3D11_SAMPLER_DESC sampl
 
 dx_sampler_state		CreateSamplerState(dx_device device) {
 	CD3D11_SAMPLER_DESC sampler_desc;
-	sampler_desc.Filter = D3D11_FILTER::D3D11_FILTER_ANISOTROPIC;
-	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
-	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
-	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
-	sampler_desc.MipLODBias = 0.0f;
-	sampler_desc.MaxAnisotropy = 1;
+	sampler_desc.Filter			= D3D11_FILTER::D3D11_FILTER_ANISOTROPIC;
+	sampler_desc.AddressU		= D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.AddressV		= D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.AddressW		= D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.MipLODBias		= 0.0f;
+	sampler_desc.MaxAnisotropy	= 1;
 	sampler_desc.ComparisonFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_NEVER;
-	sampler_desc.MinLOD = -FLT_MAX;
-	sampler_desc.MaxLOD = FLT_MAX;
+	sampler_desc.MinLOD			= -FLT_MAX;
+	sampler_desc.MaxLOD			= FLT_MAX;
 	//sampler_desc.BorderColor = pn::vec4f(1.0f, 1.0f, 1.0f, 1.0f);
 
 	return CreateSamplerState(device, sampler_desc);

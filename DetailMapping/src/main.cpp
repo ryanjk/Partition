@@ -11,10 +11,16 @@ struct alignas(16) directional_light_t {
 	float intensity;
 };
 
+struct alignas(16) mapping_vars_t {
+	float height_scale;
+};
+
 pn::cbuffer<directional_light_t>	directional_light;
+pn::cbuffer<mapping_vars_t>			mapping_vars;
 
 pn::texture_t			diffuse_map;
 pn::texture_t			normal_map;
+pn::texture_t			height_map;
 pn::dx_sampler_state	ss;
 
 pn::dx_blend_state blend_state;
@@ -35,9 +41,21 @@ void Init() {
 
 	// --------- LOAD TEXTURES -------------
 
-	diffuse_map = pn::LoadTexture2D(pn::GetResourcePath("metal.png"));
-	normal_map	= pn::LoadTexture2D(pn::GetResourcePath("metal_normal.png"));
-	ss			= pn::CreateSamplerState(device);
+	diffuse_map = pn::LoadTexture2D(pn::GetResourcePath("brick_diffuse.png"));
+	normal_map	= pn::LoadTexture2D(pn::GetResourcePath("brick_normal.png"));
+	height_map	= pn::LoadTexture2D(pn::GetResourcePath("brick_height.png"));
+
+	CD3D11_SAMPLER_DESC sampler_desc;
+	sampler_desc.Filter = D3D11_FILTER::D3D11_FILTER_ANISOTROPIC;
+	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.MipLODBias = 0.0f;
+	sampler_desc.MaxAnisotropy = 16;
+	sampler_desc.ComparisonFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_NEVER;
+	sampler_desc.MinLOD = -FLT_MAX;
+	sampler_desc.MaxLOD = FLT_MAX;
+	ss			= pn::CreateSamplerState(device, sampler_desc);
 
 	// ------- SET BLENDING STATE ------------
 
@@ -72,6 +90,10 @@ void Init() {
 	plane_transform.position = { 0, 0, 2 };
 	plane_transform.scale = { 1, 1, 1 };
 	plane_transform.rotation = pn::EulerToQuaternion(0, 0, 0.f);
+
+	// init other cbuffers
+	InitializeCBuffer(device, mapping_vars);
+	mapping_vars.data.height_scale = 0.1f;
 }
 
 void Update(const float dt) {}
@@ -104,15 +126,21 @@ void Render() {
 
 	ImGui::End(); // Lights
 
+	ImGui::Begin("Mapping Variables");
+	pn::gui::DragFloat("height scale", &mapping_vars.data.height_scale, 0.0f, 10.0f);
+	ImGui::End();
+
 	SetProgramConstantBuffer(context, global_constants, normal_map_program);
 	SetProgramConstantBuffer(context, camera_constants, normal_map_program);
 	SetProgramConstantBuffer(context, model_constants, normal_map_program);
 	SetProgramConstantBuffer(context, directional_light, normal_map_program);
+	SetProgramConstantBuffer(context, mapping_vars, normal_map_program);
 
 	// update uniform buffers that are shared across shaders
 	UpdateBuffer(context, global_constants);
 	UpdateBuffer(context, camera_constants);
 	UpdateBuffer(context, directional_light);
+	UpdateBuffer(context, mapping_vars);
 
 	// --- RENDER PLANE --------
 
@@ -132,6 +160,7 @@ void Render() {
 
 	SetProgramShaderResources(context, diffuse_map, normal_map_program);
 	SetProgramShaderResources(context, normal_map, normal_map_program);
+	SetProgramShaderResources(context, height_map, normal_map_program);
 	SetProgramSamplers(context, ss, normal_map_program);
 
 	// send updates to constant buffers

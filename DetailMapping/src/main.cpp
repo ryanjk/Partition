@@ -93,7 +93,7 @@ void Init() {
 
 	// init other cbuffers
 	InitializeCBuffer(device, mapping_vars);
-	mapping_vars.data.height_scale = 0.1f;
+	mapping_vars.data.height_scale = 0.02f;
 }
 
 void Update(const float dt) {}
@@ -127,7 +127,7 @@ void Render() {
 	ImGui::End(); // Lights
 
 	ImGui::Begin("Mapping Variables");
-	pn::gui::DragFloat("height scale", &mapping_vars.data.height_scale, 0.0f, 10.0f);
+	pn::gui::DragFloat("height scale", &mapping_vars.data.height_scale, 0.0f, 0.1f, 0.01f);
 	ImGui::End();
 
 	SetProgramConstantBuffer(context, global_constants, normal_map_program);

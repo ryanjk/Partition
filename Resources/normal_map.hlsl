@@ -70,8 +70,8 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 
 	float3x3 btn	= transpose(float3x3(i.t, i.b, i.n));
 	float3 uv_offset = mul(transpose(btn), view_dir);
-
 	i.uv = i.uv - uv_offset.xy / uv_offset.z * (height * height_scale);
+	//return float4(uv_offset, 1);
 
 	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
 	nmapn			= normalize((2 * nmapn) - float3(1, 1, 1));
@@ -87,12 +87,13 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 #define USE_DIFFUSE_TEXTURE
 #ifdef USE_DIFFUSE_TEXTURE
 	float3 color = diffuse_map.Sample(ss, i.uv);
+	//return float4(color, 1);
 #else
 	float3 color = float3(.1, .1, .1);
 #endif
 
 	float3 halfw = normalize(view_dir - direction);
-	float4 spec = pow(saturate(dot(n,halfw)), 10);
+	float4 spec = pow(saturate(dot(n,halfw)), 1000);
 
-	return float4(shade*(color.rgb+0.5*spec.rgb), 1);
+	return float4(shade*(color.rgb+0.0*spec.rgb), 1);
 }

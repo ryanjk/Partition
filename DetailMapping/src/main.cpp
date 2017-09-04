@@ -13,6 +13,7 @@ struct alignas(16) directional_light_t {
 
 struct alignas(16) mapping_vars_t {
 	float height_scale;
+	float height_offset;
 };
 
 pn::cbuffer<directional_light_t>	directional_light;
@@ -94,6 +95,7 @@ void Init() {
 	// init other cbuffers
 	InitializeCBuffer(device, mapping_vars);
 	mapping_vars.data.height_scale = 0.02f;
+	mapping_vars.data.height_offset = 0.0f;
 }
 
 void Update(const float dt) {}
@@ -128,6 +130,7 @@ void Render() {
 
 	ImGui::Begin("Mapping Variables");
 	pn::gui::DragFloat("height scale", &mapping_vars.data.height_scale, 0.0f, 0.1f, 0.01f);
+	pn::gui::DragFloat("height offset", &mapping_vars.data.height_offset, -1.0f, 1.0f, 0.1f);
 	ImGui::End();
 
 	SetProgramConstantBuffer(context, global_constants, normal_map_program);

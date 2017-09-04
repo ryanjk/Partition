@@ -15,6 +15,7 @@ cbuffer directional_light : register(b4) {
 
 cbuffer mapping_vars : register(b5) {
 	float height_scale;
+	float height_offset;
 };
 
 // ----- INPUT / OUTPUT --------
@@ -46,9 +47,9 @@ VS_OUT VS_main(VS_IN i) {
 	pos				= mul(VIEW, pos);
 	o.screen_pos	= mul(PROJECTION, pos);
 
-	o.n = i.n;
-	o.t = i.t;
-	o.b = i.b;
+	o.n = normalize(mul(MODEL,i.n));
+	o.t = normalize(mul(MODEL,i.t));
+	o.b = normalize(mul(MODEL,i.b));
 
 	o.uv = i.uv;
 	return o;
@@ -66,11 +67,15 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 	float3 view_pos = float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
 	float3 view_dir = normalize(view_pos - i.world_pos.xyz);
 
-	float height = height_map.Sample(ss, i.uv).x;
+	float height = 1 - height_map.Sample(ss, i.uv).x;
 
 	float3x3 btn	= transpose(float3x3(i.t, i.b, i.n));
 	float3 uv_offset = mul(transpose(btn), view_dir);
-	i.uv = i.uv - uv_offset.xy / uv_offset.z * (height * height_scale);
+	i.uv = i.uv - uv_offset.xy * (height_offset+height) * height_scale;
+
+	//if (i.uv.x > 1 || i.uv.x < 0 || i.uv.y > 1 || i.uv.y < 0) {
+	//	discard;
+	//}
 	//return float4(uv_offset, 1);
 
 	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
@@ -78,18 +83,18 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 
 	float3 n		= i.n;
 	n				= mul(btn, nmapn);
-	n				= mul(MODEL,n);
+	//n				= mul(MODEL,n);
 	//return float4(n, 1);
 
 	float ndotl = saturate(dot(n, -direction));
 	float3 shade = ndotl * intensity;
 
-#define USE_DIFFUSE_TEXTURE
+//#define USE_DIFFUSE_TEXTURE
 #ifdef USE_DIFFUSE_TEXTURE
 	float3 color = diffuse_map.Sample(ss, i.uv);
 	//return float4(color, 1);
 #else
-	float3 color = float3(.1, .1, .1);
+	float3 color = float3(.1, .1, .1)*9;
 #endif
 
 	float3 halfw = normalize(view_dir - direction);

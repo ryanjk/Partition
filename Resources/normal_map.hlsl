@@ -15,7 +15,7 @@ cbuffer directional_light : register(b4) {
 
 cbuffer mapping_vars : register(b5) {
 	float height_scale;
-	float height_offset;
+	float height_bias;
 };
 
 // ----- INPUT / OUTPUT --------
@@ -77,18 +77,21 @@ float3 vis(float3 vec) {
 float4 show(float3 vec) { return float4(vec, 1); }
 
 float4 PS_main(VS_OUT i) : SV_TARGET{
-	float height = height_map.Sample(ss, i.uv).x;
+	float height	= 1 - height_map.Sample(ss, i.uv).x;
+	height			= height * height_scale + height_bias;
 	
+	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
+	float3 n		= normalize((2 * nmapn) - float3(1, 1, 1));
+
 	float3 tspace_view	= normalize(i.tspace_to_camera);
-	i.uv				= i.uv - (tspace_view.xy) * (height_offset+height) * height_scale;
+	i.uv				+= (tspace_view.xy) * height * n.z;
 
 	if (i.uv.x > 1 || i.uv.x < 0 || i.uv.y > 1 || i.uv.y < 0) {
 		discard;
 	}
-	//return float4(uv_offset, 1);
 
-	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
-	float3 n		= normalize((2 * nmapn) - float3(1, 1, 1));
+	nmapn	= normal_map.Sample(ss, i.uv).xyz;
+	n		= normalize((2 * nmapn) - float3(1, 1, 1));
 
 	float3 tspace_light = normalize(i.tspace_to_light);
 	float ndotl			= saturate(dot(n, tspace_light));

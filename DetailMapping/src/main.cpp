@@ -43,8 +43,8 @@ void Init() {
 	// --------- LOAD TEXTURES -------------
 
 	diffuse_map = pn::LoadTexture2D(pn::GetResourcePath("brick_diffuse.png"));
-	normal_map	= pn::LoadTexture2D(pn::GetResourcePath("brick_normal.png"));
-	height_map	= pn::LoadTexture2D(pn::GetResourcePath("brick_height.png"));
+	normal_map	= pn::LoadTexture2D(pn::GetResourcePath("normal.jpg"));
+	height_map	= pn::LoadTexture2D(pn::GetResourcePath("height.jpg"));
 
 	CD3D11_SAMPLER_DESC sampler_desc;
 	sampler_desc.Filter = D3D11_FILTER::D3D11_FILTER_ANISOTROPIC;

@@ -57,7 +57,7 @@ VS_OUT VS_main(VS_IN i) {
 	);
 
 	float3 world_camera_pos	= float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
-	float3 world_to_camera	= normalize(world_camera_pos - world_pos);
+	float3 world_to_camera	= normalize(world_camera_pos - world_pos.xyz);
 	o.tspace_to_camera = float3(
 		dot(world_tangent,   world_to_camera),
 		dot(world_bitangent, world_to_camera),
@@ -70,34 +70,29 @@ VS_OUT VS_main(VS_IN i) {
 
 // ----- PIXEL SHADER -------
 
-float3 vis(float3 vec) {
-	return (vec + float3(1, 1, 1))*0.5;
-}
-
-float4 show(float3 vec) { return float4(vec, 1); }
-
 float4 PS_main(VS_OUT i) : SV_TARGET{
-	float height	= 1 - height_map.Sample(ss, i.uv).x;
-	height			= height * height_scale + height_bias;
-	
-	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
-	float3 n		= normalize((2 * nmapn) - float3(1, 1, 1));
 
 	float3 tspace_view	= normalize(i.tspace_to_camera);
-	i.uv				+= (tspace_view.xy) * height * n.z;
+	float3 uvh = float3(i.uv.xy, 0);
+	for (int c = 0; c < 1000; c++) {
+		float height	= height_map.Sample(ss, uvh.xy).x;
+		height			= height * height_scale + height_bias;
+		uvh				+= (tspace_view) * (height - uvh.z);
+	}
 
+	i.uv.xy = uvh.xy;
 	if (i.uv.x > 1 || i.uv.x < 0 || i.uv.y > 1 || i.uv.y < 0) {
 		discard;
 	}
 
-	nmapn	= normal_map.Sample(ss, i.uv).xyz;
-	n		= normalize((2 * nmapn) - float3(1, 1, 1));
+	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
+	float3 n		= normalize((2 * nmapn) - float3(1, 1, 1));
 
 	float3 tspace_light = normalize(i.tspace_to_light);
 	float ndotl			= saturate(dot(n, tspace_light));
 	float3 shade		= ndotl * intensity;
 
-//#define USE_DIFFUSE_TEXTURE
+#define USE_DIFFUSE_TEXTURE
 #ifdef USE_DIFFUSE_TEXTURE
 	float3 color = diffuse_map.Sample(ss, i.uv);
 	//return float4(color, 1);

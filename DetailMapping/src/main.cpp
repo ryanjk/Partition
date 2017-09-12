@@ -42,21 +42,21 @@ void Init() {
 
 	// --------- LOAD TEXTURES -------------
 
-	diffuse_map = pn::LoadTexture2D(pn::GetResourcePath("brick_diffuse.png"));
-	normal_map	= pn::LoadTexture2D(pn::GetResourcePath("normal.jpg"));
-	height_map	= pn::LoadTexture2D(pn::GetResourcePath("height.jpg"));
+	diffuse_map = pn::LoadTexture2D(pn::GetResourcePath("diffuse.png"));
+	normal_map	= pn::LoadTexture2D(pn::GetResourcePath("normal.png"));
+	height_map	= pn::LoadTexture2D(pn::GetResourcePath("depth.png"));
 
 	CD3D11_SAMPLER_DESC sampler_desc;
-	sampler_desc.Filter = D3D11_FILTER::D3D11_FILTER_ANISOTROPIC;
-	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.MipLODBias = 0.0f;
-	sampler_desc.MaxAnisotropy = 16;
+	sampler_desc.Filter			= D3D11_FILTER::D3D11_FILTER_ANISOTROPIC;
+	sampler_desc.AddressU		= D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.AddressV		= D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.AddressW		= D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.MipLODBias		= 0.0f;
+	sampler_desc.MaxAnisotropy	= 16;
 	sampler_desc.ComparisonFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_NEVER;
-	sampler_desc.MinLOD = -FLT_MAX;
-	sampler_desc.MaxLOD = FLT_MAX;
-	ss			= pn::CreateSamplerState(device, sampler_desc);
+	sampler_desc.MinLOD			= -FLT_MAX;
+	sampler_desc.MaxLOD			= FLT_MAX;
+	ss							= pn::CreateSamplerState(device, sampler_desc);
 
 	// ------- SET BLENDING STATE ------------
 
@@ -88,7 +88,7 @@ void Init() {
 	camera_constants.data.view = pn::mat4f::Identity;
 
 	// init object
-	plane_transform.position = { 0, 0, 2 };
+	plane_transform.position = { 0, 0, 4 };
 	plane_transform.scale = { 1, 1, 1 };
 	plane_transform.rotation = pn::EulerToQuaternion(0, 0, 0.f);
 
@@ -129,7 +129,7 @@ void Render() {
 	ImGui::End(); // Lights
 
 	ImGui::Begin("Mapping Variables");
-	pn::gui::DragFloat("height scale", &mapping_vars.data.height_scale, 0.0f, 0.1f, 0.01f);
+	pn::gui::DragFloat("height scale", &mapping_vars.data.height_scale, 0.0f, 0.15f, 0.01f);
 	pn::gui::DragFloat("height offset", &mapping_vars.data.height_offset, -1.0f, 1.0f, 0.1f);
 	ImGui::End();
 

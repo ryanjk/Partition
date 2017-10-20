@@ -94,7 +94,7 @@ void Init() {
 
 	// init other cbuffers
 	InitializeCBuffer(device, mapping_vars);
-	mapping_vars.data.height_scale = 0.02f;
+	mapping_vars.data.height_scale = 0.072f;
 	mapping_vars.data.height_offset = 0.0f;
 }
 

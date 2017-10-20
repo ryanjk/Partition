@@ -74,7 +74,8 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 
 	float3 tspace_view	= normalize(i.tspace_to_camera);
 	float3 uvh = float3(i.uv.xy, 0);
-	for (int c = 0; c < 1000; c++) {
+	uvh.x = 1 - uvh.x;
+	for (int c = 0; c < 2000; c++) {
 		float height	= height_map.Sample(ss, uvh.xy).x;
 		height			= height * height_scale + height_bias;
 		uvh				+= (tspace_view) * (height - uvh.z);
@@ -85,23 +86,17 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 		discard;
 	}
 
-	float3 nmapn	= normal_map.Sample(ss, i.uv).xyz;
-	float3 n		= normalize((2 * nmapn) - float3(1, 1, 1));
+	float3 nmapn = normal_map.Sample(ss, i.uv).xyz;
+	float3 n	 = normalize((2 * nmapn) - float3(1, 1, 1));
 
 	float3 tspace_light = normalize(i.tspace_to_light);
 	float ndotl			= saturate(dot(n, tspace_light));
 	float3 shade		= ndotl * intensity;
 
-#define USE_DIFFUSE_TEXTURE
-#ifdef USE_DIFFUSE_TEXTURE
 	float3 color = diffuse_map.Sample(ss, i.uv);
-	//return float4(color, 1);
-#else
-	float3 color = float3(.1, .1, .1)*7;
-#endif
 
 	float3 halfw = normalize(tspace_view + tspace_light);
 	float4 spec = pow(saturate(dot(n,halfw)), 1000);
 
-	return float4(shade*(color.rgb+0.0*spec.rgb), 1);
+	return float4(shade*(color.rgb+spec.rgb), 1);
 }

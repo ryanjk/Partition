@@ -1,0 +1,12 @@
+[submodule "dependencies/gtest"]
+	path = dependencies/gtest
+	url = https://github.com/google/googletest.git
+[submodule "dependencies/nuklear"]
+	path = dependencies/nuklear
+	url = https://github.com/vurtun/nuklear.git
+[submodule "dependencies/SDL"]
+	path = dependencies/SDL
+	url = https://github.com/spurious/SDL-mirror.git
+[submodule "dependencies/eigen"]
+	path = dependencies/eigen
+	url = https://github.com/RLovelett/eigen.git

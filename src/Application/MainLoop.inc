@@ -50,8 +50,8 @@ pn::cbuffer<model_constants_t>		model_constants;
 // --------- VARIABLES -------------
 pn::dx_device				device;
 pn::dx_swap_chain			swap_chain;
-pn::dx_render_target_view	render_target_view;
-pn::dx_depth_stencil_view	depth_stencil_view;
+pn::dx_render_target_view	display_render_target;
+pn::dx_depth_stencil_view	display_depth_stencil;
 pn::ProjectionMatrix		camera;
 
 pn::window_handle h_wnd;
@@ -85,13 +85,13 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 			LogDebug("Resizing window to width: {}, height: {}", width, height);
 
 			ImGui_ImplDX11_InvalidateDeviceObjects();
-			if (render_target_view.Get() != nullptr) {
-				render_target_view.ReleaseAndGetAddressOf();
-				render_target_view = nullptr;
+			if (display_render_target.Get() != nullptr) {
+				display_render_target.ReleaseAndGetAddressOf();
+				display_render_target = nullptr;
 			}
 
 			swap_chain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-			pn::ResizeRenderTargetViewportCamera(device, width, height, swap_chain, render_target_view, depth_stencil_view, camera);
+			pn::ResizeRenderTargetViewportCamera(device, width, height, swap_chain, display_render_target, display_depth_stencil, camera);
 
 			ImGui_ImplDX11_CreateDeviceObjects();
 		}
@@ -213,7 +213,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 	pn::InitTextureFactory(device);
 
-	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(device, swap_chain, render_target_view, depth_stencil_view);
+	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(device, swap_chain, display_render_target, display_depth_stencil);
 
 	auto context = pn::GetContext(device);
 	pn::SetViewport(context, awd.width, awd.height);
@@ -249,10 +249,10 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	msg.message = WM_NULL;
 	PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
 
-	auto prev_time = std::chrono::system_clock::now();
+	auto prev_time        = std::chrono::system_clock::now();
 	float time_to_process = 0;
-	pn::app::FPS = 60.0f;
-	pn::app::FIXED_DT = 1 / pn::app::FPS;
+	pn::app::FPS          = 60.0f;
+	pn::app::FIXED_DT     = 1 / pn::app::FPS;
 	while (!pn::app::ShouldExit()) {
 
 		// BEGINNING OF FRAME CALLS
@@ -275,11 +275,11 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		pn::gui::SetCommandLine(show_command_line);
 
 		// UPDATE
-		auto current_time = std::chrono::system_clock::now();
-		pn::app::dt = std::chrono::duration<float>(current_time - prev_time).count();
-		time_to_process += pn::app::dt;
+		auto current_time                     = std::chrono::system_clock::now();
+		pn::app::dt                           = std::chrono::duration<float>(current_time - prev_time).count();
+		time_to_process                       += pn::app::dt;
 		pn::app::time_since_application_start += pn::app::dt;
-		prev_time = current_time;
+		prev_time                             = current_time;
 
 		while (time_to_process >= pn::app::FIXED_DT) {
 			Update(pn::app::FIXED_DT);

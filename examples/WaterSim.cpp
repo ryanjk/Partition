@@ -39,16 +39,16 @@ struct alignas(16) wave_t {
 
 template<>
 void pn::gui::EditStruct(wave_t& wave) {
-	DragFloat("amplitude##", &wave.A, 0.0f, 10.0f);
-	DragFloat("speed##", &wave.L, 0.0f, 10.0f);
+	DragFloat("amplitude##" , &wave.A, 0.0f, 10.0f);
+	DragFloat("speed##"     , &wave.L, 0.0f, 10.0f);
 	DragFloat("wavelength##", &wave.w, 0.0f, 10.0f);
-	DragFloat("steepness##", &wave.q, 0.0f, 3.0f);
+	DragFloat("steepness##" , &wave.q, 0.0f, 3.0f);
 	DragFloat2("direction##", &(wave.d.x), -1.0f, 1.0f);
 	wave.d = (wave.d == pn::vec2f::Zero) ? pn::vec2f::Zero : pn::Normalize(wave.d);
 }
 
 // ----- program uniforms ------
-#define N_WAVES 1
+#define N_WAVES 4
 
 pn::cbuffer<directional_light_t>	directional_light;
 pn::cbuffer_array<wave_t, N_WAVES>	wave;
@@ -196,9 +196,9 @@ void Render() {
 
 	// Set render target backbuffer color
 	float color[] = { 0.0f, 0.0f, 0.0f, 1.000f };
-	context->ClearRenderTargetView(render_target_view.Get(), color);
-	context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
+	context->ClearRenderTargetView(display_render_target.Get(), color);
+	context->ClearDepthStencilView(display_depth_stencil.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), display_depth_stencil.Get());
 
 	// update directional light
 	ImGui::Begin("Lights");

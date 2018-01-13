@@ -33,7 +33,7 @@ void InputOnEndOfFrame() {
 
 	unsigned char i = 0U;
 	do {
-		const auto cur_key = static_cast<input_key>(i);
+		const auto cur_key       = static_cast<input_key>(i);
 		const auto cur_key_state = GetKeyState(cur_key);
 		if (cur_key_state == key_state::JUST_RELEASED) {
 			SetKeyState(cur_key, key_state::RELEASED);

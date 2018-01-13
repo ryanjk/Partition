@@ -18,7 +18,7 @@ struct Wave {
 	float2	d; // direction
 };
 
-#define N_WAVES 1
+#define N_WAVES 4
 cbuffer wave : register(b5) {
 	Wave w[N_WAVES];
 }

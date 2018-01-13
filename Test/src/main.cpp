@@ -18,9 +18,9 @@ void Render() {
 
 	// Set render target backbuffer color
 	float color[] = { 0.0f, 0.0f, 0.0f, 1.000f };
-	context->ClearRenderTargetView(render_target_view.Get(), color);
-	context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
+	context->ClearRenderTargetView(display_render_target.Get(), color);
+	context->ClearDepthStencilView(display_depth_stencil.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), display_depth_stencil.Get());
 
 }
 

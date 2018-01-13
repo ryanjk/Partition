@@ -75,7 +75,7 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 	float3 tspace_view	= normalize(i.tspace_to_camera);
 	float3 uvh = float3(i.uv.xy, 0);
 	uvh.x = 1 - uvh.x;
-	for (int c = 0; c < 2000; c++) {
+	for (int c = 0; c < 1000; c++) {
 		float height	= height_map.Sample(ss, uvh.xy).x;
 		height			= height * height_scale + height_bias;
 		uvh				+= (tspace_view) * (height - uvh.z);

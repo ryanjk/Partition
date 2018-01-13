@@ -18,9 +18,6 @@
 
 namespace pn {
 
-// -------- CONSTANTS --------------
-extern const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS;
-
 // ------------ TYPEDEFS -------------
 
 template<typename T>
@@ -46,7 +43,15 @@ using dx_texture2d			= dx_ptr<ID3D11Texture2D>;
 using dx_resource			= dx_ptr<ID3D11Resource>;
 using dx_resource_view		= dx_ptr<ID3D11ShaderResourceView>;
 
-using dx_blend_state		= dx_ptr<ID3D11BlendState>;
+using dx_blend_state		 = dx_ptr<ID3D11BlendState>;
+using dx_depth_stencil_state = dx_ptr<ID3D11DepthStencilState>;
+
+// -------- CONSTANTS --------------
+
+extern const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS;
+
+extern const D3D11_BLEND_DESC         DEFAULT_BLEND_DESC;
+extern const D3D11_DEPTH_STENCIL_DESC DEFAULT_DEPTH_STENCIL_DESC;
 
 // ------------- CLASS DEFINITIONS ---------------
 
@@ -201,7 +206,7 @@ dx_texture2d			CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_d
 dx_sampler_state		CreateSamplerState(dx_device device, CD3D11_SAMPLER_DESC sampler_desc);
 dx_sampler_state		CreateSamplerState(dx_device device);
 
-dx_render_target_view	CreateRenderTargetViewFromTexture(dx_device device, dx_texture2d texture);
+dx_render_target_view	CreateRenderTargetView(dx_device device, dx_texture2d texture);
 dx_depth_stencil_view	CreateDepthStencilView(dx_device device, dx_texture2d& depth_stencil_texture);
 
 vector<mesh_buffer_t>	CreateMeshBuffer(dx_device device, const pn::vector<mesh_t>& mesh);
@@ -400,9 +405,17 @@ SetProgramPSSamplers(context, name, program);
 
 // ---------- BLENDING -----------------
 
-dx_blend_state	CreateBlendState(dx_device device);
-dx_blend_state	CreateBlendState(dx_device device, const D3D11_BLEND_DESC& blend_desc);
-void			SetBlendState(dx_device device, dx_blend_state blend_state);
+const D3D11_BLEND_DESC GetDefaultBlendDesc(const int render_target = 0);
+
+dx_blend_state	       CreateBlendState(dx_device device, const D3D11_BLEND_DESC& blend_desc = DEFAULT_BLEND_DESC);
+
+void			       SetBlendState(dx_device device, dx_blend_state blend_state);
+
+// --------- DEPTH STENCIL -------------
+
+const D3D11_DEPTH_STENCIL_DESC GetDefaultDepthStencilDesc();
+
+dx_depth_stencil_state         CreateDepthStencilState(dx_device device, const D3D11_DEPTH_STENCIL_DESC& depth_stencil_desc = DEFAULT_DEPTH_STENCIL_DESC);
 
 // -------- DRAWING FUNCTIONS ---------------
 

@@ -1,15 +1,9 @@
-#include "stdafx.h"
-#include "CppUnitTest.h"
-
-#include <Utilities\Memory.h>
-
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+#include <gtest/gtest.h>
+#include <Utilities/Memory.h>
 
 using pn::linear_allocator;
 
 namespace MemoryUnitTest {
-TEST_CLASS(LinearAllocatorTest) {
-public:
 	struct blob {
 		int i; int j; int k; double d; float f;
 		blob() {}
@@ -18,32 +12,28 @@ public:
 		}
 	};
 
-	TEST_METHOD(ConstructorTest) {
+	TEST(LinearAllocatorTest, ConstructorTest) {
 		linear_allocator a(1024);
-		Assert::IsTrue(a.HasFree(1024));
-		Assert::IsTrue(a.HasFree());
+		ASSERT_TRUE(a.HasFree(1024));
+		ASSERT_TRUE(a.HasFree());
 	}
 
-	TEST_METHOD(CreateAndDestroyTest) {
+	TEST(LinearAllocatorTest, CreateAndDestroyTest) {
 		linear_allocator a(16);
 
 		auto* b = a.Allocate(4);
-		Assert::IsFalse(a.HasFree(16));
-		Assert::IsTrue(a.HasFree(12));
+		ASSERT_FALSE(a.HasFree(16));
+		ASSERT_TRUE(a.HasFree(12));
 
 		int* i = a.Create<int>(5);
-		Assert::AreEqual(5, *i);
-		Assert::IsTrue(a.HasFree(8));
+		ASSERT_EQ(5, *i);
+		ASSERT_TRUE(a.HasFree(8));
 
 		auto* c = a.Allocate(8);
-		Assert::IsFalse(a.HasFree());
+		ASSERT_FALSE(a.HasFree());
 
 		a.Release();
-		Assert::IsTrue(a.HasFree());
-		Assert::IsTrue(a.HasFree(16));
+		ASSERT_TRUE(a.HasFree());
+		ASSERT_TRUE(a.HasFree(16));
 	}
-
-
-
-};
 }

@@ -58,6 +58,21 @@ FIND_PACKAGE(gtest QUIET)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 INCLUDE(cmake/genrev.cmake)
 
+macro(GroupSources curdir)
+	file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
+
+    foreach(child ${children})
+
+		if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+			GroupSources(${curdir}/${child})
+		else()
+			string(REPLACE "/" "\\" groupname ${curdir})
+
+			source_group(${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+		endif()
+    endforeach()
+endmacro()
+
 # Subdirectories
 # ====================================
 
@@ -71,7 +86,7 @@ ADD_SUBDIRECTORY(src)
 
 # Compile tests ?
 IF(BUILD_TESTING)
-    ENABLE_TESTING()
+    # ENABLE_TESTING()
 
     MESSAGE(STATUS "Building tests")
     ADD_SUBDIRECTORY(tests)

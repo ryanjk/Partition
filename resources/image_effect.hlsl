@@ -29,11 +29,11 @@ VS_OUT VS_main(VS_IN i) {
 
 cbuffer blur_params {
 	float2 dir;
+	float sigma;
 };
 
-#define SIGMA 11.16
 float gaussian(float x) {
-	return exp(-(pow(x, 2.0) / (pow(SIGMA, 2.0) * 2.0)));
+	return exp(-(pow(x, 2.0) / (pow(sigma, 2.0) * 2.0)));
 }
 
 float4 PS_main(VS_OUT i) : SV_TARGET{
@@ -44,7 +44,7 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 	float3 c      = float3(0, 0, 0);
 	float2 offset = dir / res;
 
-	const int RADIUS      = 60;
+	const int RADIUS      = 67;
 	const int NUM_WEIGHTS = RADIUS + 1;
 	float w[NUM_WEIGHTS];
 	float sum = 0;

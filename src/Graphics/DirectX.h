@@ -216,6 +216,20 @@ mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh);
 
 dx_resource_view        CreateShaderResourceView(dx_device device, dx_resource resource, const D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc);
 
+// -------- DESTRUCTION FUNCTIONS ---------------
+
+template<typename T>
+void SafeRelease(dx_ptr<T>& object) {
+	auto get_ref_count = [](auto& o) {
+		o->AddRef();
+		auto c = o->Release();
+		return c;
+	};
+	if (object && get_ref_count(object) > 1) {
+		object->Release();
+	}
+}
+
 // -------------- SHADER CREATION -------------
 
 pn::bytes				CompileShader(

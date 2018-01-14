@@ -189,3 +189,5 @@ void Render() {
 void MainLoopBegin() {}
 
 void MainLoopEnd() {}
+
+void Close() {}

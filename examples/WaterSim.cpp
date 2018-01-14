@@ -262,3 +262,5 @@ void MainLoopBegin() {
 }
 
 void MainLoopEnd() {}
+
+void Close() {}

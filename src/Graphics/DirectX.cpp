@@ -45,7 +45,7 @@ dx_device				CreateDevice() {
 
 	auto GetDeviceFlags = []() {
 		UINT deviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-#if defined(DEBUG) || defined(_DEBUG)
+#ifndef NDEBUG
 		deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 		return deviceFlags;
@@ -281,6 +281,10 @@ dx_resource_view        CreateShaderResourceView(dx_device device, dx_resource r
 	device->CreateShaderResourceView(resource.Get(), &resource_desc, resource_view.GetAddressOf());
 	return resource_view;
 }
+
+// -------- DESTRUCTION FUNCTIONS ---------------
+
+
 
 // -------------- SHADER CREATION -------------
 

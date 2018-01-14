@@ -68,6 +68,7 @@ pn::dx_rasterizer_state   rasterizer_state;
 
 struct alignas(16) blur_params_t {
 	pn::vec2f dir;
+	float sigma;
 };
 pn::cbuffer<blur_params_t> blur_params;
 
@@ -163,6 +164,7 @@ void Init() {
 	// --------- CREATE SHADER DATA FOR IMAGE EFFECTS SHADER ---------------
 
 	InitializeCBuffer(device, blur_params);
+	blur_params.data.sigma = 11;
 
 	image_program = pn::CompileShaderProgram(device, pn::GetResourcePath("image_effect.hlsl"));
 
@@ -202,6 +204,7 @@ void Init() {
 		srd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		srd.Texture2D     = { 0, back_buffer_desc.MipLevels };
 		offscreen_texture.resource_view = pn::CreateShaderResourceView(device, offscreen_render_texture, srd);
+
 	}
 
 	{
@@ -214,6 +217,7 @@ void Init() {
 		srd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		srd.Texture2D = { 0, back_buffer_desc.MipLevels };
 		offscreen_texture2.resource_view = pn::CreateShaderResourceView(device, offscreen_render_texture, srd);
+
 	}
 }
 
@@ -295,6 +299,12 @@ void Render() {
 
 	// ----- RENDER GAUSSIAN BLUR -----
 
+	ImGui::Begin("Blur");
+
+	ImGui::DragFloat("sigma", &blur_params.data.sigma, 1, 0, 100);
+
+	ImGui::End();
+
 	{
 		context->OMSetRenderTargets(1, offscreen_render_target2.GetAddressOf(), display_depth_stencil.Get());
 
@@ -344,4 +354,39 @@ void MainLoopBegin() {
 	
 }
 
-void MainLoopEnd() {}
+void MainLoopEnd() {
+
+}
+
+void Close() {
+
+	pn::SafeRelease(directional_light.buffer);
+	pn::SafeRelease(wave.buffer);
+
+	/*
+	// --- wave instance data ----
+
+
+	// ----- texture data ---------
+	pn::texture_t			tex;
+	pn::dx_sampler_state	ss;
+
+	// ---- misc d3d11 state -----
+	pn::dx_blend_state        blend_state;
+	pn::dx_rasterizer_state   rasterizer_state;
+
+	pn::cbuffer<blur_params_t> blur_params;
+
+	// --- image effect data ---
+
+	pn::dx_render_target_view offscreen_render_target;
+	pn::texture_t             offscreen_texture;
+
+	pn::dx_render_target_view offscreen_render_target2;
+	pn::texture_t             offscreen_texture2;
+
+	pn::shader_program_t      image_program;
+	pn::dx_buffer             screen_mesh_buffer;
+	pn::dx_buffer             screen_index_buffer;
+	pn::dx_rasterizer_state   screen_rasterizer; */
+}

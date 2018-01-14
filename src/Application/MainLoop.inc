@@ -62,6 +62,7 @@ pn::window_handle h_wnd;
 void Init();
 void Update(const float dt);
 void Render();
+void Close();
 
 void MainLoopBegin();
 void MainLoopEnd();
@@ -326,4 +327,15 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	// Shutdown
 	pn::gui::ShutdownEditorUI();
 	pn::CloseLogger();
+
+#ifndef NDEBUG	
+	ID3D11Debug* DebugDevice = nullptr;
+	HRESULT Result = device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&DebugDevice));
+
+	Result = DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+	DebugDevice->Release();
+#endif
+
+	Close();
+//	pn::SafeRelease(device);
 }

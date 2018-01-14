@@ -60,15 +60,25 @@ pn::shader_program_t	wave_program;
 
 // ----- texture data ---------
 pn::texture_t			tex;
-pn::dx_sampler_state	sampler_state;
+pn::dx_sampler_state	ss;
 
 // ---- misc d3d11 state -----
 pn::dx_blend_state        blend_state;
 pn::dx_rasterizer_state   rasterizer_state;
 
+struct alignas(16) blur_params_t {
+	pn::vec2f dir;
+};
+pn::cbuffer<blur_params_t> blur_params;
+
 // --- image effect data ---
+
 pn::dx_render_target_view offscreen_render_target;
 pn::texture_t             offscreen_texture;
+
+pn::dx_render_target_view offscreen_render_target2;
+pn::texture_t             offscreen_texture2;
+
 pn::shader_program_t      image_program;
 pn::dx_buffer             screen_mesh_buffer;
 pn::dx_buffer             screen_index_buffer;
@@ -98,7 +108,7 @@ void Init() {
 	// --------- LOAD TEXTURES -------------
 
 	tex				= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
-	sampler_state	= pn::CreateSamplerState(device);
+	ss	= pn::CreateSamplerState(device);
 
 	// ------- SET BLENDING STATE ------------
 
@@ -152,6 +162,8 @@ void Init() {
 
 	// --------- CREATE SHADER DATA FOR IMAGE EFFECTS SHADER ---------------
 
+	InitializeCBuffer(device, blur_params);
+
 	image_program = pn::CompileShaderProgram(device, pn::GetResourcePath("image_effect.hlsl"));
 
 	// ------- CREATE MESH BUFFER FOR SCREEN ---------
@@ -180,15 +192,29 @@ void Init() {
 	auto back_buffer_desc = pn::GetTextureDesc(back_buffer);
 	back_buffer_desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-	auto offscreen_render_texture = pn::CreateTexture2D(device, back_buffer_desc);
-	offscreen_render_target       = pn::CreateRenderTargetView(device, offscreen_render_texture);
+	{
+		auto offscreen_render_texture = pn::CreateTexture2D(device, back_buffer_desc);
+		offscreen_render_target       = pn::CreateRenderTargetView(device, offscreen_render_texture);
 
-	offscreen_texture.resource = offscreen_render_texture;
-	D3D11_SHADER_RESOURCE_VIEW_DESC srd;
-	srd.Format        = back_buffer_desc.Format;
-	srd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	srd.Texture2D     = { 0, back_buffer_desc.MipLevels };
-	offscreen_texture.resource_view = pn::CreateShaderResourceView(device, offscreen_render_texture, srd);
+		offscreen_texture.resource = offscreen_render_texture;
+		D3D11_SHADER_RESOURCE_VIEW_DESC srd;
+		srd.Format        = back_buffer_desc.Format;
+		srd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srd.Texture2D     = { 0, back_buffer_desc.MipLevels };
+		offscreen_texture.resource_view = pn::CreateShaderResourceView(device, offscreen_render_texture, srd);
+	}
+
+	{
+		auto offscreen_render_texture = pn::CreateTexture2D(device, back_buffer_desc);
+		offscreen_render_target2 = pn::CreateRenderTargetView(device, offscreen_render_texture);
+
+		offscreen_texture2.resource = offscreen_render_texture;
+		D3D11_SHADER_RESOURCE_VIEW_DESC srd;
+		srd.Format = back_buffer_desc.Format;
+		srd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srd.Texture2D = { 0, back_buffer_desc.MipLevels };
+		offscreen_texture2.resource_view = pn::CreateShaderResourceView(device, offscreen_render_texture, srd);
+	}
 }
 
 void Update(const float dt) {}
@@ -209,8 +235,7 @@ void Render() {
 	
 	context->ClearRenderTargetView(display_render_target.Get(), color);
 	context->ClearRenderTargetView(offscreen_render_target.Get(), color);
-
-	context->OMSetRenderTargets(1, offscreen_render_target.GetAddressOf(), display_depth_stencil.Get());
+	context->ClearRenderTargetView(offscreen_render_target2.Get(), color);
 
 	// update directional light
 	ImGui::Begin("Lights");
@@ -221,11 +246,6 @@ void Render() {
 
 	ImGui::End(); // Lights
 
-	SetProgramConstantBuffer(context, global_constants, wave_program);
-	SetProgramConstantBuffer(context, camera_constants, wave_program);
-	SetProgramConstantBuffer(context, model_constants, wave_program);
-	SetProgramConstantBuffer(context, directional_light, wave_program);
-
 	// update uniform buffers that are shared across shaders
 	UpdateBuffer(context, global_constants);
 	UpdateBuffer(context, camera_constants);
@@ -234,6 +254,10 @@ void Render() {
 
 // ------ BEGIN WATER
 	
+	SetProgramConstantBuffer(context, global_constants, wave_program);
+	SetProgramConstantBuffer(context, camera_constants, wave_program);
+	SetProgramConstantBuffer(context, model_constants, wave_program);
+	SetProgramConstantBuffer(context, directional_light, wave_program);
 	SetProgramConstantBuffer(context, wave, wave_program);
 
 	pn::SetShaderProgram(context, wave_program);
@@ -257,34 +281,63 @@ void Render() {
 	ImGui::End(); // Waves
 
 	SetProgramShaderResources(context, tex, wave_program);
-	SetProgramSamplers(context, sampler_state, wave_program);
+	SetProgramSamplers(context, ss, wave_program);
 
 	// send updates to constant buffers
 	UpdateBuffer(context, model_constants);
 	UpdateBuffer(context, wave);
 
 	pn::SetRasterizerState(device, rasterizer_state);
+	context->OMSetRenderTargets(1, offscreen_render_target.GetAddressOf(), display_depth_stencil.Get());
 	pn::DrawIndexed(context, wave_mesh);
 
 // ----- END WATER
 
-	//context->ClearDepthStencilView(display_depth_stencil.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), display_depth_stencil.Get());
+	// ----- RENDER GAUSSIAN BLUR -----
 
-	pn::SetShaderProgram(context, image_program);
+	{
+		context->OMSetRenderTargets(1, offscreen_render_target2.GetAddressOf(), display_depth_stencil.Get());
 
-	static const unsigned int strides[1] = { sizeof(pn::vec3f) };
-	static const unsigned int offsets[1] = { 0 };
-	context->IASetVertexBuffers(0, 1, screen_mesh_buffer.GetAddressOf(), strides, offsets);
-	context->IASetIndexBuffer(screen_index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-	context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		SetProgramConstantBuffer(context, global_constants, image_program);
+		SetProgramConstantBuffer(context, blur_params, image_program);
 
-	SetProgramShaderResources(context, offscreen_texture, image_program);
-	SetProgramSamplers(context, sampler_state, image_program);
+		pn::SetShaderProgram(context, image_program);
+
+		static const unsigned int strides[1] = { sizeof(pn::vec3f) };
+		static const unsigned int offsets[1] = { 0 };
+		context->IASetVertexBuffers(0, 1, screen_mesh_buffer.GetAddressOf(), strides, offsets);
+		context->IASetIndexBuffer(screen_index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+		context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		SetProgramSamplers(context, ss, image_program);
+		pn::SetRasterizerState(device, screen_rasterizer);
+
+		// ----- RENDER GAUSSIAN BLUR DIR 1 -----
+
+		static pn::texture_t tmp = offscreen_texture;
+		offscreen_texture = tmp;
+		SetProgramShaderResources(context, offscreen_texture, image_program);
 	
-	pn::SetRasterizerState(device, screen_rasterizer);
-	context->DrawIndexed(6, 0, 0);
+		blur_params.data.dir = pn::vec2f(1, 0);
+		UpdateBuffer(context, blur_params);
 
+		context->DrawIndexed(6, 0, 0);
+	}
+
+	// ----- RENDER GAUSSIAN BLUR DIR 2 -----
+	
+	{
+		context->ClearDepthStencilView(display_depth_stencil.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), display_depth_stencil.Get());
+
+		offscreen_texture = offscreen_texture2;
+		SetProgramShaderResources(context, offscreen_texture, image_program);
+
+		blur_params.data.dir = pn::vec2f(0, 1);
+		UpdateBuffer(context, blur_params);
+
+		context->DrawIndexed(6, 0, 0);
+	}
 }
 
 void MainLoopBegin() {

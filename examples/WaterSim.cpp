@@ -60,7 +60,7 @@ pn::shader_program_t	wave_program;
 
 // ----- texture data ---------
 pn::texture_t			tex;
-pn::dx_sampler_state	sampler_state;
+pn::dx_sampler_state	ss;
 
 // ---- misc --------
 pn::linear_allocator frame_alloc(1024 * 1024);
@@ -134,7 +134,7 @@ void Init() {
 	// --------- LOAD TEXTURES -------------
 
 	tex				= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
-	sampler_state	= pn::CreateSamplerState(device);
+	ss	= pn::CreateSamplerState(device);
 
 	// ------- SET BLENDING STATE ------------
 
@@ -245,7 +245,7 @@ void Render() {
 	ImGui::End(); // Waves
 
 	SetProgramShaderResources(context, tex, wave_program);
-	SetProgramSamplers(context, sampler_state, wave_program);
+	SetProgramSamplers(context, ss, wave_program);
 
 	// send updates to constant buffers
 	UpdateBuffer(context, model_constants);

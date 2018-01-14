@@ -21,6 +21,7 @@
 #include <Application\Global.h>
 
 #include <chrono>
+#include <direct.h>
 
 using namespace pn::input;
 
@@ -187,6 +188,12 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	pn::InitLogger();
 	pn::InitPathUtil();
 	pn::input::InitInput();
+
+	const int len = 512;
+	char pBuf[len];
+	int bytes = GetModuleFileName(NULL, pBuf, len);
+	pn::SetWorkingDirectory(pn::string(_getcwd(pBuf, len)));
+	pn::SetResourceDirectoryName("resources");
 
 	if (hInstance == NULL) {
 		hInstance = (pn::instance_handle) GetModuleHandle(NULL);

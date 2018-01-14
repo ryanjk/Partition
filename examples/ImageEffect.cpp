@@ -63,10 +63,16 @@ pn::texture_t			tex;
 pn::dx_sampler_state	sampler_state;
 
 // ---- misc d3d11 state -----
-pn::dx_blend_state blend_state;
+pn::dx_blend_state        blend_state;
+pn::dx_rasterizer_state   rasterizer_state;
 
 // --- image effect data ---
 pn::dx_render_target_view offscreen_render_target;
+pn::texture_t             offscreen_texture;
+pn::shader_program_t      image_program;
+pn::dx_buffer             screen_mesh_buffer;
+pn::dx_buffer             screen_index_buffer;
+pn::dx_rasterizer_state   screen_rasterizer;
 
 void Init() {
 	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
@@ -98,6 +104,14 @@ void Init() {
 
 	blend_state		= pn::CreateBlendState(device);
 	pn::SetBlendState(device, blend_state);
+
+	// --------- CREATE RASTERIZER STATE -----
+
+	rasterizer_state = pn::CreateRasterizerState(device);
+	
+	D3D11_RASTERIZER_DESC dsr = pn::GetDefaultRasterizerDesc();
+	dsr.CullMode              = D3D11_CULL_NONE;
+	screen_rasterizer         = pn::CreateRasterizerState(device, dsr);
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -136,6 +150,45 @@ void Init() {
 	wave_transform.scale	= { 1, 1, 1 };
 	wave_transform.rotation = pn::EulerToQuaternion( 0.698f, 3.069f, 0.f );
 
+	// --------- CREATE SHADER DATA FOR IMAGE EFFECTS SHADER ---------------
+
+	image_program = pn::CompileShaderProgram(device, pn::GetResourcePath("image_effect.hlsl"));
+
+	// ------- CREATE MESH BUFFER FOR SCREEN ---------
+
+	{
+		static const pn::vec3f vertices[4] = {
+			pn::vec3f(-1,-1,0),
+			pn::vec3f(-1,1,0),
+			pn::vec3f(1,1,0),
+			pn::vec3f(1,-1,0),
+		};
+		screen_mesh_buffer = pn::CreateVertexBuffer(device, vertices, 4);
+	}
+
+	{
+		static const int indices[6] = {
+			0, 1, 2,
+			0, 2, 3
+		};
+		screen_index_buffer = pn::CreateIndexBuffer(device, indices, 6);
+	}
+
+	// ---- CREATE OFF-SCREEN RENDER TARGET -----
+
+	auto back_buffer      = pn::GetSwapChainBackBuffer(swap_chain);
+	auto back_buffer_desc = pn::GetTextureDesc(back_buffer);
+	back_buffer_desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+	auto offscreen_render_texture = pn::CreateTexture2D(device, back_buffer_desc);
+	offscreen_render_target       = pn::CreateRenderTargetView(device, offscreen_render_texture);
+
+	offscreen_texture.resource = offscreen_render_texture;
+	D3D11_SHADER_RESOURCE_VIEW_DESC srd;
+	srd.Format        = back_buffer_desc.Format;
+	srd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srd.Texture2D     = { 0, back_buffer_desc.MipLevels };
+	offscreen_texture.resource_view = pn::CreateShaderResourceView(device, offscreen_render_texture, srd);
 }
 
 void Update(const float dt) {}
@@ -151,9 +204,13 @@ void Render() {
 
 	// Set render target backbuffer color
 	float color[] = { 0.0f, 0.0f, 0.0f, 1.000f };
-	context->ClearRenderTargetView(display_render_target.Get(), color);
+
 	context->ClearDepthStencilView(display_depth_stencil.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), display_depth_stencil.Get());
+	
+	context->ClearRenderTargetView(display_render_target.Get(), color);
+	context->ClearRenderTargetView(offscreen_render_target.Get(), color);
+
+	context->OMSetRenderTargets(1, offscreen_render_target.GetAddressOf(), display_depth_stencil.Get());
 
 	// update directional light
 	ImGui::Begin("Lights");
@@ -176,7 +233,7 @@ void Render() {
 
 
 // ------ BEGIN WATER
-
+	
 	SetProgramConstantBuffer(context, wave, wave_program);
 
 	pn::SetShaderProgram(context, wave_program);
@@ -206,9 +263,27 @@ void Render() {
 	UpdateBuffer(context, model_constants);
 	UpdateBuffer(context, wave);
 
+	pn::SetRasterizerState(device, rasterizer_state);
 	pn::DrawIndexed(context, wave_mesh);
 
 // ----- END WATER
+
+	//context->ClearDepthStencilView(display_depth_stencil.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), display_depth_stencil.Get());
+
+	pn::SetShaderProgram(context, image_program);
+
+	static const unsigned int strides[1] = { sizeof(pn::vec3f) };
+	static const unsigned int offsets[1] = { 0 };
+	context->IASetVertexBuffers(0, 1, screen_mesh_buffer.GetAddressOf(), strides, offsets);
+	context->IASetIndexBuffer(screen_index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+	context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	SetProgramShaderResources(context, offscreen_texture, image_program);
+	SetProgramSamplers(context, sampler_state, image_program);
+	
+	pn::SetRasterizerState(device, screen_rasterizer);
+	context->DrawIndexed(6, 0, 0);
 
 }
 

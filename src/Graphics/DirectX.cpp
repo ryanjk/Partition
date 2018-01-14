@@ -35,6 +35,7 @@ const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_OPTIMIZATION_LE
 
 const D3D11_BLEND_DESC         DEFAULT_BLEND_DESC         = GetDefaultBlendDesc();
 const D3D11_DEPTH_STENCIL_DESC DEFAULT_DEPTH_STENCIL_DESC = GetDefaultDepthStencilDesc();
+const D3D11_RASTERIZER_DESC DEFAULT_RASTERIZER_DESC = GetDefaultRasterizerDesc();
 
 // --------------- FUNCTIONS --------------------
 
@@ -189,7 +190,7 @@ dx_depth_stencil_view	CreateDepthStencilView(dx_device device, dx_texture2d& dep
 	return depth_stencil_view;
 }
 
-dx_texture2d			CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data = nullptr) {
+dx_texture2d			CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data) {
 	dx_texture2d texture;
 	auto hr = device->CreateTexture2D(
 		&texture_desc,
@@ -273,6 +274,12 @@ vector<mesh_buffer_t>	CreateMeshBuffer(dx_device device, const pn::vector<mesh_t
 		mesh_buffers.emplace_back(CreateMeshBuffer(device, mesh));
 	}
 	return mesh_buffers;
+}
+
+dx_resource_view        CreateShaderResourceView(dx_device device, dx_resource resource, const D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc) {
+	dx_resource_view resource_view;
+	device->CreateShaderResourceView(resource.Get(), &resource_desc, resource_view.GetAddressOf());
+	return resource_view;
 }
 
 // -------------- SHADER CREATION -------------
@@ -671,14 +678,14 @@ void SetPSSamplers(dx_context context, const pn::string& sampler_name, dx_shader
 const D3D11_BLEND_DESC GetDefaultBlendDesc(const int render_target) {
 	D3D11_BLEND_DESC blend_desc;
 	ZeroMemory(&blend_desc, sizeof(D3D11_BLEND_DESC));
-	blend_desc.IndependentBlendEnable = false;
-	blend_desc.RenderTarget[render_target].BlendEnable = true;
-	blend_desc.RenderTarget[render_target].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	blend_desc.RenderTarget[render_target].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-	blend_desc.RenderTarget[render_target].BlendOp = D3D11_BLEND_OP_ADD;
-	blend_desc.RenderTarget[render_target].SrcBlendAlpha = D3D11_BLEND_ONE;
-	blend_desc.RenderTarget[render_target].DestBlendAlpha = D3D11_BLEND_ZERO;
-	blend_desc.RenderTarget[render_target].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blend_desc.IndependentBlendEnable                            = false;
+	blend_desc.RenderTarget[render_target].BlendEnable           = true;
+	blend_desc.RenderTarget[render_target].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
+	blend_desc.RenderTarget[render_target].DestBlend             = D3D11_BLEND_INV_SRC_ALPHA;
+	blend_desc.RenderTarget[render_target].BlendOp               = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[render_target].SrcBlendAlpha         = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[render_target].DestBlendAlpha        = D3D11_BLEND_ZERO;
+	blend_desc.RenderTarget[render_target].BlendOpAlpha          = D3D11_BLEND_OP_ADD;
 	blend_desc.RenderTarget[render_target].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	return blend_desc;
 }
@@ -703,27 +710,27 @@ const D3D11_DEPTH_STENCIL_DESC GetDefaultDepthStencilDesc() {
 
 	D3D11_DEPTH_STENCIL_DESC depth_stencil_desc;
 
-	depth_stencil_desc.DepthEnable = true;
+	depth_stencil_desc.DepthEnable    = true;
 	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS;
+	depth_stencil_desc.DepthFunc      = D3D11_COMPARISON_LESS;
 
-	depth_stencil_desc.StencilEnable = false;
-	depth_stencil_desc.StencilReadMask = 255;
+	depth_stencil_desc.StencilEnable    = false;
+	depth_stencil_desc.StencilReadMask  = 255;
 	depth_stencil_desc.StencilWriteMask = 255;
 
 	D3D11_DEPTH_STENCILOP_DESC front_face_op;
-	front_face_op.StencilPassOp = D3D11_STENCIL_OP_INCR;
-	front_face_op.StencilFailOp = D3D11_STENCIL_OP_DECR;
+	front_face_op.StencilPassOp      = D3D11_STENCIL_OP_INCR;
+	front_face_op.StencilFailOp      = D3D11_STENCIL_OP_DECR;
 	front_face_op.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-	front_face_op.StencilFunc = D3D11_COMPARISON_LESS;
-	depth_stencil_desc.FrontFace = front_face_op;
+	front_face_op.StencilFunc        = D3D11_COMPARISON_LESS;
+	depth_stencil_desc.FrontFace     = front_face_op;
 
 	D3D11_DEPTH_STENCILOP_DESC back_face_op;
-	back_face_op.StencilPassOp = D3D11_STENCIL_OP_INCR;
-	back_face_op.StencilFailOp = D3D11_STENCIL_OP_DECR;
-	back_face_op.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-	back_face_op.StencilFunc = D3D11_COMPARISON_LESS;
-	depth_stencil_desc.FrontFace = back_face_op;
+	back_face_op.StencilPassOp       = D3D11_STENCIL_OP_INCR;
+	back_face_op.StencilFailOp       = D3D11_STENCIL_OP_DECR;
+	back_face_op.StencilDepthFailOp  = D3D11_STENCIL_OP_KEEP;
+	back_face_op.StencilFunc         = D3D11_COMPARISON_LESS;
+	depth_stencil_desc.FrontFace     = back_face_op;
 
 	return depth_stencil_desc;
 }
@@ -737,6 +744,33 @@ dx_depth_stencil_state CreateDepthStencilState(dx_device device, const D3D11_DEP
 		LogError("Couldn't create depth stencil state: {}", pn::ErrMsg(hr));
 	}
 	return depth_stencil_state;
+}
+
+// -------- RASTERIZER -------------
+
+const D3D11_RASTERIZER_DESC GetDefaultRasterizerDesc() {
+	D3D11_RASTERIZER_DESC rasterizer_desc;
+	rasterizer_desc.AntialiasedLineEnable = false;
+	rasterizer_desc.CullMode              = D3D11_CULL_BACK;
+	rasterizer_desc.DepthBias             = 0;
+	rasterizer_desc.DepthBiasClamp        = 0;
+	rasterizer_desc.DepthClipEnable       = true;
+	rasterizer_desc.FillMode              = D3D11_FILL_SOLID;
+	rasterizer_desc.FrontCounterClockwise = false;
+	rasterizer_desc.MultisampleEnable     = false;
+	rasterizer_desc.ScissorEnable         = false;
+	rasterizer_desc.SlopeScaledDepthBias  = 0;
+	return rasterizer_desc;
+}
+
+dx_rasterizer_state CreateRasterizerState(dx_device device, const D3D11_RASTERIZER_DESC& rasterizer_desc) {
+	dx_rasterizer_state rasterizer_state;
+	device->CreateRasterizerState(&rasterizer_desc, rasterizer_state.GetAddressOf());
+	return rasterizer_state;
+}
+
+void SetRasterizerState(dx_device device, dx_rasterizer_state rasterizer_state) {
+	pn::GetContext(device)->RSSetState(rasterizer_state.Get());
 }
 
 // ----------- DRAWING FUNCTIONS ------------

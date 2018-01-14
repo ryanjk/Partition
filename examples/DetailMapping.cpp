@@ -6,6 +6,8 @@
 #include <Application\ResourceDatabase.h>
 #include <Application\MainLoop.inc>
 
+
+
 struct alignas(16) directional_light_t {
 	pn::vec3f direction;
 	float intensity;
@@ -32,9 +34,8 @@ pn::mesh_buffer_t		plane_mesh_buffer;
 pn::shader_program_t	normal_map_program;
 
 void Init() {
-	//pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
-	pn::SetWorkingDirectory("M:/projects/partition2");
-	pn::SetResourceDirectoryName("Resources");
+	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
+	pn::SetResourceDirectoryName("resources");
 
 	// ------ LOAD MESH ----------
 

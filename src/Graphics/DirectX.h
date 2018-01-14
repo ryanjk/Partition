@@ -45,6 +45,7 @@ using dx_resource_view		= dx_ptr<ID3D11ShaderResourceView>;
 
 using dx_blend_state		 = dx_ptr<ID3D11BlendState>;
 using dx_depth_stencil_state = dx_ptr<ID3D11DepthStencilState>;
+using dx_rasterizer_state    = dx_ptr<ID3D11RasterizerState>;
 
 // -------- CONSTANTS --------------
 
@@ -52,6 +53,7 @@ extern const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS;
 
 extern const D3D11_BLEND_DESC         DEFAULT_BLEND_DESC;
 extern const D3D11_DEPTH_STENCIL_DESC DEFAULT_DEPTH_STENCIL_DESC;
+extern const D3D11_RASTERIZER_DESC    DEFAULT_RASTERIZER_DESC;
 
 // ------------- CLASS DEFINITIONS ---------------
 
@@ -202,7 +204,7 @@ dx_device				CreateDevice();
 dx_swap_chain			CreateSwapChain(dx_device device, DXGI_SWAP_CHAIN_DESC swap_chain_desc);
 dx_swap_chain			CreateMainWindowSwapChain(dx_device device, const window_handle hwnd, const application_window_desc awd);
 
-dx_texture2d			CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data);
+dx_texture2d			CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data = nullptr);
 dx_sampler_state		CreateSamplerState(dx_device device, CD3D11_SAMPLER_DESC sampler_desc);
 dx_sampler_state		CreateSamplerState(dx_device device);
 
@@ -211,6 +213,8 @@ dx_depth_stencil_view	CreateDepthStencilView(dx_device device, dx_texture2d& dep
 
 vector<mesh_buffer_t>	CreateMeshBuffer(dx_device device, const pn::vector<mesh_t>& mesh);
 mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh);
+
+dx_resource_view        CreateShaderResourceView(dx_device device, dx_resource resource, const D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc);
 
 // -------------- SHADER CREATION -------------
 
@@ -416,6 +420,14 @@ void			       SetBlendState(dx_device device, dx_blend_state blend_state);
 const D3D11_DEPTH_STENCIL_DESC GetDefaultDepthStencilDesc();
 
 dx_depth_stencil_state         CreateDepthStencilState(dx_device device, const D3D11_DEPTH_STENCIL_DESC& depth_stencil_desc = DEFAULT_DEPTH_STENCIL_DESC);
+
+// -------- RASTERIZER -------------
+
+const D3D11_RASTERIZER_DESC GetDefaultRasterizerDesc();
+
+dx_rasterizer_state CreateRasterizerState(dx_device device, const D3D11_RASTERIZER_DESC& rasterizer_desc = DEFAULT_RASTERIZER_DESC);
+
+void SetRasterizerState(dx_device device, dx_rasterizer_state rasterizer_state);
 
 // -------- DRAWING FUNCTIONS ---------------
 

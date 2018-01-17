@@ -55,6 +55,11 @@ extern const D3D11_BLEND_DESC         DEFAULT_BLEND_DESC;
 extern const D3D11_DEPTH_STENCIL_DESC DEFAULT_DEPTH_STENCIL_DESC;
 extern const D3D11_RASTERIZER_DESC    DEFAULT_RASTERIZER_DESC;
 
+// --------- GLOBAL STATE -----------
+
+extern dx_device  _device;
+extern dx_context _context;
+
 // ------------- CLASS DEFINITIONS ---------------
 
 struct input_element_desc {
@@ -198,6 +203,11 @@ struct shader_program_t {
 
 // ------------------- FUNCTIONS ----------------------
 
+// ---------- STATE ACCESS --------------
+
+dx_device GetDevice();
+void      SetDevice(dx_device device);
+
 // ------------ CREATION FUNCTIONS -------------
 
 dx_device				CreateDevice();
@@ -216,19 +226,6 @@ mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh);
 
 dx_resource_view        CreateShaderResourceView(dx_device device, dx_resource resource, const D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc);
 
-// -------- DESTRUCTION FUNCTIONS ---------------
-
-template<typename T>
-void SafeRelease(dx_ptr<T>& object) {
-	auto get_ref_count = [](auto& o) {
-		o->AddRef();
-		auto c = o->Release();
-		return c;
-	};
-	if (object && get_ref_count(object) > 1) {
-		object->Release();
-	}
-}
 
 // -------------- SHADER CREATION -------------
 

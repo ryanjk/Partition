@@ -27,7 +27,7 @@ static const D3D_FEATURE_LEVEL BAD_LEVELS[] = {
 	D3D_FEATURE_LEVEL_12_0
 };
 
-#ifdef _DEBUG
+#ifndef NDEBUG
 const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL0;
 #else
 const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_OPTIMIZATION_LEVEL3;
@@ -281,9 +281,6 @@ dx_resource_view        CreateShaderResourceView(dx_device device, dx_resource r
 	device->CreateShaderResourceView(resource.Get(), &resource_desc, resource_view.GetAddressOf());
 	return resource_view;
 }
-
-// -------- DESTRUCTION FUNCTIONS ---------------
-
 
 
 // -------------- SHADER CREATION -------------

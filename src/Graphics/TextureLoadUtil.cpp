@@ -8,24 +8,13 @@
 
 namespace pn {
 
-// ------- VARIABLES -----------
-
-static dx_device	_device;
-static dx_context	_context;
-
 // ------ FUNCTIONS ---------
 
-void InitTextureFactory(dx_device device) {
-	_device = device;
-	device->GetImmediateContext(_context.GetAddressOf());
-}
 
-texture_t LoadTexture2D(const string& filepath) {
+dx_resource_view LoadTexture2D(const string& filepath) {
 	auto image_data = ReadResource(filepath);
 	
-	dx_resource			resource;
-	dx_resource_view	resource_view;
-	
+	dx_resource_view resource_view;
 	auto hr = DirectX::CreateWICTextureFromMemoryEx(
 		_device.Get(), _context.Get(),
 		(const uint8_t*)(image_data.data()), image_data.size(), 0, 
@@ -34,17 +23,14 @@ texture_t LoadTexture2D(const string& filepath) {
 		0,
 		0,
 		DirectX::WIC_LOADER_IGNORE_SRGB,
-		resource.GetAddressOf(), resource_view.GetAddressOf()
+		nullptr, resource_view.GetAddressOf()
 	);
 	
 	if (FAILED(hr)) {
 		LogError("Couldn't create texture: {}", ErrMsg(hr));
 	}
 
-	texture_t t;
-	t.resource		= resource;
-	t.resource_view = resource_view;
-	return t;
+	return resource_view;
 }
 
 } // namespace pn

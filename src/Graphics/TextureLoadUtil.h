@@ -7,8 +7,7 @@ namespace pn {
 
 // ------- FUNCTIONS ---------
 
-void InitTextureFactory(dx_device device);
-texture_t LoadTexture2D(const string& filepath);
+dx_resource_view LoadTexture2D(const string& filepath);
 
 
 } // namespace pn

@@ -221,8 +221,6 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 	swap_chain	= pn::CreateMainWindowSwapChain(h_wnd, awd);
 
-	pn::InitTextureFactory(device);
-
 	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(swap_chain, display_render_target, display_depth_stencil);
 
 	auto context = pn::GetContext(device);

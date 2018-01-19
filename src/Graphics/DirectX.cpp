@@ -294,9 +294,9 @@ vector<mesh_buffer_t>	CreateMeshBuffer(dx_device device, const pn::vector<mesh_t
 	return mesh_buffers;
 }
 
-dx_resource_view        CreateShaderResourceView(dx_resource resource, const D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc) {
+dx_resource_view        CreateShaderResourceView(dx_resource resource, const D3D11_SHADER_RESOURCE_VIEW_DESC* resource_desc) {
 	dx_resource_view resource_view;
-	auto hr = _device->CreateShaderResourceView(resource.Get(), &resource_desc, resource_view.GetAddressOf());
+	auto hr = _device->CreateShaderResourceView(resource.Get(), resource_desc, resource_view.GetAddressOf());
 	if (FAILED(hr)) {
 		LogError("Coudln't create shader resource view: {}", ErrMsg(hr));
 	}
@@ -424,7 +424,7 @@ std::pair<dx_vertex_shader, input_layout_data_t> CreateVertexShaderAndInputLayou
 
 // ------------ UTILITY FUNCTIONS -------------
 
-dx_texture2d			GetSwapChainBackBuffer(dx_swap_chain swap_chain) {
+dx_texture2d	        GetSwapChainBuffer(dx_swap_chain swap_chain) {
 	dx_texture2d back_buffer;
 	auto hr = swap_chain->GetBuffer(
 		0,
@@ -450,7 +450,13 @@ dx_context				GetContext(dx_device device) {
 	return context;
 }
 
-CD3D11_TEXTURE2D_DESC	GetTextureDesc(dx_texture2d texture) {
+D3D11_BUFFER_DESC       GetDesc(dx_buffer buffer) {
+	D3D11_BUFFER_DESC desc;
+	buffer->GetDesc(&desc);
+	return desc;
+}
+
+CD3D11_TEXTURE2D_DESC	GetDesc(dx_texture2d texture) {
 	CD3D11_TEXTURE2D_DESC desc;
 	texture->GetDesc(&desc);
 	return desc;
@@ -537,10 +543,10 @@ void SetRenderTargetViewAndDepthStencilFromSwapChain(
 	dx_render_target_view& render_target_view,
 	dx_depth_stencil_view& depth_stencil_view) {
 
-	auto back_buffer   = pn::GetSwapChainBackBuffer(swap_chain);
+	auto back_buffer   = pn::GetSwapChainBuffer(swap_chain);
 	render_target_view = pn::CreateRenderTargetView(back_buffer);
 
-	CD3D11_TEXTURE2D_DESC back_buffer_desc = pn::GetTextureDesc(back_buffer);
+	CD3D11_TEXTURE2D_DESC back_buffer_desc = pn::GetDesc(back_buffer);
 	CD3D11_TEXTURE2D_DESC depthStencilDesc(
 		DXGI_FORMAT_D24_UNORM_S8_UINT,
 		static_cast<UINT> (back_buffer_desc.Width),
@@ -661,37 +667,51 @@ void SetInputLayout(const input_layout_data_t& layout_desc) {
 	_context->IASetInputLayout(layout_desc.ptr.Get());
 }
 
-void SetVSConstantBuffer(const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer) {
+void SetVSConstant(dx_shader_reflection reflection, const pn::string& buffer_name, const dx_buffer& buffer) {
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, buffer_name);
 	if (start_slot == 0) return;
 	_context->VSSetConstantBuffers(start_slot, 1, buffer.GetAddressOf());
 }
-void SetPSConstantBuffer(const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer) {
+void SetPSConstant(dx_shader_reflection reflection, const pn::string& buffer_name, const dx_buffer& buffer) {
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, buffer_name);
 	if (start_slot == 0) return;
 	_context->PSSetConstantBuffers(start_slot, 1, buffer.GetAddressOf());
 }
+void SetProgramConstant(const shader_program_t& program, const pn::string& buffer_name, const dx_buffer& buffer) {
+	SetVSConstant(program.vertex_shader_data.reflection, buffer_name, buffer);
+	SetPSConstant(program.pixel_shader_data.reflection, buffer_name, buffer);
+}
 
-void SetVSShaderResources(const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view) {
+void SetVSShaderResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view) {
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, resource_name);
 	if (start_slot == 0) return;
 	_context->VSSetShaderResources(start_slot, 1, resource_view.GetAddressOf());
 }
-void SetPSShaderResources(const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view) {
+
+void SetPSShaderResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view) {
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, resource_name);
 	if (start_slot == 0) return;
 	_context->PSSetShaderResources(start_slot, 1, resource_view.GetAddressOf());
 }
 
-void SetVSSamplers(const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state) {
+void SetProgramResource(const shader_program_t& program, const pn::string& resource_name, dx_resource_view& resource_view) {
+	SetVSShaderResource(program.vertex_shader_data.reflection, resource_name, resource_view);
+	SetPSShaderResource(program.pixel_shader_data.reflection, resource_name, resource_view);
+}
+
+void SetVSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state) {
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, sampler_name);
 	if (start_slot == 0) return;
 	_context->VSSetSamplers(start_slot, 1, sampler_state.GetAddressOf());
 }
-void SetPSSamplers(const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state) {
+void SetPSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state) {
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, sampler_name);
 	if (start_slot == 0) return;
 	_context->PSSetSamplers(start_slot, 1, sampler_state.GetAddressOf());
+}
+void SetProgramSampler(const shader_program_t& program, const pn::string& sampler_name, dx_sampler_state& sampler_state) {
+	SetVSSampler(program.vertex_shader_data.reflection, sampler_name, sampler_state);
+	SetPSSampler(program.pixel_shader_data.reflection, sampler_name, sampler_state);
 }
 
 // ----------- BLENDING ----------------

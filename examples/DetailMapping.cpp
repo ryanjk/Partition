@@ -21,10 +21,10 @@ struct alignas(16) mapping_vars_t {
 pn::cbuffer<directional_light_t>	directional_light;
 pn::cbuffer<mapping_vars_t>			mapping_vars;
 
-pn::texture_t			diffuse_map;
-pn::texture_t			normal_map;
-pn::texture_t			height_map;
-pn::dx_sampler_state	ss;
+pn::dx_resource_view		diffuse_map;
+pn::dx_resource_view		normal_map;
+pn::dx_resource_view		height_map;
+pn::dx_sampler_state		ss;
 
 pn::dx_blend_state blend_state;
 
@@ -109,7 +109,7 @@ void Render() {
 
 	// Update global uniforms
 	global_constants.data.t += static_cast<float>(pn::app::dt);
-	auto screen_desc = pn::GetTextureDesc(pn::GetSwapChainBackBuffer(swap_chain));
+	auto screen_desc = pn::GetDesc(pn::GetSwapChainBuffer(swap_chain));
 	global_constants.data.screen_width = static_cast<float>(screen_desc.Width);
 	global_constants.data.screen_height = static_cast<float>(screen_desc.Height);
 
@@ -135,11 +135,11 @@ void Render() {
 	pn::gui::DragFloat("height offset", &mapping_vars.data.height_offset, -1.0f, 1.0f, 0.1f);
 	ImGui::End();
 
-	SetProgramConstantBuffer(global_constants, normal_map_program);
-	SetProgramConstantBuffer(camera_constants, normal_map_program);
-	SetProgramConstantBuffer(model_constants, normal_map_program);
-	SetProgramConstantBuffer(directional_light, normal_map_program);
-	SetProgramConstantBuffer(mapping_vars, normal_map_program);
+	SetProgramConstant(normal_map_program, "global_constants" , global_constants.buffer);
+	SetProgramConstant(normal_map_program, "camera_constants" , camera_constants.buffer);
+	SetProgramConstant(normal_map_program, "model_constants"  , model_constants.buffer);
+	SetProgramConstant(normal_map_program, "directional_light", directional_light.buffer);
+	SetProgramConstant(normal_map_program, "mapping_vars"     , mapping_vars.buffer);
 
 	// update uniform buffers that are shared across shaders
 	UpdateBuffer(global_constants);
@@ -163,10 +163,11 @@ void Render() {
 	model_constants.data.mvp = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 	ImGui::End(); // Plane
 
-	SetProgramShaderResources(diffuse_map, normal_map_program);
-	SetProgramShaderResources(normal_map, normal_map_program);
-	SetProgramShaderResources(height_map, normal_map_program);
-	SetProgramSamplers(ss, normal_map_program);
+	SetProgramResource(normal_map_program, "diffuse_map", diffuse_map);
+	SetProgramResource(normal_map_program, "normal_map", normal_map);
+	SetProgramResource(normal_map_program, "height_map", height_map);
+	
+	SetProgramSampler(normal_map_program, "ss", ss);
 
 	// send updates to constant buffers
 	UpdateBuffer(model_constants);

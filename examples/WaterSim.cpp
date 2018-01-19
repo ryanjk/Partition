@@ -59,7 +59,7 @@ pn::mesh_buffer_t		wave_mesh_buffer;
 pn::shader_program_t	wave_program;
 
 // ----- texture data ---------
-pn::texture_t			tex;
+pn::dx_resource_view	tex;
 pn::dx_sampler_state	ss;
 
 // ---- misc --------
@@ -95,9 +95,9 @@ void Init() {
 
 	REGISTER_COMMAND(recomp, pn::string, void);
 
-	//pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
-	pn::SetWorkingDirectory("M:/projects/partition2");
-	pn::SetResourceDirectoryName("Resources");
+	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
+	//pn::SetWorkingDirectory("M:/projects/partition2");
+	pn::SetResourceDirectoryName("resources");
 
 	Log("Size of resource id: {} bytes", sizeof(pn::rdb::resource_id_t));
 
@@ -190,7 +190,7 @@ void Render() {
 
 	// Update global uniforms
 	global_constants.data.t				+= static_cast<float>(pn::app::dt);
-	auto screen_desc					= pn::GetTextureDesc(pn::GetSwapChainBackBuffer(swap_chain));
+	auto screen_desc					= pn::GetDesc(pn::GetSwapChainBuffer(swap_chain));
 	global_constants.data.screen_width	= static_cast<float>(screen_desc.Width);
 	global_constants.data.screen_height	= static_cast<float>(screen_desc.Height);
 
@@ -209,10 +209,10 @@ void Render() {
 
 	ImGui::End(); // Lights
 
-	SetProgramConstantBuffer(global_constants, wave_program);
-	SetProgramConstantBuffer(camera_constants, wave_program);
-	SetProgramConstantBuffer(model_constants, wave_program);
-	SetProgramConstantBuffer(directional_light, wave_program);
+	SetProgramConstant(wave_program, "global_constants", global_constants.buffer);
+	SetProgramConstant(wave_program, "camera_constants", camera_constants.buffer);
+	SetProgramConstant(wave_program, "model_constants", model_constants.buffer);
+	SetProgramConstant(wave_program, "directional_light", directional_light.buffer);
 
 	// update uniform buffers that are shared across shaders
 	UpdateBuffer(global_constants);
@@ -222,7 +222,7 @@ void Render() {
 
 // ------ BEGIN WATER
 
-	SetProgramConstantBuffer(wave, wave_program);
+	SetProgramConstant(wave_program, "wave", wave.buffer);
 
 	pn::SetShaderProgram(wave_program);
 
@@ -244,8 +244,9 @@ void Render() {
 	}
 	ImGui::End(); // Waves
 
-	SetProgramShaderResources(tex, wave_program);
-	SetProgramSamplers(ss, wave_program);
+	SetProgramResource(wave_program, "tex", tex);
+
+	SetProgramSampler(wave_program, "ss", ss);
 
 	// send updates to constant buffers
 	UpdateBuffer(model_constants);

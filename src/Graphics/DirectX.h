@@ -35,6 +35,7 @@ using dx_depth_stencil_view = dx_ptr<ID3D11DepthStencilView>;
 
 using dx_input_layout		= dx_ptr<ID3D11InputLayout>;
 using dx_shader_reflection	= dx_ptr<ID3D11ShaderReflection>;
+
 using dx_vertex_shader		= dx_ptr<ID3D11VertexShader>;
 using dx_pixel_shader		= dx_ptr<ID3D11PixelShader>;
 
@@ -182,13 +183,6 @@ struct mesh_buffer_t {
 	pn::string				name;
 };
 
-struct texture_t {
-	dx_resource			resource;
-	dx_resource_view	resource_view;
-
-	texture_t() : resource(nullptr), resource_view(nullptr) {}
-};
-
 template<typename DxShaderPtrT>
 struct shader_data_t {
 	DxShaderPtrT			shader;
@@ -225,7 +219,7 @@ dx_sampler_state		CreateSamplerState();
 vector<mesh_buffer_t>	CreateMeshBuffer(const pn::vector<mesh_t>& mesh);
 mesh_buffer_t			CreateMeshBuffer(const mesh_t& mesh);
 
-dx_resource_view        CreateShaderResourceView(dx_resource resource, const D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc);
+dx_resource_view        CreateShaderResourceView(dx_resource resource, const D3D11_SHADER_RESOURCE_VIEW_DESC* resource_desc = nullptr);
 
 
 // -------------- SHADER CREATION -------------
@@ -287,12 +281,12 @@ std::pair<dx_vertex_shader, input_layout_data_t>
 // -------------- BUFFER CREATION -------------------
 
 template<typename BufferDataType>
-auto					CreateBufferDataDesc(BufferDataType* data) {
+auto					CreateBufferDataDesc(BufferDataType* data, unsigned int pitch = 0, unsigned int slice_pitch = 0) {
 	D3D11_SUBRESOURCE_DATA data_desc;
 	ZeroMemory(&data_desc, sizeof(decltype(data_desc)));
-	data_desc.pSysMem = data;
-	data_desc.SysMemPitch = 0;
-	data_desc.SysMemSlicePitch = 0;
+	data_desc.pSysMem          = data;
+	data_desc.SysMemPitch      = pitch;
+	data_desc.SysMemSlicePitch = slice_pitch;
 	return data_desc;
 }
 
@@ -346,9 +340,11 @@ auto					CreateIndexBuffer(const pn::vector<IndexDataType>& i_data) {
 
 // ------------ UTILITY FUNCTIONS -------------
 
-dx_texture2d			GetSwapChainBackBuffer(dx_swap_chain swap_chain);
+dx_texture2d            GetSwapChainBuffer(dx_swap_chain swap_chain);
 dx_context				GetContext(dx_device device);
-CD3D11_TEXTURE2D_DESC	GetTextureDesc(dx_texture2d texture);
+
+D3D11_BUFFER_DESC       GetDesc(dx_buffer buffer);
+CD3D11_TEXTURE2D_DESC	GetDesc(dx_texture2d texture);
 
 // ---------- SHADER REFLECTION ----------------
 
@@ -390,38 +386,18 @@ void SetInputLayout(const input_layout_data_t& layout_desc);
 
 void SetVertexBuffers(const input_layout_data_t& input_layout, const mesh_buffer_t& mesh_buffer);
 
-void SetVSConstantBuffer(const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
-void SetPSConstantBuffer(const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
+void SetVSConstant(dx_shader_reflection reflection, const pn::string& buffer_name, const dx_buffer& buffer);
+void SetPSConstant(dx_shader_reflection reflection, const pn::string& buffer_name, const dx_buffer& buffer);
+void SetProgramConstant(const shader_program_t& program, const pn::string& buffer_name, const dx_buffer& buffer);
 
-#define SetProgramVSConstantBuffer(name, program) pn::SetVSConstantBuffer(#name, program.vertex_shader_data.reflection, name.buffer)
+void SetVSResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view);
+void SetPSResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view);
+void SetProgramResource(const shader_program_t& program, const pn::string& resource_name, dx_resource_view& resource_view);
 
-#define SetProgramPSConstantBuffer(name, program) pn::SetPSConstantBuffer(#name, program.pixel_shader_data.reflection, name.buffer)
+void SetVSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state);
+void SetPSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state);
+void SetProgramSampler(const shader_program_t& program, const pn::string& sampler_name, dx_sampler_state& sampler_state);
 
-#define SetProgramConstantBuffer(name, program)	\
-SetProgramVSConstantBuffer(name, program);			\
-SetProgramPSConstantBuffer(name, program);
-
-void SetVSShaderResources(const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
-void SetPSShaderResources(const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
-
-#define SetProgramVSShaderResources(name, program) pn::SetVSShaderResources(#name, program.vertex_shader_data.reflection, name.resource_view)
-
-#define SetProgramPSShaderResources(name, program) pn::SetPSShaderResources(#name, program.pixel_shader_data.reflection, name.resource_view)
-
-#define SetProgramShaderResources(name, program)	\
-SetProgramVSShaderResources(name, program);		\
-SetProgramPSShaderResources(name, program);
-
-void SetVSSamplers(const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state);
-void SetPSSamplers(const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state);
-
-#define SetProgramVSSamplers(name, program) pn::SetVSSamplers(#name, program.vertex_shader_data.reflection, name)
-
-#define SetProgramPSSamplers(name, program) pn::SetPSSamplers(#name, program.pixel_shader_data.reflection, name)
-
-#define SetProgramSamplers(name, program)	\
-SetProgramVSSamplers(name, program);		\
-SetProgramPSSamplers(name, program);
 
 // ---------- BLENDING -----------------
 

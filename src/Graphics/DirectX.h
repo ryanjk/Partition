@@ -211,20 +211,21 @@ void      SetDevice(dx_device device);
 // ------------ CREATION FUNCTIONS -------------
 
 dx_device				CreateDevice();
-dx_swap_chain			CreateSwapChain(dx_device device, DXGI_SWAP_CHAIN_DESC swap_chain_desc);
-dx_swap_chain			CreateMainWindowSwapChain(dx_device device, const window_handle hwnd, const application_window_desc awd);
+dx_swap_chain			CreateSwapChain(DXGI_SWAP_CHAIN_DESC swap_chain_desc);
+dx_swap_chain			CreateMainWindowSwapChain(const window_handle hwnd, const application_window_desc awd);
 
-dx_texture2d			CreateTexture2D(dx_device device, CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data = nullptr);
-dx_sampler_state		CreateSamplerState(dx_device device, CD3D11_SAMPLER_DESC sampler_desc);
-dx_sampler_state		CreateSamplerState(dx_device device);
+dx_render_target_view	CreateRenderTargetView(dx_texture2d texture);
+dx_depth_stencil_view	CreateDepthStencilView(dx_texture2d& depth_stencil_texture);
 
-dx_render_target_view	CreateRenderTargetView(dx_device device, dx_texture2d texture);
-dx_depth_stencil_view	CreateDepthStencilView(dx_device device, dx_texture2d& depth_stencil_texture);
+dx_texture2d			CreateTexture2D(CD3D11_TEXTURE2D_DESC texture_desc, const D3D11_SUBRESOURCE_DATA* initial_data = nullptr);
+dx_sampler_state		CreateSamplerState(CD3D11_SAMPLER_DESC sampler_desc);
+dx_sampler_state		CreateSamplerState();
 
-vector<mesh_buffer_t>	CreateMeshBuffer(dx_device device, const pn::vector<mesh_t>& mesh);
-mesh_buffer_t			CreateMeshBuffer(dx_device device, const mesh_t& mesh);
 
-dx_resource_view        CreateShaderResourceView(dx_device device, dx_resource resource, const D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc);
+vector<mesh_buffer_t>	CreateMeshBuffer(const pn::vector<mesh_t>& mesh);
+mesh_buffer_t			CreateMeshBuffer(const mesh_t& mesh);
+
+dx_resource_view        CreateShaderResourceView(dx_resource resource, const D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc);
 
 
 // -------------- SHADER CREATION -------------
@@ -236,10 +237,10 @@ pn::bytes				CompileShader(
 	const pn::string& shader_type,
 	unsigned int flags);
 
-shader_program_t		CompileShaderProgram(dx_device device, const pn::string& filename, const D3D_SHADER_MACRO* defines = nullptr, unsigned int flags = DEFAULT_SHADER_COMPILATION_FLAGS);
+shader_program_t		CompileShaderProgram(const pn::string& filename, const D3D_SHADER_MACRO* defines = nullptr, unsigned int flags = DEFAULT_SHADER_COMPILATION_FLAGS);
 
 template<typename ID3D11ShaderType, typename DeviceShaderFunc>
-auto					CreateShader(dx_device device, const pn::bytes& bytes, DeviceShaderFunc CreateShader) {
+auto					CreateShader(const pn::bytes& bytes, DeviceShaderFunc CreateShader) {
 
 	dx_ptr<ID3D11ShaderType> shader;
 	if (bytes.empty()) {
@@ -263,25 +264,25 @@ auto					CreateShader(dx_device device, const pn::bytes& bytes, DeviceShaderFunc
 
 pn::bytes				CompileVertexShader(const pn::string& filename, const D3D_SHADER_MACRO* defines = nullptr, unsigned int flags = DEFAULT_SHADER_COMPILATION_FLAGS);
 
-dx_vertex_shader		CreateVertexShader(dx_device device, const pn::bytes& bytes);
-dx_vertex_shader		CreateVertexShader(dx_device device, const pn::string& filename);
+dx_vertex_shader		CreateVertexShader(const pn::bytes& bytes);
+dx_vertex_shader		CreateVertexShader(const pn::string& filename);
 
 pn::bytes				CompilePixelShader(const pn::string& filename, const D3D_SHADER_MACRO* defines = nullptr, unsigned int flags = DEFAULT_SHADER_COMPILATION_FLAGS);
 
-dx_pixel_shader			CreatePixelShader(dx_device device, const pn::bytes& ps_data);
-dx_pixel_shader			CreatePixelShader(dx_device device, const pn::string& filename);
+dx_pixel_shader			CreatePixelShader(const pn::bytes& ps_data);
+dx_pixel_shader			CreatePixelShader(const pn::string& filename);
 
-input_layout_data_t		CreateInputLayout(dx_device device, const pn::bytes& bytes, const vertex_input_desc& desc);
-input_layout_data_t		CreateInputLayout(dx_device device, const pn::bytes& bytes);
-
-std::pair<dx_vertex_shader, input_layout_data_t> 
-						CreateVertexShaderAndInputLayout(dx_device device, const pn::string& filename, const vertex_input_desc& desc);
+input_layout_data_t		CreateInputLayout(const pn::bytes& bytes, const vertex_input_desc& desc);
+input_layout_data_t		CreateInputLayout(const pn::bytes& bytes);
 
 std::pair<dx_vertex_shader, input_layout_data_t> 
-						CreateVertexShaderAndInputLayout(dx_device device, const pn::bytes& vs_byte_code, const vertex_input_desc& desc);
+						CreateVertexShaderAndInputLayout(const pn::string& filename, const vertex_input_desc& desc);
 
 std::pair<dx_vertex_shader, input_layout_data_t> 
-						CreateVertexShaderAndInputLayout(dx_device device, const pn::string& filename);
+						CreateVertexShaderAndInputLayout(const pn::bytes& vs_byte_code, const vertex_input_desc& desc);
+
+std::pair<dx_vertex_shader, input_layout_data_t> 
+						CreateVertexShaderAndInputLayout(const pn::string& filename);
 
 // -------------- BUFFER CREATION -------------------
 
@@ -296,7 +297,7 @@ auto					CreateBufferDataDesc(BufferDataType* data) {
 }
 
 template<typename BufferDataType>
-auto					CreateBuffer(dx_device device, BufferDataType* v_data, const size_t n, const D3D11_BIND_FLAG bind_target) {
+auto					CreateBuffer(BufferDataType* v_data, const size_t n, const D3D11_BIND_FLAG bind_target) {
 	// Create buffer description
 	CD3D11_BUFFER_DESC buffer_desc(static_cast<unsigned int>(n) * sizeof(BufferDataType), bind_target);
 
@@ -304,7 +305,7 @@ auto					CreateBuffer(dx_device device, BufferDataType* v_data, const size_t n, 
 	auto data_desc = CreateBufferDataDesc(v_data);
 
 	dx_buffer buffer;
-	auto hr = device->CreateBuffer(&buffer_desc, &data_desc, &buffer);
+	auto hr = _device->CreateBuffer(&buffer_desc, &data_desc, &buffer);
 	if (FAILED(hr)) {
 		LogError("Couldn't create buffer {}: {}", bind_target, pn::ErrMsg(hr));
 	}
@@ -313,34 +314,34 @@ auto					CreateBuffer(dx_device device, BufferDataType* v_data, const size_t n, 
 }
 
 template<typename VertexDataType>
-auto					CreateVertexBuffer(dx_device device, const VertexDataType* v_data, const size_t n) {
-	return CreateBuffer(device, v_data, n, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER);
+auto					CreateVertexBuffer(const VertexDataType* v_data, const size_t n) {
+	return CreateBuffer(v_data, n, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER);
 }
 
 template<typename VertexDataType>
-auto					CreateVertexBuffer(dx_device device, const pn::vector<VertexDataType>& v_data) {
-	return CreateVertexBuffer(device, v_data.data(), v_data.size());
+auto					CreateVertexBuffer(const pn::vector<VertexDataType>& v_data) {
+	return CreateVertexBuffer(v_data.data(), v_data.size());
 }
 
 template<typename ConstantDataType>
-auto					CreateConstantBuffer(dx_device device, const ConstantDataType* c_data, const size_t n) {
+auto					CreateConstantBuffer(const ConstantDataType* c_data, const size_t n) {
 	static_assert((sizeof(ConstantDataType) % 16) == 0, "Constant Buffer size must be 16-byte aligned");
-	return CreateBuffer(device, c_data, n, D3D11_BIND_FLAG::D3D11_BIND_CONSTANT_BUFFER);
+	return CreateBuffer(c_data, n, D3D11_BIND_FLAG::D3D11_BIND_CONSTANT_BUFFER);
 }
 
 template<typename ConstantDataType>
-auto					CreateConstantBuffer(dx_device device, const pn::vector<ConstantDataType>& c_data) {
-	return CreateConstantBuffer(device, c_data.data(), c_data.size());
+auto					CreateConstantBuffer(const pn::vector<ConstantDataType>& c_data) {
+	return CreateConstantBuffer(c_data.data(), c_data.size());
 }
 
 template<typename IndexDataType>
-auto					CreateIndexBuffer(dx_device device, const IndexDataType* i_data, const size_t n) {
-	return CreateBuffer(device, i_data, n, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER);
+auto					CreateIndexBuffer(const IndexDataType* i_data, const size_t n) {
+	return CreateBuffer(i_data, n, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER);
 }
 
 template<typename IndexDataType>
-auto					CreateIndexBuffer(dx_device device, const pn::vector<IndexDataType>& i_data) {
-	return CreateIndexBuffer(device, i_data.data(), i_data.size());
+auto					CreateIndexBuffer(const pn::vector<IndexDataType>& i_data) {
+	return CreateIndexBuffer(i_data.data(), i_data.size());
 }
 
 // ------------ UTILITY FUNCTIONS -------------
@@ -362,87 +363,91 @@ unsigned int					GetShaderResourceStartSlot(dx_shader_reflection reflector, cons
 
 // ----------- VIEWPORT -----------------------
 
-void SetViewport(dx_context context, const int width, const int height, const int top_left_x = 0, const int top_left_y = 0);
-void SetRenderTargetViewAndDepthStencilFromSwapChain(dx_device device, 
-																		dx_swap_chain swap_chain, 
-																		dx_render_target_view& render_target_view, 
-																		dx_depth_stencil_view& depth_stencil_view);
-void ResizeRenderTargetViewportCamera(dx_device device, 
-														 unsigned int width, unsigned int height, 
-														 dx_swap_chain& swap_chain, 
-														 dx_render_target_view& render_target_view, 
-														 dx_depth_stencil_view& depth_stencil_view, 
-														 ProjectionMatrix& camera);
+void SetViewport(const int width, const int height, const int top_left_x = 0, const int top_left_y = 0);
+
+void SetRenderTargetViewAndDepthStencilFromSwapChain(
+	dx_swap_chain          swap_chain, 
+	dx_render_target_view& render_target_view, 
+	dx_depth_stencil_view& depth_stencil_view
+);
+
+void ResizeRenderTargetViewportCamera(
+	unsigned int width, unsigned int height, 
+	dx_swap_chain& swap_chain, 
+	dx_render_target_view& render_target_view, 
+	dx_depth_stencil_view& depth_stencil_view, 
+	ProjectionMatrix& camera
+);
 
 // --------- SHADER STATE ----------------
 
-void SetShaderProgram(dx_context context, shader_program_t& shader_program);
+void SetShaderProgram(shader_program_t& shader_program);
 
-void SetVertexShader(dx_context context, dx_vertex_shader shader);
-void SetPixelShader(dx_context context, dx_pixel_shader shader);
+void SetVertexShader(dx_vertex_shader shader);
+void SetPixelShader(dx_pixel_shader shader);
 
-void SetInputLayout(dx_context context, const input_layout_data_t& layout_desc);
+void SetInputLayout(const input_layout_data_t& layout_desc);
 
-void SetVertexBuffers(dx_context context, const input_layout_data_t& input_layout, const mesh_buffer_t& mesh_buffer);
+void SetVertexBuffers(const input_layout_data_t& input_layout, const mesh_buffer_t& mesh_buffer);
 
-void SetVSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
-void SetPSConstantBuffer(dx_context context, const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
+void SetVSConstantBuffer(const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
+void SetPSConstantBuffer(const pn::string& buffer_name, dx_shader_reflection reflection, dx_buffer& buffer);
 
-#define SetProgramVSConstantBuffer(context, name, program) pn::SetVSConstantBuffer(context, #name, program.vertex_shader_data.reflection, name.buffer)
+#define SetProgramVSConstantBuffer(name, program) pn::SetVSConstantBuffer(#name, program.vertex_shader_data.reflection, name.buffer)
 
-#define SetProgramPSConstantBuffer(context, name, program) pn::SetPSConstantBuffer(context, #name, program.pixel_shader_data.reflection, name.buffer)
+#define SetProgramPSConstantBuffer(name, program) pn::SetPSConstantBuffer(#name, program.pixel_shader_data.reflection, name.buffer)
 
-#define SetProgramConstantBuffer(context, name, program)	\
-SetProgramVSConstantBuffer(context, name, program);			\
-SetProgramPSConstantBuffer(context, name, program);
+#define SetProgramConstantBuffer(name, program)	\
+SetProgramVSConstantBuffer(name, program);			\
+SetProgramPSConstantBuffer(name, program);
 
-void SetVSShaderResources(dx_context context, const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
-void SetPSShaderResources(dx_context context, const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
+void SetVSShaderResources(const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
+void SetPSShaderResources(const pn::string& resource_name, dx_shader_reflection reflection, dx_resource_view& resource_view);
 
-#define SetProgramVSShaderResources(context, name, program) pn::SetVSShaderResources(context, #name, program.vertex_shader_data.reflection, name.resource_view)
+#define SetProgramVSShaderResources(name, program) pn::SetVSShaderResources(#name, program.vertex_shader_data.reflection, name.resource_view)
 
-#define SetProgramPSShaderResources(context, name, program) pn::SetPSShaderResources(context, #name, program.pixel_shader_data.reflection, name.resource_view)
+#define SetProgramPSShaderResources(name, program) pn::SetPSShaderResources(#name, program.pixel_shader_data.reflection, name.resource_view)
 
-#define SetProgramShaderResources(context, name, program)	\
-SetProgramVSShaderResources(context, name, program);		\
-SetProgramPSShaderResources(context, name, program);
+#define SetProgramShaderResources(name, program)	\
+SetProgramVSShaderResources(name, program);		\
+SetProgramPSShaderResources(name, program);
 
-void SetVSSamplers(dx_context context, const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state);
-void SetPSSamplers(dx_context context, const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state);
+void SetVSSamplers(const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state);
+void SetPSSamplers(const pn::string& sampler_name, dx_shader_reflection reflection, dx_sampler_state& sampler_state);
 
-#define SetProgramVSSamplers(context, name, program) pn::SetVSSamplers(context, #name, program.vertex_shader_data.reflection, name)
+#define SetProgramVSSamplers(name, program) pn::SetVSSamplers(#name, program.vertex_shader_data.reflection, name)
 
-#define SetProgramPSSamplers(context, name, program) pn::SetPSSamplers(context, #name, program.pixel_shader_data.reflection, name)
+#define SetProgramPSSamplers(name, program) pn::SetPSSamplers(#name, program.pixel_shader_data.reflection, name)
 
-#define SetProgramSamplers(context, name, program)	\
-SetProgramVSSamplers(context, name, program);		\
-SetProgramPSSamplers(context, name, program);
+#define SetProgramSamplers(name, program)	\
+SetProgramVSSamplers(name, program);		\
+SetProgramPSSamplers(name, program);
 
 // ---------- BLENDING -----------------
 
 const D3D11_BLEND_DESC GetDefaultBlendDesc(const int render_target = 0);
 
-dx_blend_state	       CreateBlendState(dx_device device, const D3D11_BLEND_DESC& blend_desc = DEFAULT_BLEND_DESC);
+dx_blend_state	       CreateBlendState(const D3D11_BLEND_DESC& blend_desc = DEFAULT_BLEND_DESC);
 
-void			       SetBlendState(dx_device device, dx_blend_state blend_state);
+void			       SetBlendState(dx_blend_state blend_state);
 
 // --------- DEPTH STENCIL -------------
 
 const D3D11_DEPTH_STENCIL_DESC GetDefaultDepthStencilDesc();
 
-dx_depth_stencil_state         CreateDepthStencilState(dx_device device, const D3D11_DEPTH_STENCIL_DESC& depth_stencil_desc = DEFAULT_DEPTH_STENCIL_DESC);
+dx_depth_stencil_state         CreateDepthStencilState(const D3D11_DEPTH_STENCIL_DESC& depth_stencil_desc = DEFAULT_DEPTH_STENCIL_DESC);
 
 // -------- RASTERIZER -------------
 
 const D3D11_RASTERIZER_DESC GetDefaultRasterizerDesc();
 
-dx_rasterizer_state CreateRasterizerState(dx_device device, const D3D11_RASTERIZER_DESC& rasterizer_desc = DEFAULT_RASTERIZER_DESC);
+dx_rasterizer_state CreateRasterizerState(const D3D11_RASTERIZER_DESC& rasterizer_desc = DEFAULT_RASTERIZER_DESC);
 
-void SetRasterizerState(dx_device device, dx_rasterizer_state rasterizer_state);
+void SetRasterizerState(dx_rasterizer_state rasterizer_state);
 
 // -------- DRAWING FUNCTIONS ---------------
 
-void DrawIndexed(dx_context context, const mesh_buffer_t& mesh_buffer, unsigned int start_vertex_location = 0, unsigned int base_vertex_location = 0);
+void DrawIndexed(const mesh_buffer_t& mesh_buffer, unsigned int start_vertex_location = 0, unsigned int base_vertex_location = 0);
 
 
 

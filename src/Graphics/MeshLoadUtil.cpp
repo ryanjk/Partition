@@ -142,7 +142,7 @@ pn::rdb::resource_id_t ProcessAINode(aiNode* node, const aiScene* scene, pn::rdb
 			//EndProfile();
 			
 			//StartProfile("Mesh to MeshBuffer");
-			auto mesh_buffer	= CreateMeshBuffer(device, mesh);
+			auto mesh_buffer	= CreateMeshBuffer(mesh);
 			//EndProfile();
 
 			mesh_id				= rdb::AddMeshResource(mesh_buffer);

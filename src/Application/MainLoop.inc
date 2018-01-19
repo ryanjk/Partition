@@ -93,7 +93,7 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 			}
 
 			swap_chain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-			pn::ResizeRenderTargetViewportCamera(device, width, height, swap_chain, display_render_target, display_depth_stencil, camera);
+			pn::ResizeRenderTargetViewportCamera(width, height, swap_chain, display_render_target, display_depth_stencil, camera);
 
 			ImGui_ImplDX11_CreateDeviceObjects();
 		}
@@ -217,18 +217,20 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	// INIT DIRECTX
 
 	device		= pn::CreateDevice();
-	swap_chain	= pn::CreateMainWindowSwapChain(device, h_wnd, awd);
+	pn::SetDevice(device);
+
+	swap_chain	= pn::CreateMainWindowSwapChain(h_wnd, awd);
 
 	pn::InitTextureFactory(device);
 
-	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(device, swap_chain, display_render_target, display_depth_stencil);
+	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(swap_chain, display_render_target, display_depth_stencil);
 
 	auto context = pn::GetContext(device);
-	pn::SetViewport(context, awd.width, awd.height);
+	pn::SetViewport(awd.width, awd.height);
 
-	pn::InitializeCBuffer(device, global_constants);
-	pn::InitializeCBuffer(device, camera_constants);
-	pn::InitializeCBuffer(device, model_constants);
+	pn::InitializeCBuffer(global_constants);
+	pn::InitializeCBuffer(camera_constants);
+	pn::InitializeCBuffer(model_constants);
 
 	// ------- POST DX INIT ---------
 

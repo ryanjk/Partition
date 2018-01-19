@@ -71,8 +71,8 @@ pn::dx_blend_state blend_state;
 pn::string recomp() {
 	auto vs_byte_code = pn::CompileVertexShader(pn::GetResourcePath("water.hlsl"));
 	if (pn::Size(vs_byte_code) > 0) {
-		wave_program.vertex_shader_data.shader		= pn::CreateVertexShader(device, vs_byte_code);
-		wave_program.input_layout_data				= pn::CreateInputLayout(device, vs_byte_code);
+		wave_program.vertex_shader_data.shader		= pn::CreateVertexShader(vs_byte_code);
+		wave_program.input_layout_data				= pn::CreateInputLayout(vs_byte_code);
 		wave_program.vertex_shader_data.reflection	= pn::GetShaderReflector(vs_byte_code);
 	}
 	else {
@@ -81,7 +81,7 @@ pn::string recomp() {
 
 	auto ps_byte_code = pn::CompilePixelShader(pn::GetResourcePath("water.hlsl"));
 	if (pn::Size(ps_byte_code) > 0) {
-		wave_program.pixel_shader_data.shader		= pn::CreatePixelShader(device, ps_byte_code);
+		wave_program.pixel_shader_data.shader		= pn::CreatePixelShader(ps_byte_code);
 		wave_program.pixel_shader_data.reflection	= pn::GetShaderReflector(ps_byte_code);
 	}
 	else {
@@ -134,23 +134,23 @@ void Init() {
 	// --------- LOAD TEXTURES -------------
 
 	tex				= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
-	ss	= pn::CreateSamplerState(device);
+	ss	= pn::CreateSamplerState();
 
 	// ------- SET BLENDING STATE ------------
 
-	blend_state		= pn::CreateBlendState(device);
-	pn::SetBlendState(device, blend_state);
+	blend_state		= pn::CreateBlendState();
+	pn::SetBlendState(blend_state);
 
 	// --------- CREATE SHADER DATA ---------------
 
-	wave_program	= pn::CompileShaderProgram(device, pn::GetResourcePath("water.hlsl"));
-	//basic_program	= pn::CompileShaderProgram(device, pn::GetResourcePath("basic.hlsl"));
+	wave_program	= pn::CompileShaderProgram(pn::GetResourcePath("water.hlsl"));
+	//basic_program	= pn::CompileShaderProgram(pn::GetResourcePath("basic.hlsl"));
 
 	global_constants.data.screen_width	= static_cast<float>(pn::app::window_desc.width);
 	global_constants.data.screen_height	= static_cast<float>(pn::app::window_desc.height);
 
-	InitializeCBuffer(device, directional_light);
-	InitializeCBuffer(device, wave);
+	InitializeCBuffer(directional_light);
+	InitializeCBuffer(wave);
 
 	// init lights
 	directional_light.data.direction = pn::vec3f(0.0f, 0.0f, 1.0f);
@@ -209,25 +209,25 @@ void Render() {
 
 	ImGui::End(); // Lights
 
-	SetProgramConstantBuffer(context, global_constants, wave_program);
-	SetProgramConstantBuffer(context, camera_constants, wave_program);
-	SetProgramConstantBuffer(context, model_constants, wave_program);
-	SetProgramConstantBuffer(context, directional_light, wave_program);
+	SetProgramConstantBuffer(global_constants, wave_program);
+	SetProgramConstantBuffer(camera_constants, wave_program);
+	SetProgramConstantBuffer(model_constants, wave_program);
+	SetProgramConstantBuffer(directional_light, wave_program);
 
 	// update uniform buffers that are shared across shaders
-	UpdateBuffer(context, global_constants);
-	UpdateBuffer(context, camera_constants);
-	UpdateBuffer(context, directional_light);
+	UpdateBuffer(global_constants);
+	UpdateBuffer(camera_constants);
+	UpdateBuffer(directional_light);
 
 
 // ------ BEGIN WATER
 
-	SetProgramConstantBuffer(context, wave, wave_program);
+	SetProgramConstantBuffer(wave, wave_program);
 
-	pn::SetShaderProgram(context, wave_program);
+	pn::SetShaderProgram(wave_program);
 
 	auto& wave_mesh = wave_mesh_buffer;
-	pn::SetVertexBuffers(context, wave_program.input_layout_data, wave_mesh);
+	pn::SetVertexBuffers(wave_program.input_layout_data, wave_mesh);
 
 	// update wave
 	ImGui::Begin("Waves");
@@ -244,14 +244,14 @@ void Render() {
 	}
 	ImGui::End(); // Waves
 
-	SetProgramShaderResources(context, tex, wave_program);
-	SetProgramSamplers(context, ss, wave_program);
+	SetProgramShaderResources(tex, wave_program);
+	SetProgramSamplers(ss, wave_program);
 
 	// send updates to constant buffers
-	UpdateBuffer(context, model_constants);
-	UpdateBuffer(context, wave);
+	UpdateBuffer(model_constants);
+	UpdateBuffer(wave);
 
-	pn::DrawIndexed(context, wave_mesh);
+	pn::DrawIndexed(wave_mesh);
 
 // ----- END WATER
 

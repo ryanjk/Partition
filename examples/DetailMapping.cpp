@@ -58,23 +58,23 @@ void Init() {
 	sampler_desc.ComparisonFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_NEVER;
 	sampler_desc.MinLOD			= -FLT_MAX;
 	sampler_desc.MaxLOD			= FLT_MAX;
-	ss							= pn::CreateSamplerState(device, sampler_desc);
+	ss							= pn::CreateSamplerState(sampler_desc);
 
 	// ------- SET BLENDING STATE ------------
 
-	blend_state = pn::CreateBlendState(device);
-	pn::SetBlendState(device, blend_state);
+	blend_state = pn::CreateBlendState();
+	pn::SetBlendState(blend_state);
 
 	// --------- LOAD SHADER -------------
 
-	normal_map_program = pn::CompileShaderProgram(device, pn::GetResourcePath("normal_map.hlsl"));
+	normal_map_program = pn::CompileShaderProgram(pn::GetResourcePath("normal_map.hlsl"));
 
 	// -------- INIT PROGRAM STATE -------
 
 	global_constants.data.screen_width = static_cast<float>(pn::app::window_desc.width);
 	global_constants.data.screen_height = static_cast<float>(pn::app::window_desc.height);
 
-	InitializeCBuffer(device, directional_light);
+	InitializeCBuffer(directional_light);
 
 	// init lights
 	directional_light.data.direction = pn::vec3f(0.0f, 0.0f, 1.0f);
@@ -95,7 +95,7 @@ void Init() {
 	plane_transform.rotation = pn::EulerToQuaternion(0, 0, 0.f);
 
 	// init other cbuffers
-	InitializeCBuffer(device, mapping_vars);
+	InitializeCBuffer(mapping_vars);
 	mapping_vars.data.height_scale = 0.072f;
 	mapping_vars.data.height_offset = 0.0f;
 }
@@ -135,24 +135,24 @@ void Render() {
 	pn::gui::DragFloat("height offset", &mapping_vars.data.height_offset, -1.0f, 1.0f, 0.1f);
 	ImGui::End();
 
-	SetProgramConstantBuffer(context, global_constants, normal_map_program);
-	SetProgramConstantBuffer(context, camera_constants, normal_map_program);
-	SetProgramConstantBuffer(context, model_constants, normal_map_program);
-	SetProgramConstantBuffer(context, directional_light, normal_map_program);
-	SetProgramConstantBuffer(context, mapping_vars, normal_map_program);
+	SetProgramConstantBuffer(global_constants, normal_map_program);
+	SetProgramConstantBuffer(camera_constants, normal_map_program);
+	SetProgramConstantBuffer(model_constants, normal_map_program);
+	SetProgramConstantBuffer(directional_light, normal_map_program);
+	SetProgramConstantBuffer(mapping_vars, normal_map_program);
 
 	// update uniform buffers that are shared across shaders
-	UpdateBuffer(context, global_constants);
-	UpdateBuffer(context, camera_constants);
-	UpdateBuffer(context, directional_light);
-	UpdateBuffer(context, mapping_vars);
+	UpdateBuffer(global_constants);
+	UpdateBuffer(camera_constants);
+	UpdateBuffer(directional_light);
+	UpdateBuffer(mapping_vars);
 
 	// --- RENDER PLANE --------
 
-	pn::SetShaderProgram(context, normal_map_program);
+	pn::SetShaderProgram(normal_map_program);
 
 	auto& plane_mesh = plane_mesh_buffer;
-	pn::SetVertexBuffers(context, normal_map_program.input_layout_data, plane_mesh);
+	pn::SetVertexBuffers(normal_map_program.input_layout_data, plane_mesh);
 
 	// update wave
 	ImGui::Begin("Plane");
@@ -163,16 +163,16 @@ void Render() {
 	model_constants.data.mvp = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 	ImGui::End(); // Plane
 
-	SetProgramShaderResources(context, diffuse_map, normal_map_program);
-	SetProgramShaderResources(context, normal_map, normal_map_program);
-	SetProgramShaderResources(context, height_map, normal_map_program);
-	SetProgramSamplers(context, ss, normal_map_program);
+	SetProgramShaderResources(diffuse_map, normal_map_program);
+	SetProgramShaderResources(normal_map, normal_map_program);
+	SetProgramShaderResources(height_map, normal_map_program);
+	SetProgramSamplers(ss, normal_map_program);
 
 	// send updates to constant buffers
-	UpdateBuffer(context, model_constants);
+	UpdateBuffer(model_constants);
 
 	//pn::SetViewport(context, screen_desc.Width / 2, screen_desc.Height / 2, 0, 0);
-	pn::DrawIndexed(context, plane_mesh);
+	pn::DrawIndexed(plane_mesh);
 	/*
 	pn::SetViewport(context, screen_desc.Width / 2, screen_desc.Height / 2, screen_desc.Width / 2, 0);
 	pn::DrawIndexed(context, plane_mesh);

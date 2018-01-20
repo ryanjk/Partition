@@ -63,8 +63,7 @@ pn::dx_resource_view	tex;
 pn::dx_sampler_state	ss;
 
 // ---- misc d3d11 state -----
-pn::dx_blend_state        blend_state;
-pn::dx_rasterizer_state   rasterizer_state;
+pn::dx_blend_state        ENABLE_ALPHA_BLENDING;
 
 struct alignas(16) blur_params_t {
 	pn::vec2f dir;
@@ -83,7 +82,8 @@ pn::dx_resource_view      offscreen_texture2;
 pn::shader_program_t      image_program;
 pn::dx_buffer             screen_mesh_buffer;
 pn::dx_buffer             screen_index_buffer;
-pn::dx_rasterizer_state   screen_rasterizer;
+
+pn::dx_depth_stencil_state DISABLE_DEPTH_TEST;
 
 void Init() {
 	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
@@ -113,16 +113,15 @@ void Init() {
 
 	// ------- SET BLENDING STATE ------------
 
-	blend_state		= pn::CreateBlendState();
-	pn::SetBlendState(blend_state);
+	auto desc             = pn::CreateAlphaBlendDesc();
+	ENABLE_ALPHA_BLENDING = pn::CreateBlendState(&desc);
+	pn::SetBlendState(ENABLE_ALPHA_BLENDING);
 
-	// --------- CREATE RASTERIZER STATE -----
+	// --------- CREATE DEPTH STATE -----
 
-	rasterizer_state = pn::CreateRasterizerState();
-	
-	D3D11_RASTERIZER_DESC dsr = pn::GetDefaultRasterizerDesc();
-	dsr.CullMode              = D3D11_CULL_NONE;
-	screen_rasterizer         = pn::CreateRasterizerState(dsr);
+	CD3D11_DEPTH_STENCIL_DESC ds_desc(CD3D11_DEFAULT{});
+	ds_desc.DepthEnable = false;
+	DISABLE_DEPTH_TEST  = pn::CreateDepthStencilState(&ds_desc);
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -212,12 +211,6 @@ void Update(const float dt) {}
 void Render() {
 	auto context = pn::GetContext(device);
 
-	// Update global uniforms
-	global_constants.data.t				+= static_cast<float>(pn::app::dt);
-	auto screen_desc					= pn::GetDesc(pn::GetSwapChainBuffer(swap_chain));
-	global_constants.data.screen_width	= static_cast<float>(screen_desc.Width);
-	global_constants.data.screen_height	= static_cast<float>(screen_desc.Height);
-
 	// Set render target backbuffer color
 	float color[] = { 0.0f, 0.0f, 0.0f, 1.000f };
 
@@ -244,11 +237,11 @@ void Render() {
 
 // ------ BEGIN WATER
 	
-	SetProgramConstant(wave_program, "global_constants" , global_constants.buffer);
-	SetProgramConstant(wave_program, "camera_constants" , camera_constants.buffer);
-	SetProgramConstant(wave_program, "model_constants"  , model_constants.buffer);
-	SetProgramConstant(wave_program, "directional_light", directional_light.buffer);
-	SetProgramConstant(wave_program, "wave"             , wave.buffer);
+	SetProgramConstant(wave_program, "global_constants" , global_constants);
+	SetProgramConstant(wave_program, "camera_constants" , camera_constants);
+	SetProgramConstant(wave_program, "model_constants"  , model_constants);
+	SetProgramConstant(wave_program, "directional_light", directional_light);
+	SetProgramConstant(wave_program, "wave"             , wave);
 
 	pn::SetShaderProgram(wave_program);
 
@@ -278,7 +271,7 @@ void Render() {
 	UpdateBuffer(model_constants);
 	UpdateBuffer(wave);
 
-	pn::SetRasterizerState(rasterizer_state);
+	pn::SetDepthStencilState();
 	context->OMSetRenderTargets(1, offscreen_render_target.GetAddressOf(), display_depth_stencil.Get());
 	pn::DrawIndexed(wave_mesh);
 
@@ -287,13 +280,11 @@ void Render() {
 	// ----- RENDER GAUSSIAN BLUR -----
 
 	ImGui::Begin("Blur");
-
-	ImGui::DragFloat("sigma", &blur_params.data.sigma, 1, 0, 100);
-
+		ImGui::DragFloat("sigma", &blur_params.data.sigma, 1, 0, 100);
 	ImGui::End();
 
 	{
-		context->OMSetRenderTargets(1, offscreen_render_target2.GetAddressOf(), display_depth_stencil.Get());
+		context->OMSetRenderTargets(1, offscreen_render_target2.GetAddressOf(), nullptr);
 
 		SetProgramConstant(image_program, "global_constants", global_constants.buffer);
 		SetProgramConstant(image_program, "blur_params"     , blur_params.buffer);
@@ -308,7 +299,7 @@ void Render() {
 
 		SetProgramSampler(image_program, "ss", ss);
 
-		pn::SetRasterizerState(screen_rasterizer);
+		pn::SetDepthStencilState(DISABLE_DEPTH_TEST);
 
 		// ----- RENDER GAUSSIAN BLUR DIR 1 -----
 
@@ -323,8 +314,7 @@ void Render() {
 	// ----- RENDER GAUSSIAN BLUR DIR 2 -----
 	
 	{
-		context->ClearDepthStencilView(display_depth_stencil.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), display_depth_stencil.Get());
+		context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), nullptr);
 
 		SetProgramResource(image_program, "offscreen_texture", offscreen_texture2);
 

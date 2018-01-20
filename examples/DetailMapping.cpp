@@ -26,7 +26,7 @@ pn::dx_resource_view		normal_map;
 pn::dx_resource_view		height_map;
 pn::dx_sampler_state		ss;
 
-pn::dx_blend_state blend_state;
+pn::dx_blend_state ENABLE_ALPHA_BLENDING;
 
 // --- wave instance data ----
 pn::transform_t			plane_transform;
@@ -62,8 +62,9 @@ void Init() {
 
 	// ------- SET BLENDING STATE ------------
 
-	blend_state = pn::CreateBlendState();
-	pn::SetBlendState(blend_state);
+	auto desc = pn::CreateAlphaBlendDesc();
+	ENABLE_ALPHA_BLENDING = pn::CreateBlendState(&desc);
+	pn::SetBlendState(ENABLE_ALPHA_BLENDING);
 
 	// --------- LOAD SHADER -------------
 
@@ -107,12 +108,6 @@ void Render() {
 
 	auto context = pn::GetContext(device);
 
-	// Update global uniforms
-	global_constants.data.t += static_cast<float>(pn::app::dt);
-	auto screen_desc = pn::GetDesc(pn::GetSwapChainBuffer(swap_chain));
-	global_constants.data.screen_width = static_cast<float>(screen_desc.Width);
-	global_constants.data.screen_height = static_cast<float>(screen_desc.Height);
-
 	// Set render target backbuffer color
 	float color[] = { 0.0f, 0.0f, 0.0f, 1.000f };
 	context->ClearRenderTargetView(display_render_target.Get(), color);
@@ -121,25 +116,22 @@ void Render() {
 
 	// update directional light
 	ImGui::Begin("Lights");
-	pn::quaternion light_q = pn::EulerToQuaternion(directional_light.data.direction);
-	pn::gui::DragRotation("light direction", &light_q);
-	directional_light.data.direction = pn::QuaternionToEuler(light_q);
-	//pn::gui::DragFloat3("light dir", &directional_light.data.direction.x, -1.0f, 1.0f);
-	pn::gui::DragFloat("light power", &directional_light.data.intensity, 0.0f, 10.0f);
-	//directional_light.data.direction = directional_light.data.direction == pn::vec3f::Zero ? pn::vec3f::Zero : pn::Normalize(directional_light.data.direction);
-
+		pn::quaternion light_q = pn::EulerToQuaternion(directional_light.data.direction);
+		pn::gui::DragRotation("light direction", &light_q);
+		directional_light.data.direction = pn::QuaternionToEuler(light_q);
+		pn::gui::DragFloat("light power", &directional_light.data.intensity, 0.0f, 10.0f);
 	ImGui::End(); // Lights
 
 	ImGui::Begin("Mapping Variables");
-	pn::gui::DragFloat("height scale", &mapping_vars.data.height_scale, 0.0f, 0.15f, 0.01f);
-	pn::gui::DragFloat("height offset", &mapping_vars.data.height_offset, -1.0f, 1.0f, 0.1f);
+		pn::gui::DragFloat("height scale", &mapping_vars.data.height_scale, 0.0f, 0.15f, 0.01f);
+		pn::gui::DragFloat("height offset", &mapping_vars.data.height_offset, -1.0f, 1.0f, 0.1f);
 	ImGui::End();
 
-	SetProgramConstant(normal_map_program, "global_constants" , global_constants.buffer);
-	SetProgramConstant(normal_map_program, "camera_constants" , camera_constants.buffer);
-	SetProgramConstant(normal_map_program, "model_constants"  , model_constants.buffer);
-	SetProgramConstant(normal_map_program, "directional_light", directional_light.buffer);
-	SetProgramConstant(normal_map_program, "mapping_vars"     , mapping_vars.buffer);
+	SetProgramConstant(normal_map_program, "global_constants" , global_constants);
+	SetProgramConstant(normal_map_program, "camera_constants" , camera_constants);
+	SetProgramConstant(normal_map_program, "model_constants"  , model_constants);
+	SetProgramConstant(normal_map_program, "directional_light", directional_light);
+	SetProgramConstant(normal_map_program, "mapping_vars"     , mapping_vars);
 
 	// update uniform buffers that are shared across shaders
 	UpdateBuffer(global_constants);
@@ -157,10 +149,10 @@ void Render() {
 	// update wave
 	ImGui::Begin("Plane");
 	// update model matrix
-	pn::gui::EditStruct(plane_transform);
-	model_constants.data.model = LocalToWorldMatrix(plane_transform);
-	model_constants.data.model_view_inverse_transpose = pn::Transpose(pn::Inverse(model_constants.data.model * camera_constants.data.view));
-	model_constants.data.mvp = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
+		pn::gui::EditStruct(plane_transform);
+		model_constants.data.model                        = LocalToWorldMatrix(plane_transform);
+		model_constants.data.model_view_inverse_transpose = pn::Transpose(pn::Inverse(model_constants.data.model * camera_constants.data.view));
+		model_constants.data.mvp                          = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 	ImGui::End(); // Plane
 
 	SetProgramResource(normal_map_program, "diffuse_map", diffuse_map);

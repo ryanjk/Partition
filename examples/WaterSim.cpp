@@ -66,7 +66,7 @@ pn::dx_sampler_state	ss;
 pn::linear_allocator frame_alloc(1024 * 1024);
 
 // ---- misc d3d11 state -----
-pn::dx_blend_state blend_state;
+pn::dx_blend_state ENABLE_ALPHA_BLENDING;
 
 pn::string recomp() {
 	auto vs_byte_code = pn::CompileVertexShader(pn::GetResourcePath("water.hlsl"));
@@ -138,8 +138,9 @@ void Init() {
 
 	// ------- SET BLENDING STATE ------------
 
-	blend_state		= pn::CreateBlendState();
-	pn::SetBlendState(blend_state);
+	auto desc = pn::CreateAlphaBlendDesc();
+	ENABLE_ALPHA_BLENDING = pn::CreateBlendState(&desc);
+	pn::SetBlendState(ENABLE_ALPHA_BLENDING);
 
 	// --------- CREATE SHADER DATA ---------------
 

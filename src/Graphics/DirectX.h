@@ -52,10 +52,6 @@ using dx_rasterizer_state    = dx_ptr<ID3D11RasterizerState>;
 
 extern const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS;
 
-extern const D3D11_BLEND_DESC         DEFAULT_BLEND_DESC;
-extern const D3D11_DEPTH_STENCIL_DESC DEFAULT_DEPTH_STENCIL_DESC;
-extern const D3D11_RASTERIZER_DESC    DEFAULT_RASTERIZER_DESC;
-
 // --------- GLOBAL STATE -----------
 
 extern dx_device  _device;
@@ -401,24 +397,24 @@ void SetProgramSampler(const shader_program_t& program, const pn::string& sample
 
 // ---------- BLENDING -----------------
 
-const D3D11_BLEND_DESC GetDefaultBlendDesc(const int render_target = 0);
+CD3D11_BLEND_DESC CreateAlphaBlendDesc(const int render_target = 0);
+dx_blend_state   CreateBlendState(CD3D11_BLEND_DESC* blend_desc = nullptr);
 
-dx_blend_state	       CreateBlendState(const D3D11_BLEND_DESC& blend_desc = DEFAULT_BLEND_DESC);
-
-void			       SetBlendState(dx_blend_state blend_state);
+void SetBlendState();
+void SetBlendState(dx_blend_state blend_state);
 
 // --------- DEPTH STENCIL -------------
 
-const D3D11_DEPTH_STENCIL_DESC GetDefaultDepthStencilDesc();
+dx_depth_stencil_state CreateDepthStencilState(CD3D11_DEPTH_STENCIL_DESC* desc = nullptr);
 
-dx_depth_stencil_state         CreateDepthStencilState(const D3D11_DEPTH_STENCIL_DESC& depth_stencil_desc = DEFAULT_DEPTH_STENCIL_DESC);
+void SetDepthStencilState();
+void SetDepthStencilState(dx_depth_stencil_state depth_stencil_state);
 
 // -------- RASTERIZER -------------
 
-const D3D11_RASTERIZER_DESC GetDefaultRasterizerDesc();
+dx_rasterizer_state CreateRasterizerState(CD3D11_RASTERIZER_DESC* desc = nullptr);
 
-dx_rasterizer_state CreateRasterizerState(const D3D11_RASTERIZER_DESC& rasterizer_desc = DEFAULT_RASTERIZER_DESC);
-
+void SetRasterizerState();
 void SetRasterizerState(dx_rasterizer_state rasterizer_state);
 
 // -------- DRAWING FUNCTIONS ---------------

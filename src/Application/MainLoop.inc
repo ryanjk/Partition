@@ -309,6 +309,13 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		// Draw command line
 		pn::gui::DrawCommandLine();
 		
+		// Update global uniforms
+		global_constants.data.t             += static_cast<float>(pn::app::dt);
+
+		auto screen_desc                    = pn::GetDesc(pn::GetSwapChainBuffer(swap_chain));
+		global_constants.data.screen_width  = static_cast<float>(screen_desc.Width);
+		global_constants.data.screen_height = static_cast<float>(screen_desc.Height);
+
 		// USER-DEFINED RENDER CALL
 		Render();
 

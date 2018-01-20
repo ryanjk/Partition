@@ -33,10 +33,6 @@ const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_DEBUG | D3DCOMP
 const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #endif
 
-const D3D11_BLEND_DESC         DEFAULT_BLEND_DESC         = GetDefaultBlendDesc();
-const D3D11_DEPTH_STENCIL_DESC DEFAULT_DEPTH_STENCIL_DESC = GetDefaultDepthStencilDesc();
-const D3D11_RASTERIZER_DESC    DEFAULT_RASTERIZER_DESC    = GetDefaultRasterizerDesc();
-
 // --------- GLOBAL STATE -----------
 
 dx_device  _device;
@@ -716,75 +712,49 @@ void SetProgramSampler(const shader_program_t& program, const pn::string& sample
 
 // ----------- BLENDING ----------------
 
-const D3D11_BLEND_DESC GetDefaultBlendDesc(const int render_target) {
-	D3D11_BLEND_DESC blend_desc;
-	ZeroMemory(&blend_desc, sizeof(D3D11_BLEND_DESC));
-	blend_desc.IndependentBlendEnable                            = false;
-	blend_desc.RenderTarget[render_target].BlendEnable           = true;
-	blend_desc.RenderTarget[render_target].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
-	blend_desc.RenderTarget[render_target].DestBlend             = D3D11_BLEND_INV_SRC_ALPHA;
-	blend_desc.RenderTarget[render_target].BlendOp               = D3D11_BLEND_OP_ADD;
-	blend_desc.RenderTarget[render_target].SrcBlendAlpha         = D3D11_BLEND_ONE;
-	blend_desc.RenderTarget[render_target].DestBlendAlpha        = D3D11_BLEND_ZERO;
-	blend_desc.RenderTarget[render_target].BlendOpAlpha          = D3D11_BLEND_OP_ADD;
-	blend_desc.RenderTarget[render_target].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+CD3D11_BLEND_DESC CreateAlphaBlendDesc(const int render_target) {
+	CD3D11_BLEND_DESC blend_desc(CD3D11_DEFAULT{});
+	blend_desc.RenderTarget[render_target].BlendEnable = true;
+	blend_desc.RenderTarget[render_target].SrcBlend    = D3D11_BLEND_SRC_ALPHA;
+	blend_desc.RenderTarget[render_target].DestBlend   = D3D11_BLEND_INV_SRC_ALPHA;
 	return blend_desc;
 }
 
-
-dx_blend_state	CreateBlendState(const D3D11_BLEND_DESC& blend_desc) {
+dx_blend_state	CreateBlendState(CD3D11_BLEND_DESC* blend_desc) {
 	pn::dx_blend_state blend_state;
-	auto hr = _device->CreateBlendState(&blend_desc, blend_state.GetAddressOf());
+	auto hr = _device->CreateBlendState(blend_desc, blend_state.GetAddressOf());
 	if (FAILED(hr)) {
 		LogError("Couldn't create blend state: {}", pn::ErrMsg(hr));
 	}
 	return blend_state;
 }
 
+void SetBlendState() {
+	_context->OMSetBlendState(nullptr, 0, 0xffffffff);
+}
+
 // @TODO: Look into the parameters here
-void			SetBlendState(dx_blend_state blend_state) {
+void SetBlendState(dx_blend_state blend_state) {
 	_context->OMSetBlendState(blend_state.Get(), 0, 0xffffffff);
 }
 
 // --------- DEPTH STENCIL -------------
 
-const D3D11_DEPTH_STENCIL_DESC GetDefaultDepthStencilDesc() {
-
-	D3D11_DEPTH_STENCIL_DESC depth_stencil_desc;
-
-	depth_stencil_desc.DepthEnable    = true;
-	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	depth_stencil_desc.DepthFunc      = D3D11_COMPARISON_LESS;
-
-	depth_stencil_desc.StencilEnable    = false;
-	depth_stencil_desc.StencilReadMask  = 255;
-	depth_stencil_desc.StencilWriteMask = 255;
-
-	D3D11_DEPTH_STENCILOP_DESC front_face_op;
-	front_face_op.StencilPassOp      = D3D11_STENCIL_OP_INCR;
-	front_face_op.StencilFailOp      = D3D11_STENCIL_OP_DECR;
-	front_face_op.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-	front_face_op.StencilFunc        = D3D11_COMPARISON_LESS;
-	depth_stencil_desc.FrontFace     = front_face_op;
-
-	D3D11_DEPTH_STENCILOP_DESC back_face_op;
-	back_face_op.StencilPassOp       = D3D11_STENCIL_OP_INCR;
-	back_face_op.StencilFailOp       = D3D11_STENCIL_OP_DECR;
-	back_face_op.StencilDepthFailOp  = D3D11_STENCIL_OP_KEEP;
-	back_face_op.StencilFunc         = D3D11_COMPARISON_LESS;
-	depth_stencil_desc.FrontFace     = back_face_op;
-
-	return depth_stencil_desc;
-}
-
-
-dx_depth_stencil_state CreateDepthStencilState(const D3D11_DEPTH_STENCIL_DESC& depth_stencil_desc) {
+dx_depth_stencil_state CreateDepthStencilState(CD3D11_DEPTH_STENCIL_DESC* desc) {
 	dx_depth_stencil_state depth_stencil_state;
-	auto hr = _device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state);
+	auto hr = _device->CreateDepthStencilState(desc, &depth_stencil_state);
 	if (FAILED(hr)) {
 		LogError("Couldn't create depth stencil state: {}", pn::ErrMsg(hr));
 	}
 	return depth_stencil_state;
+}
+
+void SetDepthStencilState() {
+	_context->OMSetDepthStencilState(nullptr, 1);
+}
+
+void SetDepthStencilState(dx_depth_stencil_state depth_stencil_state) {
+	_context->OMSetDepthStencilState(depth_stencil_state.Get(), 1);
 }
 
 // -------- RASTERIZER -------------

@@ -20,6 +20,16 @@ struct cbuffer {
 
 // ------- FUNCTIONS ------------
 
+template<typename T>
+void SetProgramConstant(const shader_program_t& program, const pn::string& buffer_name, const cbuffer<T>& cbuffer) {
+	SetProgramConstant(program, buffer_name, cbuffer.buffer);
+}
+
+template<typename T, int N>
+void SetProgramConstant(const shader_program_t& program, const pn::string& buffer_name, const cbuffer_array<T, N>& cbuffer) {
+	SetProgramConstant(program, buffer_name, cbuffer.buffer);
+}
+
 template<typename T, int N>
 void InitializeCBuffer(cbuffer_array<T, N>& uni) {
 	uni.buffer = pn::CreateConstantBuffer(&uni.data, 1);

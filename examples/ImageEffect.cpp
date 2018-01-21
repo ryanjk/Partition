@@ -80,8 +80,7 @@ pn::dx_render_target_view offscreen_render_target2;
 pn::dx_resource_view      offscreen_texture2;
 
 pn::shader_program_t      image_program;
-pn::dx_buffer             screen_mesh_buffer;
-pn::dx_buffer             screen_index_buffer;
+pn::mesh_buffer_t         screen_mesh;
 
 pn::dx_depth_stencil_state DISABLE_DEPTH_TEST;
 
@@ -170,21 +169,21 @@ void Init() {
 	// ------- CREATE MESH BUFFER FOR SCREEN ---------
 
 	{
-		static const pn::vec3f vertices[4] = {
+		const pn::vector<pn::vec3f> vertices = {
 			pn::vec3f(-1,-1,0),
 			pn::vec3f(-1,1,0),
 			pn::vec3f(1,1,0),
 			pn::vec3f(1,-1,0),
 		};
-		screen_mesh_buffer = pn::CreateVertexBuffer(vertices, 4);
-	}
-
-	{
-		static const int indices[6] = {
+		const pn::vector<unsigned int> indices = {
 			0, 1, 2,
 			0, 2, 3
 		};
-		screen_index_buffer = pn::CreateIndexBuffer(indices, 6);
+		pn::mesh_t screen_mesh_data{};
+		screen_mesh_data.vertices = vertices;
+		screen_mesh_data.indices  = indices;
+		screen_mesh_data.topology = D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		screen_mesh               = pn::CreateMeshBuffer(screen_mesh_data);
 	}
 
 	// ---- CREATE OFF-SCREEN RENDER TARGET -----
@@ -209,52 +208,45 @@ void Init() {
 void Update(const float dt) {}
 
 void Render() {
-	auto context = pn::GetContext(device);
-
 	// Set render target backbuffer color
-	float color[] = { 0.0f, 0.0f, 0.0f, 1.000f };
+	pn::ClearDepthStencilView(display_depth_stencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	context->ClearDepthStencilView(display_depth_stencil.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	
-	context->ClearRenderTargetView(display_render_target.Get(), color);
-	context->ClearRenderTargetView(offscreen_render_target.Get(), color);
-	context->ClearRenderTargetView(offscreen_render_target2.Get(), color);
+	static const pn::vec4f color = { 0.0f, 0.0f, 0.0f, 1.000f };
+	pn::ClearRenderTargetView(display_render_target, color);
+	pn::ClearRenderTargetView(offscreen_render_target, color);
+	pn::ClearRenderTargetView(offscreen_render_target2, color);
 
 	// update directional light
 	ImGui::Begin("Lights");
-
-	pn::gui::DragFloat3("light dir", &directional_light.data.direction.x, -1.0f, 1.0f);
-	pn::gui::DragFloat("light power", &directional_light.data.intensity, 0.0f, 10.0f);
-	directional_light.data.direction = directional_light.data.direction == pn::vec3f::Zero ? pn::vec3f::Zero : pn::Normalize(directional_light.data.direction);
-
+		pn::gui::DragFloat3("light dir", &directional_light.data.direction.x, -1.0f, 1.0f);
+		pn::gui::DragFloat("light power", &directional_light.data.intensity, 0.0f, 10.0f);
+		directional_light.data.direction = directional_light.data.direction == pn::vec3f::Zero ? pn::vec3f::Zero : pn::Normalize(directional_light.data.direction);
 	ImGui::End(); // Lights
 
-	// update uniform buffers that are shared across shaders
 	UpdateBuffer(global_constants);
 	UpdateBuffer(camera_constants);
 	UpdateBuffer(directional_light);
 
-
-// ------ BEGIN WATER
-	
-	SetProgramConstant(wave_program, "global_constants" , global_constants);
-	SetProgramConstant(wave_program, "camera_constants" , camera_constants);
-	SetProgramConstant(wave_program, "model_constants"  , model_constants);
-	SetProgramConstant(wave_program, "directional_light", directional_light);
-	SetProgramConstant(wave_program, "wave"             , wave);
+	// ------ BEGIN WATER
 
 	pn::SetShaderProgram(wave_program);
 
+	SetProgramConstant("global_constants", global_constants);
+	SetProgramConstant("camera_constants", camera_constants);
+	SetProgramConstant("model_constants", model_constants);
+	SetProgramConstant("directional_light", directional_light);
+	SetProgramConstant("wave", wave);
+
 	auto& wave_mesh = wave_mesh_buffer;
-	pn::SetVertexBuffers(wave_program.input_layout_data, wave_mesh);
+	pn::SetVertexBuffers(wave_mesh);
 
 	// update wave
 	ImGui::Begin("Waves");
 	// update model matrix
 	pn::gui::EditStruct(wave_transform);
-	model_constants.data.model	= LocalToWorldMatrix(wave_transform);
+	model_constants.data.model = LocalToWorldMatrix(wave_transform);
 	model_constants.data.model_view_inverse_transpose = pn::Transpose(pn::Inverse(model_constants.data.model * camera_constants.data.view));
-	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
+	model_constants.data.mvp = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
 	for (int i = 0; i < N_WAVES; ++i) {
 		ImGui::PushID(i);
@@ -263,19 +255,19 @@ void Render() {
 	}
 	ImGui::End(); // Waves
 
-	SetProgramResource(wave_program, "tex", tex);
-
-	SetProgramSampler(wave_program, "ss", ss);
+	pn::SetProgramResource("tex", tex);
+	pn::SetProgramSampler("ss", ss);
 
 	// send updates to constant buffers
 	UpdateBuffer(model_constants);
 	UpdateBuffer(wave);
 
 	pn::SetDepthStencilState();
-	context->OMSetRenderTargets(1, offscreen_render_target.GetAddressOf(), display_depth_stencil.Get());
+	pn::SetRenderTarget(offscreen_render_target, display_depth_stencil);
+
 	pn::DrawIndexed(wave_mesh);
 
-// ----- END WATER
+	// ----- END WATER
 
 	// ----- RENDER GAUSSIAN BLUR -----
 
@@ -284,44 +276,37 @@ void Render() {
 	ImGui::End();
 
 	{
-		context->OMSetRenderTargets(1, offscreen_render_target2.GetAddressOf(), nullptr);
-
-		SetProgramConstant(image_program, "global_constants", global_constants.buffer);
-		SetProgramConstant(image_program, "blur_params"     , blur_params.buffer);
-
 		pn::SetShaderProgram(image_program);
+		pn::SetVertexBuffers(screen_mesh);
 
-		static const unsigned int strides[1] = { sizeof(pn::vec3f) };
-		static const unsigned int offsets[1] = { 0 };
-		context->IASetVertexBuffers(0, 1, screen_mesh_buffer.GetAddressOf(), strides, offsets);
-		context->IASetIndexBuffer(screen_index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-		context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		SetProgramConstant("global_constants", global_constants);
+		SetProgramConstant("blur_params", blur_params);
 
-		SetProgramSampler(image_program, "ss", ss);
+		pn::SetProgramSampler("ss", ss);
 
 		pn::SetDepthStencilState(DISABLE_DEPTH_TEST);
 
 		// ----- RENDER GAUSSIAN BLUR DIR 1 -----
 
-		SetProgramResource(image_program, "offscreen_texture", offscreen_texture);
-	
+		pn::SetRenderTarget(offscreen_render_target2);
+		
+		pn::SetProgramResource("offscreen_texture", offscreen_texture);
+
 		blur_params.data.dir = pn::vec2f(1, 0);
 		UpdateBuffer(blur_params);
 
-		context->DrawIndexed(6, 0, 0);
-	}
+		pn::DrawIndexed(screen_mesh);
 
-	// ----- RENDER GAUSSIAN BLUR DIR 2 -----
-	
-	{
-		context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), nullptr);
+		// ----- RENDER GAUSSIAN BLUR DIR 2 -----
 
-		SetProgramResource(image_program, "offscreen_texture", offscreen_texture2);
+		pn::SetRenderTarget(display_render_target);
+
+		pn::SetProgramResource("offscreen_texture", offscreen_texture2);
 
 		blur_params.data.dir = pn::vec2f(0, 1);
 		UpdateBuffer(blur_params);
 
-		context->DrawIndexed(6, 0, 0);
+		pn::DrawIndexed(screen_mesh);
 	}
 }
 

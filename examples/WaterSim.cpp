@@ -187,19 +187,13 @@ void Init() {
 void Update(const float dt) {}
 
 void Render() {
-	auto context = pn::GetContext(device);
-
-	// Update global uniforms
-	global_constants.data.t				+= static_cast<float>(pn::app::dt);
-	auto screen_desc					= pn::GetDesc(pn::GetSwapChainBuffer(swap_chain));
-	global_constants.data.screen_width	= static_cast<float>(screen_desc.Width);
-	global_constants.data.screen_height	= static_cast<float>(screen_desc.Height);
 
 	// Set render target backbuffer color
-	float color[] = { 0.0f, 0.0f, 0.0f, 1.000f };
-	context->ClearRenderTargetView(display_render_target.Get(), color);
-	context->ClearDepthStencilView(display_depth_stencil.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), display_depth_stencil.Get());
+	pn::ClearDepthStencilView(display_depth_stencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+	static const pn::vec4f color = { 0.0f, 0.0f, 0.0f, 1.000f };
+	pn::ClearRenderTargetView(display_render_target, color);
+	pn::SetRenderTarget(display_render_target, display_depth_stencil);
 
 	// update directional light
 	ImGui::Begin("Lights");
@@ -210,25 +204,25 @@ void Render() {
 
 	ImGui::End(); // Lights
 
-	SetProgramConstant(wave_program, "global_constants", global_constants.buffer);
-	SetProgramConstant(wave_program, "camera_constants", camera_constants.buffer);
-	SetProgramConstant(wave_program, "model_constants", model_constants.buffer);
-	SetProgramConstant(wave_program, "directional_light", directional_light.buffer);
+// ------ BEGIN WATER
+
+	pn::SetShaderProgram(wave_program);
+
+	SetProgramConstant("global_constants" , global_constants);
+	SetProgramConstant("camera_constants" , camera_constants);
+	SetProgramConstant("model_constants"  , model_constants);
+	SetProgramConstant("directional_light", directional_light);
+	SetProgramConstant("wave"             , wave);
 
 	// update uniform buffers that are shared across shaders
 	UpdateBuffer(global_constants);
 	UpdateBuffer(camera_constants);
 	UpdateBuffer(directional_light);
 
-
-// ------ BEGIN WATER
-
-	SetProgramConstant(wave_program, "wave", wave.buffer);
-
 	pn::SetShaderProgram(wave_program);
 
 	auto& wave_mesh = wave_mesh_buffer;
-	pn::SetVertexBuffers(wave_program.input_layout_data, wave_mesh);
+	pn::SetVertexBuffers(wave_mesh);
 
 	// update wave
 	ImGui::Begin("Waves");

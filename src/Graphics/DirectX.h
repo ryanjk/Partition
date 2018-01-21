@@ -52,11 +52,6 @@ using dx_rasterizer_state    = dx_ptr<ID3D11RasterizerState>;
 
 extern const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS;
 
-// --------- GLOBAL STATE -----------
-
-extern dx_device  _device;
-extern dx_context _context;
-
 // ------------- CLASS DEFINITIONS ---------------
 
 struct input_element_desc {
@@ -190,6 +185,12 @@ struct shader_program_t {
 	shader_data_t<dx_vertex_shader> vertex_shader_data;
 	shader_data_t<dx_pixel_shader>	pixel_shader_data;
 };
+
+// --------- GLOBAL STATE -----------
+
+extern dx_device         _device;
+extern dx_context        _context;
+extern shader_program_t* _program;
 
 // ------------------- FUNCTIONS ----------------------
 
@@ -342,6 +343,11 @@ dx_context				GetContext(dx_device device);
 D3D11_BUFFER_DESC       GetDesc(dx_buffer buffer);
 CD3D11_TEXTURE2D_DESC	GetDesc(dx_texture2d texture);
 
+void ClearDepthStencilView(dx_depth_stencil_view view, unsigned int flags, float depth, UINT8 stencil);
+void ClearRenderTargetView(dx_render_target_view view, pn::vec4f color);
+
+void SetRenderTarget(dx_render_target_view render_target, dx_depth_stencil_view depth_stencil = nullptr);
+
 // ---------- SHADER REFLECTION ----------------
 
 dx_shader_reflection			GetShaderReflector(const pn::bytes& shader_byte_code);
@@ -380,19 +386,22 @@ void SetPixelShader(dx_pixel_shader shader);
 
 void SetInputLayout(const input_layout_data_t& layout_desc);
 
-void SetVertexBuffers(const input_layout_data_t& input_layout, const mesh_buffer_t& mesh_buffer);
+void SetVertexBuffers(const mesh_buffer_t& mesh_buffer);
 
 void SetVSConstant(dx_shader_reflection reflection, const pn::string& buffer_name, const dx_buffer& buffer);
 void SetPSConstant(dx_shader_reflection reflection, const pn::string& buffer_name, const dx_buffer& buffer);
 void SetProgramConstant(const shader_program_t& program, const pn::string& buffer_name, const dx_buffer& buffer);
+void SetProgramConstant(const pn::string& buffer_name, const dx_buffer& buffer);
 
 void SetVSResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view);
 void SetPSResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view);
 void SetProgramResource(const shader_program_t& program, const pn::string& resource_name, dx_resource_view& resource_view);
+void SetProgramResource(const pn::string& resource_name, dx_resource_view& resource_view);
 
 void SetVSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state);
 void SetPSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state);
 void SetProgramSampler(const shader_program_t& program, const pn::string& sampler_name, dx_sampler_state& sampler_state);
+void SetProgramSampler(const pn::string& sampler_name, dx_sampler_state& sampler_state);
 
 
 // ---------- BLENDING -----------------

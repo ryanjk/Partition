@@ -35,8 +35,9 @@ const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_OPTIMIZATION_LE
 
 // --------- GLOBAL STATE -----------
 
-dx_device  _device;
-dx_context _context;
+dx_device         _device;
+dx_context        _context;
+shader_program_t* _program;
 
 // --------------- FUNCTIONS --------------------
 
@@ -458,6 +459,18 @@ CD3D11_TEXTURE2D_DESC	GetDesc(dx_texture2d texture) {
 	return desc;
 }
 
+void                    ClearDepthStencilView(dx_depth_stencil_view view, unsigned int flags, float depth, UINT8 stencil) {
+	_context->ClearDepthStencilView(view.Get(), flags, depth, stencil);
+}
+
+void                    ClearRenderTargetView(dx_render_target_view view, pn::vec4f color) {
+	_context->ClearRenderTargetView(view.Get(), &color.x);
+}
+
+void                    SetRenderTarget(dx_render_target_view render_target, dx_depth_stencil_view depth_stencil) {
+	_context->OMSetRenderTargets(1, render_target.GetAddressOf(), depth_stencil.Get());
+}
+
 // --------- SHADER REFLECTION ------------
 
 dx_shader_reflection			GetShaderReflector(const pn::bytes& shader_byte_code) {
@@ -577,6 +590,7 @@ void SetShaderProgram(shader_program_t& shader_program) {
 	pn::SetInputLayout(shader_program.input_layout_data);
 	pn::SetVertexShader(shader_program.vertex_shader_data.shader);
 	pn::SetPixelShader(shader_program.pixel_shader_data.shader);
+	_program = &shader_program;
 }
 
 void SetVertexShader(dx_vertex_shader shader) {
@@ -587,8 +601,9 @@ void SetPixelShader(dx_pixel_shader shader) {
 	_context->PSSetShader(shader.Get(), nullptr, 0);
 }
 
-void SetVertexBuffers(const input_layout_data_t& layout, const mesh_buffer_t& mesh_buffer) {
-	const auto NUM_PARAMETERS = layout.desc.size();
+void SetVertexBuffers(const mesh_buffer_t& mesh_buffer) {
+	const input_layout_data_t& layout = _program->input_layout_data;
+	const auto NUM_PARAMETERS         = layout.desc.size();
 
 	pn::vector<ID3D11Buffer*> vertex_buffers;
 	Reserve(vertex_buffers, NUM_PARAMETERS);
@@ -677,6 +692,9 @@ void SetProgramConstant(const shader_program_t& program, const pn::string& buffe
 	SetVSConstant(program.vertex_shader_data.reflection, buffer_name, buffer);
 	SetPSConstant(program.pixel_shader_data.reflection, buffer_name, buffer);
 }
+void SetProgramConstant(const pn::string& buffer_name, const dx_buffer& buffer) {
+	SetProgramConstant(*_program, buffer_name, buffer);
+}
 
 void SetVSShaderResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view) {
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, resource_name);
@@ -694,6 +712,9 @@ void SetProgramResource(const shader_program_t& program, const pn::string& resou
 	SetVSShaderResource(program.vertex_shader_data.reflection, resource_name, resource_view);
 	SetPSShaderResource(program.pixel_shader_data.reflection, resource_name, resource_view);
 }
+void SetProgramResource(const pn::string& resource_name, dx_resource_view& resource_view) {
+	SetProgramResource(*_program, resource_name, resource_view);
+}
 
 void SetVSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state) {
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, sampler_name);
@@ -708,6 +729,9 @@ void SetPSSampler(dx_shader_reflection reflection, const pn::string& sampler_nam
 void SetProgramSampler(const shader_program_t& program, const pn::string& sampler_name, dx_sampler_state& sampler_state) {
 	SetVSSampler(program.vertex_shader_data.reflection, sampler_name, sampler_state);
 	SetPSSampler(program.pixel_shader_data.reflection, sampler_name, sampler_state);
+}
+void SetProgramSampler(const pn::string& sampler_name, dx_sampler_state& sampler_state) {
+	SetProgramSampler(*_program, sampler_name, sampler_state);
 }
 
 // ----------- BLENDING ----------------

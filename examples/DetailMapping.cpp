@@ -104,15 +104,12 @@ void Init() {
 void Update(const float dt) {}
 
 void Render() {
-	//pn::StartProfile("Frame");
-
-	auto context = pn::GetContext(device);
-
 	// Set render target backbuffer color
-	float color[] = { 0.0f, 0.0f, 0.0f, 1.000f };
-	context->ClearRenderTargetView(display_render_target.Get(), color);
-	context->ClearDepthStencilView(display_depth_stencil.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	context->OMSetRenderTargets(1, display_render_target.GetAddressOf(), display_depth_stencil.Get());
+	pn::ClearDepthStencilView(display_depth_stencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+	static const pn::vec4f color = { 0.0f, 0.0f, 0.0f, 1.000f };
+	pn::ClearRenderTargetView(display_render_target, color);
+	pn::SetRenderTarget(display_render_target, display_depth_stencil);
 
 	// update directional light
 	ImGui::Begin("Lights");
@@ -127,11 +124,15 @@ void Render() {
 		pn::gui::DragFloat("height offset", &mapping_vars.data.height_offset, -1.0f, 1.0f, 0.1f);
 	ImGui::End();
 
-	SetProgramConstant(normal_map_program, "global_constants" , global_constants);
-	SetProgramConstant(normal_map_program, "camera_constants" , camera_constants);
-	SetProgramConstant(normal_map_program, "model_constants"  , model_constants);
-	SetProgramConstant(normal_map_program, "directional_light", directional_light);
-	SetProgramConstant(normal_map_program, "mapping_vars"     , mapping_vars);
+	// --- RENDER PLANE --------
+	
+	pn::SetShaderProgram(normal_map_program);
+	
+	pn::SetProgramConstant("global_constants" , global_constants);
+	pn::SetProgramConstant("camera_constants" , camera_constants);
+	pn::SetProgramConstant("model_constants"  , model_constants);
+	pn::SetProgramConstant("directional_light", directional_light);
+	pn::SetProgramConstant("mapping_vars"     , mapping_vars);
 
 	// update uniform buffers that are shared across shaders
 	UpdateBuffer(global_constants);
@@ -139,12 +140,7 @@ void Render() {
 	UpdateBuffer(directional_light);
 	UpdateBuffer(mapping_vars);
 
-	// --- RENDER PLANE --------
-
-	pn::SetShaderProgram(normal_map_program);
-
-	auto& plane_mesh = plane_mesh_buffer;
-	pn::SetVertexBuffers(normal_map_program.input_layout_data, plane_mesh);
+	pn::SetVertexBuffers(plane_mesh_buffer);
 
 	// update wave
 	ImGui::Begin("Plane");
@@ -155,28 +151,16 @@ void Render() {
 		model_constants.data.mvp                          = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 	ImGui::End(); // Plane
 
-	SetProgramResource(normal_map_program, "diffuse_map", diffuse_map);
-	SetProgramResource(normal_map_program, "normal_map", normal_map);
-	SetProgramResource(normal_map_program, "height_map", height_map);
-	
-	SetProgramSampler(normal_map_program, "ss", ss);
-
 	// send updates to constant buffers
 	UpdateBuffer(model_constants);
 
-	//pn::SetViewport(context, screen_desc.Width / 2, screen_desc.Height / 2, 0, 0);
-	pn::DrawIndexed(plane_mesh);
-	/*
-	pn::SetViewport(context, screen_desc.Width / 2, screen_desc.Height / 2, screen_desc.Width / 2, 0);
-	pn::DrawIndexed(context, plane_mesh);
+	pn::SetProgramResource("diffuse_map", diffuse_map);
+	pn::SetProgramResource("normal_map", normal_map);
+	pn::SetProgramResource("height_map", height_map);
+	
+	pn::SetProgramSampler("ss", ss);
 
-	pn::SetViewport(context, screen_desc.Width / 2, screen_desc.Height / 2, 0, screen_desc.Height / 2);
-	pn::DrawIndexed(context, plane_mesh);
-
-	pn::SetViewport(context, screen_desc.Width / 2, screen_desc.Height / 2, screen_desc.Width / 2, screen_desc.Height / 2);
-	pn::DrawIndexed(context, plane_mesh);*/
-
-	//pn::EndProfile();
+	pn::DrawIndexed(plane_mesh_buffer);
 }
 
 void MainLoopBegin() {}

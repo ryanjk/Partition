@@ -22,10 +22,10 @@ using window_pwstr		= PWSTR;
 // --------- CLASS DEFINITIONS -------------
 
 struct application_window_desc {
-	HINSTANCE	h_instance;
-	int			width;
-	int			height;
-	bool		fullscreen;
+	HINSTANCE	 h_instance;
+	unsigned int width;
+	unsigned int height;
+	bool		 fullscreen;
 };
 
 // ------------- FUNCTIONS -----------------

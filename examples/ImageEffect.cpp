@@ -107,7 +107,7 @@ void Init() {
 
 	// --------- LOAD TEXTURES -------------
 
-	tex				= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
+	tex	= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
 	ss	= pn::CreateSamplerState();
 
 	// ------- SET BLENDING STATE ------------

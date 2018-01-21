@@ -318,6 +318,24 @@ void ShutdownEditorUI() {
 	delete command_line;
 }
 
+void DrawFPS() {
+	auto fps_text_size = ImGui::CalcTextSize("FPS: XXXXX.XXX");
+	ImGui::SetCursorPosX(static_cast<float>(pn::app::window_desc.width) - fps_text_size.x);
+	
+	static float fps = 0.0f;
+	static float sec_per_frame = 0.0f;
+	static int num_frames = 0;
+	
+	sec_per_frame += pn::app::dt;
+	num_frames++;
+	if (sec_per_frame >= 0.2f) {
+		fps = 1 / (sec_per_frame / num_frames);
+		sec_per_frame = 0.0f;
+		num_frames = 0;
+	}
+	ImGui::Text("FPS: %.2f", fps);
+}
+
 // --------- MAIN MENU ---------
 
 void SetMainMenuVisible(bool value) {
@@ -345,6 +363,7 @@ void DrawMainMenu(const unsigned int screen_width) {
 
 				ImGui::EndMenu();
 			}
+			DrawFPS();
 			ImGui::EndMenuBar();
 		}
 		ImGui::End();

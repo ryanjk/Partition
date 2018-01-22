@@ -270,7 +270,7 @@ void Render() {
 	UpdateBuffer(wave);
 
 	pn::SetDepthStencilState();
-	pn::SetRasterizerState(ENABLE_WIREFRAME_MODE);
+	//pn::SetRasterizerState(ENABLE_WIREFRAME_MODE);
 	pn::SetRenderTarget(offscreen_render_target, display_depth_stencil);
 
 	pn::DrawIndexed(wave_mesh);
@@ -293,7 +293,7 @@ void Render() {
 		pn::SetProgramSampler("ss", ss);
 
 		pn::SetDepthStencilState(DISABLE_DEPTH_TEST);
-		pn::SetRasterizerState();
+		//pn::SetRasterizerState();
 
 		// ----- RENDER GAUSSIAN BLUR DIR 1 -----
 

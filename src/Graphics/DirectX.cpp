@@ -547,14 +547,13 @@ void SetViewport(const int width, const int height, const int top_left_x, const 
 	);
 }
 
-void SetRenderTargetViewAndDepthStencilFromSwapChain(
-	dx_swap_chain swap_chain,
-	dx_render_target_view& render_target_view,
-	dx_depth_stencil_view& depth_stencil_view) {
+dx_render_target_view CreateRenderTargetView(dx_swap_chain swap_chain) {
+	auto back_buffer = pn::GetSwapChainBuffer(swap_chain);
+	return pn::CreateRenderTargetView(back_buffer);
+}
 
-	auto back_buffer   = pn::GetSwapChainBuffer(swap_chain);
-	render_target_view = pn::CreateRenderTargetView(back_buffer);
-
+dx_depth_stencil_view CreateDepthStencilView(dx_swap_chain swap_chain) {
+	auto back_buffer = pn::GetSwapChainBuffer(swap_chain);
 	CD3D11_TEXTURE2D_DESC back_buffer_desc = pn::GetDesc(back_buffer);
 	CD3D11_TEXTURE2D_DESC depthStencilDesc(
 		DXGI_FORMAT_D24_UNORM_S8_UINT,
@@ -566,9 +565,18 @@ void SetRenderTargetViewAndDepthStencilFromSwapChain(
 	);
 
 	auto depth_stencil = pn::CreateTexture2D(depthStencilDesc);
-	depth_stencil_view = pn::CreateDepthStencilView(depth_stencil);
+	return pn::CreateDepthStencilView(depth_stencil);
+}
 
-	_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
+void SetRenderTargetAndDepthStencilFromSwapChain(
+	dx_swap_chain swap_chain,
+	dx_render_target_view& render_target_view,
+	dx_depth_stencil_view& depth_stencil_view) {
+
+	render_target_view = CreateRenderTargetView(swap_chain);
+	depth_stencil_view = CreateDepthStencilView(swap_chain);
+
+	pn::SetRenderTarget(render_target_view, depth_stencil_view);
 }
 
 void ResizeRenderTargetViewportCamera(
@@ -578,7 +586,7 @@ void ResizeRenderTargetViewportCamera(
 	dx_depth_stencil_view& depth_stencil_view,
 	ProjectionMatrix& camera
 ) {
-	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(swap_chain, render_target_view, depth_stencil_view);
+	pn::SetRenderTargetAndDepthStencilFromSwapChain(swap_chain, render_target_view, depth_stencil_view);
 	pn::SetViewport(width, height);
 	camera.SetViewWidth(static_cast<float>(width));
 	camera.SetViewHeight(static_cast<float>(height));
@@ -744,7 +752,7 @@ CD3D11_BLEND_DESC CreateAlphaBlendDesc(const int render_target) {
 	return blend_desc;
 }
 
-dx_blend_state	CreateBlendState(CD3D11_BLEND_DESC* blend_desc) {
+dx_blend_state	  CreateBlendState(CD3D11_BLEND_DESC* blend_desc) {
 	pn::dx_blend_state blend_state;
 	auto hr = _device->CreateBlendState(blend_desc, blend_state.GetAddressOf());
 	if (FAILED(hr)) {
@@ -782,21 +790,6 @@ void SetDepthStencilState(dx_depth_stencil_state depth_stencil_state) {
 }
 
 // -------- RASTERIZER -------------
-
-const D3D11_RASTERIZER_DESC GetDefaultRasterizerDesc() {
-	D3D11_RASTERIZER_DESC rasterizer_desc;
-	rasterizer_desc.AntialiasedLineEnable = false;
-	rasterizer_desc.CullMode              = D3D11_CULL_BACK;
-	rasterizer_desc.DepthBias             = 0;
-	rasterizer_desc.DepthBiasClamp        = 0;
-	rasterizer_desc.DepthClipEnable       = true;
-	rasterizer_desc.FillMode              = D3D11_FILL_SOLID;
-	rasterizer_desc.FrontCounterClockwise = false;
-	rasterizer_desc.MultisampleEnable     = false;
-	rasterizer_desc.ScissorEnable         = false;
-	rasterizer_desc.SlopeScaledDepthBias  = 0;
-	return rasterizer_desc;
-}
 
 dx_rasterizer_state CreateRasterizerState(CD3D11_RASTERIZER_DESC* desc) {
 	dx_rasterizer_state rasterizer_state;

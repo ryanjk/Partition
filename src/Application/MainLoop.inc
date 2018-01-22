@@ -221,9 +221,9 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 	swap_chain	= pn::CreateMainWindowSwapChain(h_wnd, awd);
 
-	pn::SetRenderTargetViewAndDepthStencilFromSwapChain(swap_chain, display_render_target, display_depth_stencil);
+	// INIT MAIN DISPLAY RENDER TARGET AND DEPTH BUFFER
+	pn::SetRenderTargetAndDepthStencilFromSwapChain(swap_chain, display_render_target, display_depth_stencil);
 
-	auto context = pn::GetContext(device);
 	pn::SetViewport(awd.width, awd.height);
 
 	pn::InitializeCBuffer(global_constants);
@@ -235,14 +235,17 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	pn::InitMeshLoadUtil(device);
 
 	// ------ SET UP IMGUI ------------------------------
+	
+	{
+		auto context = pn::GetContext(device);
+		ImGui_ImplDX11_Init(h_wnd, device.Get(), context.Get());
+		pn::gui::InitEditorUI();
+	}
 
-	ImGui_ImplDX11_Init(h_wnd, device.Get(), context.Get());
-	pn::gui::InitEditorUI();
-
-	bool	display_imgui		= true;
-	bool	show_test_window	= false;
-	bool	show_command_line	= false;
-	bool	show_main_menu		= true;
+	bool display_imgui		= true;
+	bool show_test_window	= false;
+	bool show_command_line	= false;
+	bool show_main_menu		= true;
 
 	// ------- USER-DEFINED INIT CALL -----------------
 	Init();

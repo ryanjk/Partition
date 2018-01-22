@@ -1,5 +1,7 @@
 #include "GlobalConstants.hlsli"
 
+#define USE_K
+
 Texture2D   tex	: register(t1);
 SamplerState ss : register(s1);
 
@@ -42,7 +44,11 @@ float sample_wave_y(Wave w, float2 p, float t) {
 	return w.A * w.q * w.d.y * cos_wave_f(w, p, t);
 }
 float sample_wave_height(Wave w, float2 p, float t) {
+#ifdef USE_K
+	return w.A * 2 * pow((sin_wave_f(w, p, t) + 1) / 2, 2.5);
+#else
 	return w.A * sin_wave_f(w, p, t);
+#endif
 }
 
 float sample_wave_nx(Wave w, float2 p, float t) {

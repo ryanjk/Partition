@@ -83,6 +83,7 @@ pn::shader_program_t      image_program;
 pn::mesh_buffer_t         screen_mesh;
 
 pn::dx_depth_stencil_state DISABLE_DEPTH_TEST;
+pn::dx_rasterizer_state    ENABLE_WIREFRAME_MODE;
 
 void Init() {
 	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
@@ -121,6 +122,12 @@ void Init() {
 	CD3D11_DEPTH_STENCIL_DESC ds_desc(CD3D11_DEFAULT{});
 	ds_desc.DepthEnable = false;
 	DISABLE_DEPTH_TEST  = pn::CreateDepthStencilState(&ds_desc);
+
+	// -------- RASTERIZER STATE --------
+
+	CD3D11_RASTERIZER_DESC rs_desc(CD3D11_DEFAULT{});
+	rs_desc.FillMode = D3D11_FILL_WIREFRAME;
+	ENABLE_WIREFRAME_MODE = pn::CreateRasterizerState(&rs_desc);
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -263,6 +270,7 @@ void Render() {
 	UpdateBuffer(wave);
 
 	pn::SetDepthStencilState();
+	pn::SetRasterizerState(ENABLE_WIREFRAME_MODE);
 	pn::SetRenderTarget(offscreen_render_target, display_depth_stencil);
 
 	pn::DrawIndexed(wave_mesh);
@@ -285,6 +293,7 @@ void Render() {
 		pn::SetProgramSampler("ss", ss);
 
 		pn::SetDepthStencilState(DISABLE_DEPTH_TEST);
+		pn::SetRasterizerState();
 
 		// ----- RENDER GAUSSIAN BLUR DIR 1 -----
 

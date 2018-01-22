@@ -798,10 +798,14 @@ const D3D11_RASTERIZER_DESC GetDefaultRasterizerDesc() {
 	return rasterizer_desc;
 }
 
-dx_rasterizer_state CreateRasterizerState(const D3D11_RASTERIZER_DESC& rasterizer_desc) {
+dx_rasterizer_state CreateRasterizerState(CD3D11_RASTERIZER_DESC* desc) {
 	dx_rasterizer_state rasterizer_state;
-	_device->CreateRasterizerState(&rasterizer_desc, rasterizer_state.GetAddressOf());
+	_device->CreateRasterizerState(desc, rasterizer_state.GetAddressOf());
 	return rasterizer_state;
+}
+
+void SetRasterizerState() {
+	_context->RSSetState(nullptr);
 }
 
 void SetRasterizerState(dx_rasterizer_state rasterizer_state) {

@@ -8,10 +8,10 @@ namespace app {
 
 pn::application_window_desc window_desc;
 
-float FPS;
-float FIXED_DT;
-float dt;
-float time_since_application_start;
+double FPS;
+double FIXED_DT;
+double dt;
+double time_since_application_start;
 
 bool exit;
 

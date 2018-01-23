@@ -10,10 +10,10 @@ namespace app {
 
 extern pn::application_window_desc window_desc;
 
-extern float FPS;
-extern float FIXED_DT;
-extern float dt;
-extern float time_since_application_start;
+extern double FPS;
+extern double FIXED_DT;
+extern double dt;
+extern double time_since_application_start;
 
 // ------ FUNCTIONS ------------
 

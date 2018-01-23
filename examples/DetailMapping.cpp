@@ -101,7 +101,7 @@ void Init() {
 	mapping_vars.data.height_offset = 0.0f;
 }
 
-void Update(const float dt) {}
+void Update(const double dt) {}
 
 void Render() {
 	// Set render target backbuffer color

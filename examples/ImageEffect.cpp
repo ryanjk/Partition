@@ -212,7 +212,7 @@ void Init() {
 	}
 }
 
-void Update(const float dt) {}
+void Update(const double dt) {}
 
 void Render() {
 	// Set render target backbuffer color

@@ -60,7 +60,7 @@ pn::window_handle h_wnd;
 // -------- USER-DEFINED MAIN LOOP FUNCTIONS -----------
 
 void Init();
-void Update(const float dt);
+void Update(const double dt);
 void Render();
 void Close();
 
@@ -124,13 +124,13 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 			if (!was_down_last_frame) {
 				new_key_state = key_state::JUST_PRESSED;
 			}
-			pn::input::SetKeyState(wParam, new_key_state);
+			pn::input::SetKeyState(static_cast<unsigned int>(wParam), new_key_state);
 		}
 		break;
 
 	case WM_KEYUP:
 		if (wParam < 256) {
-			pn::input::SetKeyState(wParam, key_state::JUST_RELEASED);
+			pn::input::SetKeyState(static_cast<unsigned int>(wParam), key_state::JUST_RELEASED);
 		}
 		break;
 
@@ -261,7 +261,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
 
 	auto prev_time        = std::chrono::system_clock::now();
-	float time_to_process = 0;
+	double time_to_process = 0;
 	pn::app::FPS          = 60.0f;
 	pn::app::FIXED_DT     = 1 / pn::app::FPS;
 	while (!pn::app::ShouldExit()) {
@@ -287,7 +287,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 		// UPDATE
 		auto current_time                     = std::chrono::system_clock::now();
-		pn::app::dt                           = std::chrono::duration<float>(current_time - prev_time).count();
+		pn::app::dt                           = std::chrono::duration<double>(current_time - prev_time).count();
 		time_to_process                       += pn::app::dt;
 		pn::app::time_since_application_start += pn::app::dt;
 		prev_time                             = current_time;

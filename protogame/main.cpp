@@ -24,7 +24,7 @@
 
 void Init() {}
 
-void Update(const float dt) {}
+void Update(const double dt) {}
 
 void Render() {
 	pn::ClearDepthStencilView(display_depth_stencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);

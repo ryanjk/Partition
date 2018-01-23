@@ -184,7 +184,7 @@ void Init() {
 	pn::frame_string::SetFrameAllocator(&frame_alloc);
 }
 
-void Update(const float dt) {}
+void Update(const double dt) {}
 
 void Render() {
 

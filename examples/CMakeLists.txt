@@ -9,7 +9,7 @@ INCLUDE_DIRECTORIES(../src)
 
 FUNCTION(CreateExample exampleName)
 	ADD_EXECUTABLE(${exampleName} WIN32 ${exampleName}.cpp)
-	TARGET_LINK_LIBRARIES(${exampleName} partition)
+	TARGET_LINK_LIBRARIES(${exampleName} Partition)
 	SET_PROPERTY(TARGET ${exampleName} PROPERTY CXX_STANDARD 17)
 	SET_PROPERTY(TARGET ${exampleName} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${exampleName}")
 ENDFUNCTION(CreateExample)

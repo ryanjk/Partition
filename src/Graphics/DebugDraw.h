@@ -1,14 +1,15 @@
 #pragma once
 
-namespace pn {
+#include <Utilities\Math.h>
 
-struct vec3f;
+namespace pn {
 
 namespace debug {
 
 void InitDebugDraw();
 
-void DrawLine(vec3f origin, vec3f direction, float length);
+void DrawLine(vec3f origin, vec3f direction, float length, vec3f color = { 1,1,1 });
+void DrawLine(vec3f origin, vec3f direction, float length, vec4f color = { 1,1,1,1 });
 
 }
 

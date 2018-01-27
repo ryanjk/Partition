@@ -261,7 +261,8 @@ mat4f LookAt(const vec3f& position, const vec3f& target, const vec3f& up) {
 
 #pragma region Quaternion Functions
 
-mat4f				QuaternionToRotationMatrix(const quaternion& q) {
+mat4f				QuaternionToRotationMatrix(const quaternion& qt) {
+	auto q = Normalize(qt);
 	const float sx = q.x*q.x;
 	const float sy = q.y*q.y;
 	const float sz = q.z*q.z;

@@ -1,5 +1,9 @@
 #include "GlobalConstants.hlsli"
 
+cbuffer options : register(b4) {
+	float4 color;
+}
+
 struct VS_IN {
 	float3 pos	: POSITION;
 };
@@ -19,5 +23,5 @@ VS_OUT VS_main(VS_IN i) {
 }
 
 float4 PS_main(VS_OUT i) : SV_TARGET{
-	return float4(1, 1, 1, 1);
+	return color;
 }

@@ -170,8 +170,13 @@ void Init() {
 }
 
 void Update(const double dt) {
+
+	transform_t& transform = MAIN_CAMERA.transform;
+
 	if (input::GetKeyState(input::SPACE) == input::key_state::PRESSED) {
-		MAIN_CAMERA.transform = transform_t{};
+		wave_transform.position = { 0, 0, 15 };
+		wave_transform.scale = { 1, 1, 1 };
+		wave_transform.rotation = pn::EulerToQuaternion(0.698f, 3.069f, 0.f);
 	}
 
 	static const float SPEED = 20.0f * dt;
@@ -191,21 +196,29 @@ void Update(const double dt) {
 
 	auto mouse_pos_delta = pn::input::GetMousePosDelta();
 	if (mouse_pos_delta.x != 0 || mouse_pos_delta.y != 0) {
-		static const float ROT_SPEED = 1.0f;
-		float pitch = mouse_pos_delta.y * ROT_SPEED * dt;
-		float yaw   = mouse_pos_delta.x * ROT_SPEED * dt;
+		Log("X: {}, Y: {}", mouse_pos_delta.x, mouse_pos_delta.y);
 
-		auto local_x = RotateVector(vec3f::UnitX, MAIN_CAMERA.transform.rotation);
-		auto local_y = RotateVector(vec3f::UnitY, MAIN_CAMERA.transform.rotation);
-		auto axis = Normalize(vec3f(pitch, yaw, 0.0f));
-		axis = RotateVector(axis, MAIN_CAMERA.transform.rotation);
+		static const float ROT_SPEED = 0.5f;
+		vec2f md (mouse_pos_delta.x, mouse_pos_delta.y );
+		md = md * ROT_SPEED * dt;
 
-		auto rot = AxisAngleToQuaternion(local_x, pitch) * AxisAngleToQuaternion(local_y, yaw);
-	
-		MAIN_CAMERA.transform.rotation = MAIN_CAMERA.transform.rotation * rot;
+		auto x_axis = RotateVector(vec3f::UnitX, transform.rotation);
+		auto y_axis = vec3f::UnitY;
+		auto rot = AxisAngleToQuaternion(x_axis, md.y) * AxisAngleToQuaternion(y_axis, md.x);
+		transform.rotation = transform.rotation * rot;
 	}
 	
-	MAIN_CAMERA.transform.position += InverseTransformVector(MAIN_CAMERA.transform, camera_translation);
+	auto local_x = RotateVector(vec3f::UnitX, transform.rotation);
+	auto local_y = RotateVector(vec3f::UnitY, transform.rotation);
+	auto local_z = RotateVector(vec3f::UnitZ, transform.rotation);
+	const vec3f o = transform.position;
+	debug::DrawLine(o, local_x, 10.0f, { 1, 0, 0});
+	debug::DrawLine(o, local_y, 10.0f, { 0, 1, 0});
+	debug::DrawLine(o, local_z, 10.0f, { 0, 0, 1});
+
+	transform.position += RotateVector(camera_translation, transform.rotation);
+	/*transform.position += camera_translation.x * local_x;
+	transform.position += camera_translation.z * local_z;*/
 	
 }
 

@@ -433,6 +433,7 @@ void SetRasterizerState(dx_rasterizer_state rasterizer_state);
 
 // -------- DRAWING FUNCTIONS ---------------
 
+void Draw(const mesh_buffer_t& mesh_buffer);
 void DrawIndexed(const mesh_buffer_t& mesh_buffer, unsigned int start_vertex_location = 0, unsigned int base_vertex_location = 0);
 
 

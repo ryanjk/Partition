@@ -585,7 +585,7 @@ inline int		Sign(const float f) { return (f > 0) ? 1 : (f < 0) ? -1 : 0; }
 // ----------- TRANSFORMATIONS ---------------
 
 inline vec3f	RotatePoint(const vec3f& v, const quaternion& q) {
-	quaternion p = Conjugate(q) * (quaternion(v, 0.0f) * q);
+	quaternion p = Inverse(q) * (quaternion(v, 0.0f) * q);
 	return vec3f(p.x, p.y, p.z);
 }
 

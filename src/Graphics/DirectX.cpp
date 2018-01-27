@@ -255,8 +255,10 @@ mesh_buffer_t			CreateMeshBuffer(const mesh_t& mesh) {
 
 	mesh_buffer.name		= mesh.name;
 	mesh_buffer.vertices	= CreateVertexBuffer(mesh.vertices);
-	mesh_buffer.indices		= CreateIndexBuffer(mesh.indices);
-	mesh_buffer.index_count = static_cast<unsigned int>(mesh.indices.size());
+	if (Size(mesh.indices) > 0) {
+		mesh_buffer.indices		= CreateIndexBuffer(mesh.indices);
+		mesh_buffer.index_count = static_cast<unsigned int>(mesh.indices.size());
+	}
 	mesh_buffer.topology	= mesh.topology;
 
 	if (!mesh.normals.empty()) {
@@ -806,6 +808,11 @@ void SetRasterizerState(dx_rasterizer_state rasterizer_state) {
 }
 
 // ----------- DRAWING FUNCTIONS ------------
+
+void Draw(const mesh_buffer_t& mesh_buffer) {
+	assert(false);
+	//_context->Draw(Size(mesh_buffer.vertices), 0);
+}
 
 void DrawIndexed(const mesh_buffer_t& mesh_buffer, unsigned int start_vertex_location, unsigned int base_vertex_location) {
 	_context->DrawIndexed(static_cast<unsigned int>(mesh_buffer.index_count), start_vertex_location, base_vertex_location);

@@ -39,9 +39,11 @@ namespace MathUnitTest {
 					auto q = EulerToQuaternion(v);
 					auto e = QuaternionToEuler(q);
 
-					ASSERT_TRUE(IsRadianEqual(v.x, e.x, 0.01f));
-					ASSERT_TRUE(IsRadianEqual(v.y, e.y, 0.01f));
-					ASSERT_TRUE(IsRadianEqual(v.z, e.z, 0.01f));
+					bool cond = IsRadianEqual(v.x, e.x, 0.01f) && IsRadianEqual(v.y, e.y, 0.01f) && IsRadianEqual(v.z, e.z, 0.01f);
+					if (!cond) {
+						auto b = 6;
+					}
+					ASSERT_TRUE(cond);
 				}
 			}
 		}

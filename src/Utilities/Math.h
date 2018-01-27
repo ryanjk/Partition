@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <cassert>
 
 namespace DirectX {
 struct XMMATRIX;
@@ -434,7 +435,8 @@ mat4f				QuaternionToRotationMatrix(const quaternion& q);
 quaternion			RotationMatrixToQuaternion(const mat4f& pm);
 inline quaternion	AxisAngleToQuaternion(const vec3f& axis, const float angle) {
 	const float w = cosf(angle / 2);
-	return quaternion(axis * sinf(angle / 2), w);
+	quaternion result(axis * sinf(angle / 2), w);
+	return result;
 }
 inline quaternion	AxisAngleToQuaternion(const vec4f& axis_angle) {
 	return AxisAngleToQuaternion(axis_angle.xyz(), axis_angle.w);
@@ -585,6 +587,10 @@ inline int		Sign(const float f) { return (f > 0) ? 1 : (f < 0) ? -1 : 0; }
 inline vec3f	RotatePoint(const vec3f& v, const quaternion& q) {
 	quaternion p = Conjugate(q) * (quaternion(v, 0.0f) * q);
 	return vec3f(p.x, p.y, p.z);
+}
+
+inline vec3f	RotateVector(const vec3f& v, const quaternion& q) {
+	return RotatePoint(v, q);
 }
 
 inline vec4f	RotatePoint(const vec4f& v, const quaternion& q) {

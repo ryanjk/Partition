@@ -22,6 +22,8 @@
 #include <Application\ResourceDatabase.h>
 #include <Application\MainLoop.inc>
 
+using namespace pn;
+
 // -- Uniform buffer data definitions ----
 
 struct alignas(16) directional_light_t {
@@ -95,10 +97,6 @@ void Init() {
 
 	REGISTER_COMMAND(recomp, pn::string, void);
 
-	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
-	//pn::SetWorkingDirectory("M:/projects/partition2");
-	pn::SetResourceDirectoryName("resources");
-
 	Log("Size of resource id: {} bytes", sizeof(pn::rdb::resource_id_t));
 
 	// ---------- LOAD RESOURCES ----------------
@@ -145,10 +143,6 @@ void Init() {
 	// --------- CREATE SHADER DATA ---------------
 
 	wave_program	= pn::CompileShaderProgram(pn::GetResourcePath("water.hlsl"));
-	//basic_program	= pn::CompileShaderProgram(pn::GetResourcePath("basic.hlsl"));
-
-	global_constants.data.screen_width	= static_cast<float>(pn::app::window_desc.width);
-	global_constants.data.screen_height	= static_cast<float>(pn::app::window_desc.height);
 
 	InitializeCBuffer(directional_light);
 	InitializeCBuffer(wave);
@@ -166,15 +160,6 @@ void Init() {
 		wave.data[i].d = { 0.68f, 0.735f };
 	}
 
-	// init camera
-	camera = pn::ProjectionMatrix{ pn::ProjectionType::PERSPECTIVE,
-		static_cast<float>(pn::app::window_desc.width), static_cast<float>(pn::app::window_desc.height),
-		0.01f, 1000.0f,
-		70.0f, 0.1f
-	};
-	camera_constants.data.proj = camera.GetMatrix();
-	camera_constants.data.view = pn::mat4f::Identity;
-
 	// init wave object
 	wave_transform.position	= { 0, 0, 15 };
 	wave_transform.scale	= { 1, 1, 1 };
@@ -184,16 +169,47 @@ void Init() {
 	pn::frame_string::SetFrameAllocator(&frame_alloc);
 }
 
-void Update(const double dt) {}
+void Update(const double dt) {
+	if (input::GetKeyState(input::SPACE) == input::key_state::PRESSED) {
+		MAIN_CAMERA.transform = transform_t{};
+	}
+
+	static const float SPEED = 20.0f * dt;
+	pn::vec3f camera_translation{ 0.0f, 0.0f, 0.0f };
+	if (pn::input::GetKeyState(pn::input::W) == pn::input::key_state::PRESSED) {
+		camera_translation += pn::vec3f(0.0f, 0.0f, SPEED);
+	}
+	if (pn::input::GetKeyState(pn::input::S) == pn::input::key_state::PRESSED) {
+		camera_translation += pn::vec3f(0.0f, 0.0f, -SPEED);
+	}
+	if (pn::input::GetKeyState(pn::input::A) == pn::input::key_state::PRESSED) {
+		camera_translation += pn::vec3f(-SPEED, 0.0f, 0.0f);
+	}
+	if (pn::input::GetKeyState(pn::input::D) == pn::input::key_state::PRESSED) {
+		camera_translation += pn::vec3f(SPEED, 0.0f, 0.0f);
+	}
+
+	auto mouse_pos_delta = pn::input::GetMousePosDelta();
+	if (mouse_pos_delta.x != 0 || mouse_pos_delta.y != 0) {
+		static const float ROT_SPEED = 1.0f;
+		float pitch = mouse_pos_delta.y * ROT_SPEED * dt;
+		float yaw   = mouse_pos_delta.x * ROT_SPEED * dt;
+
+		auto local_x = RotateVector(vec3f::UnitX, MAIN_CAMERA.transform.rotation);
+		auto local_y = RotateVector(vec3f::UnitY, MAIN_CAMERA.transform.rotation);
+		auto axis = Normalize(vec3f(pitch, yaw, 0.0f));
+		axis = RotateVector(axis, MAIN_CAMERA.transform.rotation);
+
+		auto rot = AxisAngleToQuaternion(local_x, pitch) * AxisAngleToQuaternion(local_y, yaw);
+	
+		MAIN_CAMERA.transform.rotation = MAIN_CAMERA.transform.rotation * rot;
+	}
+	
+	MAIN_CAMERA.transform.position += InverseTransformVector(MAIN_CAMERA.transform, camera_translation);
+	
+}
 
 void Render() {
-
-	// Set render target backbuffer color
-	pn::ClearDepthStencilView(display_depth_stencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-	static const pn::vec4f color = { 0.0f, 0.0f, 0.0f, 1.000f };
-	pn::ClearRenderTargetView(display_render_target, color);
-	pn::SetRenderTarget(display_render_target, display_depth_stencil);
 
 	// update directional light
 	ImGui::Begin("Lights");
@@ -219,8 +235,6 @@ void Render() {
 	UpdateBuffer(camera_constants);
 	UpdateBuffer(directional_light);
 
-	pn::SetShaderProgram(wave_program);
-
 	auto& wave_mesh = wave_mesh_buffer;
 	pn::SetVertexBuffers(wave_mesh);
 
@@ -228,9 +242,7 @@ void Render() {
 	ImGui::Begin("Waves");
 	// update model matrix
 	pn::gui::EditStruct(wave_transform);
-	model_constants.data.model	= LocalToWorldMatrix(wave_transform);
-	model_constants.data.model_view_inverse_transpose = pn::Transpose(pn::Inverse(model_constants.data.model * camera_constants.data.view));
-	model_constants.data.mvp	= model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
+	UpdateModelConstantCBuffer(wave_transform);
 
 	for (int i = 0; i < N_WAVES; ++i) {
 		ImGui::PushID(i);

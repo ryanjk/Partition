@@ -1,6 +1,6 @@
 #include "GlobalConstants.hlsli"
 
-#define USE_K
+//#define USE_K
 
 Texture2D   tex	: register(t1);
 SamplerState ss : register(s1);

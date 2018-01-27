@@ -12,8 +12,10 @@ namespace input {
 
 // -------- VARIABLES ---------------
 
-input_state_t	input_state;
-pn::string		input_characters;
+input_state_t	       input_state;
+pn::string		       input_characters;
+
+static pn::input::mouse_pos_t last_mouse_pos;
 
 // ------- FUNCTIONS --------
 
@@ -24,8 +26,10 @@ void InitInput() {
 		cur_key = key_state::RELEASED;
 		++i;
 	} while (i != 0);
-	input_state.mouse_pos = { 0, 0 };
-	input_state.mouse_wheel = mouse_wheel_state::NO_CHANGE;
+	input_state.mouse_pos       = { 0, 0 };
+	input_state.mouse_pos_delta = { 0, 0 };
+	last_mouse_pos              = { 0, 0 };
+	input_state.mouse_wheel     = mouse_wheel_state::NO_CHANGE;
 }
 
 void InputOnEndOfFrame() {
@@ -47,6 +51,13 @@ void InputOnEndOfFrame() {
 	if (GetMouseWheelState() == mouse_wheel_state::SCROLL_DOWN || GetMouseWheelState() == mouse_wheel_state::SCROLL_UP) {
 		SetMouseWheelState(mouse_wheel_state::NO_CHANGE);
 	}
+
+	input_state.mouse_pos_delta.x = 0;
+	input_state.mouse_pos_delta.y = 0;
+}
+
+void InputUpdate() {
+	//Log("X: {}, Y: {}", input_state.mouse_pos_delta.x, input_state.mouse_pos_delta.y);
 }
 
 void SetKeyState(const unsigned int vkey, key_state state) {
@@ -59,11 +70,19 @@ key_state GetKeyState(const input_key vkey) {
 }
 
 void SetMousePos(const mouse_pos_t mouse_pos) {
+	last_mouse_pos        = input_state.mouse_pos;
 	input_state.mouse_pos = mouse_pos;
+
+	input_state.mouse_pos_delta.x = mouse_pos.x - last_mouse_pos.x;
+	input_state.mouse_pos_delta.y = mouse_pos.y - last_mouse_pos.y;
 }
 
 mouse_pos_t GetMousePos() {
 	return input_state.mouse_pos;
+}
+
+mouse_pos_t GetMousePosDelta() {
+	return input_state.mouse_pos_delta;
 }
 
 void SetMouseWheelState(const mouse_wheel_state state) {

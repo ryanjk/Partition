@@ -3,9 +3,11 @@
 #include <stdafx.h>
 #include <Graphics\Window.h>
 #include <Graphics\DirectX.h>
+#include <Graphics\RenderSystem.h>
 #include <Graphics\TextureLoadUtil.h>
 #include <Graphics\MeshLoadUtil.h>
 #include <Graphics\CBuffer.h>
+#include <Graphics\DebugDraw.h>
 
 #include <Utilities\Logging.h>
 #include <Utilities\Memory.h>
@@ -23,37 +25,8 @@
 #include <chrono>
 #include <direct.h>
 
+using namespace pn;
 using namespace pn::input;
-
-// -- Uniform buffer data definitions ----
-
-struct alignas(16) global_constants_t {
-	float t = 0.0f;
-	float screen_width;
-	float screen_height;
-};
-
-struct camera_constants_t {
-	pn::mat4f view;
-	pn::mat4f proj;
-};
-
-struct model_constants_t {
-	pn::mat4f model;
-	pn::mat4f model_view_inverse_transpose;
-	pn::mat4f mvp;
-};
-
-pn::cbuffer<global_constants_t>		global_constants;
-pn::cbuffer<camera_constants_t>		camera_constants;
-pn::cbuffer<model_constants_t>		model_constants;
-
-// --------- VARIABLES -------------
-pn::dx_device				device;
-pn::dx_swap_chain			swap_chain;
-pn::dx_render_target_view	display_render_target;
-pn::dx_depth_stencil_view	display_depth_stencil;
-pn::ProjectionMatrix		camera;
 
 pn::window_handle h_wnd;
 
@@ -77,23 +50,23 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 
 	switch (uMsg) {
 	case WM_SIZE:
-		if (device.Get() != nullptr && wParam != SIZE_MINIMIZED) {
+		if (GetDevice() != nullptr && wParam != SIZE_MINIMIZED) {
 			auto width = (unsigned int) LOWORD(lParam);
 			auto height = (unsigned int) HIWORD(lParam);
 
-			pn::app::window_desc.width = width;
+			pn::app::window_desc.width  = width;
 			pn::app::window_desc.height = height;
 
 			LogDebug("Resizing window to width: {}, height: {}", width, height);
 
 			ImGui_ImplDX11_InvalidateDeviceObjects();
-			if (display_render_target.Get() != nullptr) {
-				display_render_target.ReleaseAndGetAddressOf();
-				display_render_target = nullptr;
+			if (DISPLAY_RENDER_TARGET.Get() != nullptr) {
+				DISPLAY_RENDER_TARGET.ReleaseAndGetAddressOf();
+				DISPLAY_RENDER_TARGET = nullptr;
 			}
 
-			swap_chain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-			pn::ResizeRenderTargetViewportCamera(width, height, swap_chain, display_render_target, display_depth_stencil, camera);
+			SWAP_CHAIN->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
+			pn::ResizeRenderTargetViewportCamera(width, height, SWAP_CHAIN, DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL, MAIN_CAMERA.projection_matrix);
 
 			ImGui_ImplDX11_CreateDeviceObjects();
 		}
@@ -216,23 +189,17 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 	// INIT DIRECTX
 
-	device		= pn::CreateDevice();
+	auto device	= pn::CreateDevice();
 	pn::SetDevice(device);
-
-	swap_chain	= pn::CreateMainWindowSwapChain(h_wnd, awd);
-
-	// INIT MAIN DISPLAY RENDER TARGET AND DEPTH BUFFER
-	pn::SetRenderTargetAndDepthStencilFromSwapChain(swap_chain, display_render_target, display_depth_stencil);
-
-	pn::SetViewport(awd.width, awd.height);
-
-	pn::InitializeCBuffer(global_constants);
-	pn::InitializeCBuffer(camera_constants);
-	pn::InitializeCBuffer(model_constants);
 
 	// ------- POST DX INIT ---------
 
-	pn::InitMeshLoadUtil(device);
+	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
+	pn::SetResourceDirectoryName("resources");
+
+	InitRenderSystem(h_wnd, awd);
+	InitMeshLoadUtil(device);
+	debug::InitDebugDraw();
 
 	// ------ SET UP IMGUI ------------------------------
 	
@@ -277,9 +244,15 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 			continue;
 		}
 
+		pn::input::InputUpdate();
+
 		// Draw main menu
-		//show_main_menu = pn::input::GetKeyState(input_key::SPACE) == key_state::JUST_PRESSED ? !show_main_menu : show_main_menu;
 		pn::gui::SetMainMenuVisible(show_main_menu);
+
+		// Update render system
+		ClearDepthStencil();
+		ClearDisplay();
+		ResetRenderTarget();
 
 		// Draw command line
 		show_command_line = pn::input::GetKeyState(input_key::TILDE) == key_state::JUST_PRESSED ? !show_command_line : show_command_line;
@@ -297,6 +270,9 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 			time_to_process -= pn::app::FIXED_DT;
 		}
 
+		UpdateGlobalConstantCBuffer();
+		UpdateCameraConstantCBuffer(MAIN_CAMERA);
+
 		// RENDER
 
 		// Start new frame
@@ -311,20 +287,13 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 		// Draw command line
 		pn::gui::DrawCommandLine();
-		
-		// Update global uniforms
-		global_constants.data.t             += static_cast<float>(pn::app::dt);
-
-		auto screen_desc                    = pn::GetDesc(pn::GetSwapChainBuffer(swap_chain));
-		global_constants.data.screen_width  = static_cast<float>(screen_desc.Width);
-		global_constants.data.screen_height = static_cast<float>(screen_desc.Height);
 
 		// USER-DEFINED RENDER CALL
 		Render();
 
 		ImGui::Render();
 
-		auto hr = swap_chain->Present(1, 0);
+		auto hr = SWAP_CHAIN->Present(1, 0);
 		if (FAILED(hr)) {
 			LogError("Swap chain present error: ", pn::ErrMsg(hr));
 		}

@@ -70,18 +70,21 @@ struct input_state_t {
 	key_state			keys[256];
 	mouse_wheel_state	mouse_wheel;
 	mouse_pos_t			mouse_pos;
+	mouse_pos_t         mouse_pos_delta;
 };
 
 // -------- FUNCTIONS --------------
 
 void				InitInput();
 void				InputOnEndOfFrame();
+void                InputUpdate();
 
 void				SetKeyState(const unsigned int vkey, const key_state state);
 key_state			GetKeyState(const input_key vkey);
 
 void				SetMousePos(const mouse_pos_t mouse_pos);
 mouse_pos_t			GetMousePos();
+mouse_pos_t         GetMousePosDelta();
 
 void				SetMouseWheelState(const mouse_wheel_state state);
 mouse_wheel_state	GetMouseWheelState();

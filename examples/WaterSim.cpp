@@ -173,12 +173,6 @@ void Update(const double dt) {
 
 	transform_t& transform = MAIN_CAMERA.transform;
 
-	if (input::GetKeyState(input::SPACE) == input::key_state::PRESSED) {
-		wave_transform.position = { 0, 0, 15 };
-		wave_transform.scale = { 1, 1, 1 };
-		wave_transform.rotation = pn::EulerToQuaternion(0.698f, 3.069f, 0.f);
-	}
-
 	static const float SPEED = 20.0f * dt;
 	pn::vec3f camera_translation{ 0.0f, 0.0f, 0.0f };
 	if (pn::input::GetKeyState(pn::input::W) == pn::input::key_state::PRESSED) {
@@ -217,8 +211,6 @@ void Update(const double dt) {
 	debug::DrawLine(o, local_z, 10.0f, { 0, 0, 1});
 
 	transform.position += RotateVector(camera_translation, transform.rotation);
-	/*transform.position += camera_translation.x * local_x;
-	transform.position += camera_translation.z * local_z;*/
 	
 }
 

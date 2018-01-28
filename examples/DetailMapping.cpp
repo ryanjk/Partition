@@ -34,8 +34,6 @@ pn::mesh_buffer_t		plane_mesh_buffer;
 pn::shader_program_t	normal_map_program;
 
 void Init() {
-	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
-	pn::SetResourceDirectoryName("resources");
 
 	// ------ LOAD MESH ----------
 
@@ -72,23 +70,11 @@ void Init() {
 
 	// -------- INIT PROGRAM STATE -------
 
-	global_constants.data.screen_width = static_cast<float>(pn::app::window_desc.width);
-	global_constants.data.screen_height = static_cast<float>(pn::app::window_desc.height);
-
 	InitializeCBuffer(directional_light);
 
 	// init lights
 	directional_light.data.direction = pn::vec3f(0.0f, 0.0f, 1.0f);
 	directional_light.data.intensity = 1.0f;
-
-	// init camera
-	camera = pn::ProjectionMatrix{ pn::ProjectionType::PERSPECTIVE,
-		static_cast<float>(pn::app::window_desc.width), static_cast<float>(pn::app::window_desc.height),
-		0.01f, 1000.0f,
-		70.0f, 0.1f
-	};
-	camera_constants.data.proj = camera.GetMatrix();
-	camera_constants.data.view = pn::mat4f::Identity;
 
 	// init object
 	plane_transform.position = { 0, 0, 4 };
@@ -104,12 +90,6 @@ void Init() {
 void Update(const double dt) {}
 
 void Render() {
-	// Set render target backbuffer color
-	pn::ClearDepthStencilView(display_depth_stencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-	static const pn::vec4f color = { 0.0f, 0.0f, 0.0f, 1.000f };
-	pn::ClearRenderTargetView(display_render_target, color);
-	pn::SetRenderTarget(display_render_target, display_depth_stencil);
 
 	// update directional light
 	ImGui::Begin("Lights");

@@ -3,6 +3,7 @@
 #include <Graphics\MeshLoadUtil.h>
 #include <Graphics\TextureLoadUtil.h>
 #include <Graphics\ProjectionMatrix.h>
+#include <Graphics\RenderSystem.h>
 
 #include <Utilities\Logging.h>
 #include <Utilities\frame_string.h>
@@ -152,15 +153,6 @@ void Init() {
 		wave.data[i].d = { 0.68f, 0.735f };
 	}
 
-	// init camera
-	camera = pn::ProjectionMatrix{ pn::ProjectionType::PERSPECTIVE,
-		static_cast<float>(pn::app::window_desc.width), static_cast<float>(pn::app::window_desc.height),
-		0.01f, 1000.0f,
-		70.0f, 0.1f
-	};
-	camera_constants.data.proj = camera.GetMatrix();
-	camera_constants.data.view = pn::mat4f::Identity;
-
 	// init wave object
 	wave_transform.position	= { 0, 0, 15 };
 	wave_transform.scale	= { 1, 1, 1 };
@@ -195,7 +187,7 @@ void Init() {
 
 	// ---- CREATE OFF-SCREEN RENDER TARGET -----
 
-	auto back_buffer           = pn::GetSwapChainBuffer(swap_chain);
+	auto back_buffer           = pn::GetSwapChainBuffer(SWAP_CHAIN);
 	auto back_buffer_desc      = pn::GetDesc(back_buffer);
 	back_buffer_desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
@@ -215,11 +207,8 @@ void Init() {
 void Update(const double dt) {}
 
 void Render() {
-	// Set render target backbuffer color
-	pn::ClearDepthStencilView(display_depth_stencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	static const pn::vec4f color = { 0.0f, 0.0f, 0.0f, 1.000f };
-	pn::ClearRenderTargetView(display_render_target, color);
 	pn::ClearRenderTargetView(offscreen_render_target, color);
 	pn::ClearRenderTargetView(offscreen_render_target2, color);
 
@@ -271,7 +260,7 @@ void Render() {
 
 	pn::SetDepthStencilState();
 	//pn::SetRasterizerState(ENABLE_WIREFRAME_MODE);
-	pn::SetRenderTarget(offscreen_render_target, display_depth_stencil);
+	pn::SetRenderTarget(offscreen_render_target, DISPLAY_DEPTH_STENCIL);
 
 	pn::DrawIndexed(wave_mesh);
 
@@ -308,7 +297,7 @@ void Render() {
 
 		// ----- RENDER GAUSSIAN BLUR DIR 2 -----
 
-		pn::SetRenderTarget(display_render_target);
+		pn::SetRenderTarget(DISPLAY_RENDER_TARGET);
 
 		pn::SetProgramResource("offscreen_texture", offscreen_texture2);
 

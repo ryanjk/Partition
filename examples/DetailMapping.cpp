@@ -26,8 +26,6 @@ pn::dx_resource_view		normal_map;
 pn::dx_resource_view		height_map;
 pn::dx_sampler_state		ss;
 
-pn::dx_blend_state ENABLE_ALPHA_BLENDING;
-
 // --- wave instance data ----
 pn::transform_t			plane_transform;
 pn::mesh_buffer_t		plane_mesh_buffer;
@@ -57,12 +55,6 @@ void Init() {
 	sampler_desc.MinLOD			= -FLT_MAX;
 	sampler_desc.MaxLOD			= FLT_MAX;
 	ss							= pn::CreateSamplerState(sampler_desc);
-
-	// ------- SET BLENDING STATE ------------
-
-	auto desc = pn::CreateAlphaBlendDesc();
-	ENABLE_ALPHA_BLENDING = pn::CreateBlendState(&desc);
-	pn::SetBlendState(ENABLE_ALPHA_BLENDING);
 
 	// --------- LOAD SHADER -------------
 
@@ -106,17 +98,12 @@ void Render() {
 
 	// --- RENDER PLANE --------
 	
-	pn::SetShaderProgram(normal_map_program);
+	pn::SetStandardShaderProgram(normal_map_program);
 	
-	pn::SetProgramConstant("global_constants" , global_constants);
-	pn::SetProgramConstant("camera_constants" , camera_constants);
-	pn::SetProgramConstant("model_constants"  , model_constants);
 	pn::SetProgramConstant("directional_light", directional_light);
 	pn::SetProgramConstant("mapping_vars"     , mapping_vars);
 
 	// update uniform buffers that are shared across shaders
-	UpdateBuffer(global_constants);
-	UpdateBuffer(camera_constants);
 	UpdateBuffer(directional_light);
 	UpdateBuffer(mapping_vars);
 
@@ -124,15 +111,9 @@ void Render() {
 
 	// update wave
 	ImGui::Begin("Plane");
-	// update model matrix
 		pn::gui::EditStruct(plane_transform);
-		model_constants.data.model                        = LocalToWorldMatrix(plane_transform);
-		model_constants.data.model_view_inverse_transpose = pn::Transpose(pn::Inverse(model_constants.data.model * camera_constants.data.view));
-		model_constants.data.mvp                          = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 	ImGui::End(); // Plane
-
-	// send updates to constant buffers
-	UpdateBuffer(model_constants);
+	UpdateModelConstantCBuffer(plane_transform);
 
 	pn::SetProgramResource("diffuse_map", diffuse_map);
 	pn::SetProgramResource("normal_map", normal_map);

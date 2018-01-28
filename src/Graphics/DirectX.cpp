@@ -37,7 +37,6 @@ const unsigned int DEFAULT_SHADER_COMPILATION_FLAGS = D3DCOMPILE_OPTIMIZATION_LE
 
 dx_device         _device;
 dx_context        _context;
-shader_program_t* _program;
 
 // --------------- FUNCTIONS --------------------
 
@@ -596,92 +595,12 @@ void ResizeRenderTargetViewportCamera(
 
 // --------- SHADER STATE -----------------
 
-void SetShaderProgram(shader_program_t& shader_program) {
-	pn::SetInputLayout(shader_program.input_layout_data);
-	pn::SetVertexShader(shader_program.vertex_shader_data.shader);
-	pn::SetPixelShader(shader_program.pixel_shader_data.shader);
-	_program = &shader_program;
-}
-
 void SetVertexShader(dx_vertex_shader shader) {
 	_context->VSSetShader(shader.Get(), nullptr, 0);
 }
 
 void SetPixelShader(dx_pixel_shader shader) {
 	_context->PSSetShader(shader.Get(), nullptr, 0);
-}
-
-void SetVertexBuffers(const mesh_buffer_t& mesh_buffer) {
-	const input_layout_data_t& layout = _program->input_layout_data;
-	const auto NUM_PARAMETERS         = layout.desc.size();
-
-	pn::vector<ID3D11Buffer*> vertex_buffers;
-	Reserve(vertex_buffers, NUM_PARAMETERS);
-
-	pn::vector<unsigned int> strides;
-	Reserve(strides, NUM_PARAMETERS);
-
-	pn::vector<unsigned int> offsets;
-	Reserve(offsets, NUM_PARAMETERS);
-
-	for (size_t i = 0; i < layout.desc.size(); ++i) {
-		const auto& el = layout.desc[i];
-		unsigned int index = layout.desc[i].SemanticIndex;
-		std::string type = el.SemanticName;
-		if (type == "POSITION") {
-			PushBack(vertex_buffers, mesh_buffer.vertices.Get());
-			PushBack(strides, sizeof(pn::vec3f));
-			PushBack(offsets, 0);
-		}
-		else if (type == "NORMAL") {
-			PushBack(vertex_buffers, mesh_buffer.normals.Get());
-			PushBack(strides, sizeof(pn::vec3f));
-			PushBack(offsets, 0);
-		}
-		else if (type == "TEXCOORD") {
-			if (index == 0) {
-				PushBack(vertex_buffers, mesh_buffer.uvs.Get());
-				PushBack(strides, sizeof(pn::vec2f));
-				PushBack(offsets, 0);
-			}
-			else if (index == 1) {
-				PushBack(vertex_buffers, mesh_buffer.uv2s.Get());
-				PushBack(strides, sizeof(pn::vec2f));
-				PushBack(offsets, 0);
-			}
-			else {
-				LogError("TEXCOORD with index {} not implemented", index);
-			}
-		}
-		else if (type == "TANGENT") {		
-			if (index == 0) {
-				PushBack(vertex_buffers, mesh_buffer.tangents.Get());
-				PushBack(strides, sizeof(pn::vec3f));
-				PushBack(offsets, 0);
-			}
-			else if (index == 1) {
-				PushBack(vertex_buffers, mesh_buffer.bitangents.Get());
-				PushBack(strides, sizeof(pn::vec3f));
-				PushBack(offsets, 0);
-			}
-			else {
-				LogError("TANGENT with index {} not implemented", index);
-			}
-		}
-		else if (type == "COLOR") {
-			PushBack(vertex_buffers, mesh_buffer.colors.Get());
-			PushBack(strides, sizeof(pn::vec4f));
-			PushBack(offsets, 0);
-		}
-		else {
-			LogError("Unknown parameter type '{}' in MeshBuffer", type);
-		}
-	}
-
-	// @TODO: Create wrappers around these to simplify interfaces
-	_context->IASetVertexBuffers(0, vertex_buffers.size(), const_cast<const pn::vector<ID3D11Buffer*>&>(vertex_buffers).data(), strides.data(), offsets.data());
-	_context->IASetIndexBuffer(mesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
-	_context->IASetPrimitiveTopology(mesh_buffer.topology);
 }
 
 void SetInputLayout(const input_layout_data_t& layout_desc) {
@@ -702,9 +621,6 @@ void SetProgramConstant(const shader_program_t& program, const pn::string& buffe
 	SetVSConstant(program.vertex_shader_data.reflection, buffer_name, buffer);
 	SetPSConstant(program.pixel_shader_data.reflection, buffer_name, buffer);
 }
-void SetProgramConstant(const pn::string& buffer_name, const dx_buffer& buffer) {
-	SetProgramConstant(*_program, buffer_name, buffer);
-}
 
 void SetVSShaderResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view) {
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, resource_name);
@@ -722,9 +638,7 @@ void SetProgramResource(const shader_program_t& program, const pn::string& resou
 	SetVSShaderResource(program.vertex_shader_data.reflection, resource_name, resource_view);
 	SetPSShaderResource(program.pixel_shader_data.reflection, resource_name, resource_view);
 }
-void SetProgramResource(const pn::string& resource_name, dx_resource_view& resource_view) {
-	SetProgramResource(*_program, resource_name, resource_view);
-}
+
 
 void SetVSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state) {
 	unsigned int start_slot = GetShaderResourceStartSlot(reflection, sampler_name);
@@ -740,9 +654,7 @@ void SetProgramSampler(const shader_program_t& program, const pn::string& sample
 	SetVSSampler(program.vertex_shader_data.reflection, sampler_name, sampler_state);
 	SetPSSampler(program.pixel_shader_data.reflection, sampler_name, sampler_state);
 }
-void SetProgramSampler(const pn::string& sampler_name, dx_sampler_state& sampler_state) {
-	SetProgramSampler(*_program, sampler_name, sampler_state);
-}
+
 
 // ----------- BLENDING ----------------
 
@@ -772,6 +684,12 @@ void SetBlendState(dx_blend_state blend_state) {
 	_context->OMSetBlendState(blend_state.Get(), 0, 0xffffffff);
 }
 
+dx_blend_state GetBlendState() {
+	dx_blend_state blend_state;
+	_context->OMGetBlendState(blend_state.GetAddressOf(), nullptr, nullptr);
+	return blend_state;
+}
+
 // --------- DEPTH STENCIL -------------
 
 dx_depth_stencil_state CreateDepthStencilState(CD3D11_DEPTH_STENCIL_DESC* desc) {
@@ -791,6 +709,12 @@ void SetDepthStencilState(dx_depth_stencil_state depth_stencil_state) {
 	_context->OMSetDepthStencilState(depth_stencil_state.Get(), 1);
 }
 
+dx_depth_stencil_state GetDepthStencilState() {
+	dx_depth_stencil_state state;
+	_context->OMGetDepthStencilState(state.GetAddressOf(), nullptr);
+	return state;
+}
+
 // -------- RASTERIZER -------------
 
 dx_rasterizer_state CreateRasterizerState(CD3D11_RASTERIZER_DESC* desc) {
@@ -805,6 +729,12 @@ void SetRasterizerState() {
 
 void SetRasterizerState(dx_rasterizer_state rasterizer_state) {
 	_context->RSSetState(rasterizer_state.Get());
+}
+
+dx_rasterizer_state GetRasterizerState() {
+	dx_rasterizer_state state;
+	_context->RSGetState(state.GetAddressOf());
+	return state;
 }
 
 // ----------- DRAWING FUNCTIONS ------------

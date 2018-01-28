@@ -83,14 +83,7 @@ pn::dx_resource_view      offscreen_texture2;
 pn::shader_program_t      image_program;
 pn::mesh_buffer_t         screen_mesh;
 
-pn::dx_depth_stencil_state DISABLE_DEPTH_TEST;
-pn::dx_rasterizer_state    ENABLE_WIREFRAME_MODE;
-
 void Init() {
-	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
-	pn::SetResourceDirectoryName("Resources");
-
-	Log("Size of resource id: {} bytes", sizeof(pn::rdb::resource_id_t));
 
 	// ---------- LOAD RESOURCES ----------------
 
@@ -117,18 +110,6 @@ void Init() {
 	auto desc             = pn::CreateAlphaBlendDesc();
 	ENABLE_ALPHA_BLENDING = pn::CreateBlendState(&desc);
 	pn::SetBlendState(ENABLE_ALPHA_BLENDING);
-
-	// --------- CREATE DEPTH STATE -----
-
-	CD3D11_DEPTH_STENCIL_DESC ds_desc(CD3D11_DEFAULT{});
-	ds_desc.DepthEnable = false;
-	DISABLE_DEPTH_TEST  = pn::CreateDepthStencilState(&ds_desc);
-
-	// -------- RASTERIZER STATE --------
-
-	CD3D11_RASTERIZER_DESC rs_desc(CD3D11_DEFAULT{});
-	rs_desc.FillMode = D3D11_FILL_WIREFRAME;
-	ENABLE_WIREFRAME_MODE = pn::CreateRasterizerState(&rs_desc);
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -219,17 +200,12 @@ void Render() {
 		directional_light.data.direction = directional_light.data.direction == pn::vec3f::Zero ? pn::vec3f::Zero : pn::Normalize(directional_light.data.direction);
 	ImGui::End(); // Lights
 
-	UpdateBuffer(global_constants);
-	UpdateBuffer(camera_constants);
 	UpdateBuffer(directional_light);
 
 	// ------ BEGIN WATER
 
-	pn::SetShaderProgram(wave_program);
+	pn::SetStandardShaderProgram(wave_program);
 
-	SetProgramConstant("global_constants", global_constants);
-	SetProgramConstant("camera_constants", camera_constants);
-	SetProgramConstant("model_constants", model_constants);
 	SetProgramConstant("directional_light", directional_light);
 	SetProgramConstant("wave", wave);
 
@@ -240,9 +216,7 @@ void Render() {
 	ImGui::Begin("Waves");
 	// update model matrix
 	pn::gui::EditStruct(wave_transform);
-	model_constants.data.model = LocalToWorldMatrix(wave_transform);
-	model_constants.data.model_view_inverse_transpose = pn::Transpose(pn::Inverse(model_constants.data.model * camera_constants.data.view));
-	model_constants.data.mvp = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
+	UpdateModelConstantCBuffer(wave_transform);
 
 	for (int i = 0; i < N_WAVES; ++i) {
 		ImGui::PushID(i);
@@ -250,16 +224,12 @@ void Render() {
 		ImGui::PopID();
 	}
 	ImGui::End(); // Waves
+	UpdateBuffer(wave);
 
 	pn::SetProgramResource("tex", tex);
 	pn::SetProgramSampler("ss", ss);
 
-	// send updates to constant buffers
-	UpdateBuffer(model_constants);
-	UpdateBuffer(wave);
-
-	pn::SetDepthStencilState();
-	//pn::SetRasterizerState(ENABLE_WIREFRAME_MODE);
+	SetDepthTest(true);
 	pn::SetRenderTarget(offscreen_render_target, DISPLAY_DEPTH_STENCIL);
 
 	pn::DrawIndexed(wave_mesh);
@@ -273,16 +243,15 @@ void Render() {
 	ImGui::End();
 
 	{
-		pn::SetShaderProgram(image_program);
+		pn::SetStandardShaderProgram(image_program);
+
 		pn::SetVertexBuffers(screen_mesh);
 
-		SetProgramConstant("global_constants", global_constants);
 		SetProgramConstant("blur_params", blur_params);
 
 		pn::SetProgramSampler("ss", ss);
 
-		pn::SetDepthStencilState(DISABLE_DEPTH_TEST);
-		//pn::SetRasterizerState();
+		SetDepthTest(false);
 
 		// ----- RENDER GAUSSIAN BLUR DIR 1 -----
 

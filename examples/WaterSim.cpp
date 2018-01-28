@@ -67,9 +67,6 @@ pn::dx_sampler_state	ss;
 // ---- misc --------
 pn::linear_allocator frame_alloc(1024 * 1024);
 
-// ---- misc d3d11 state -----
-pn::dx_blend_state ENABLE_ALPHA_BLENDING;
-
 pn::string recomp() {
 	auto vs_byte_code = pn::CompileVertexShader(pn::GetResourcePath("water.hlsl"));
 	if (pn::Size(vs_byte_code) > 0) {
@@ -96,8 +93,6 @@ pn::string recomp() {
 void Init() {
 
 	REGISTER_COMMAND(recomp, pn::string, void);
-
-	Log("Size of resource id: {} bytes", sizeof(pn::rdb::resource_id_t));
 
 	// ---------- LOAD RESOURCES ----------------
 
@@ -136,9 +131,7 @@ void Init() {
 
 	// ------- SET BLENDING STATE ------------
 
-	auto desc = pn::CreateAlphaBlendDesc();
-	ENABLE_ALPHA_BLENDING = pn::CreateBlendState(&desc);
-	pn::SetBlendState(ENABLE_ALPHA_BLENDING);
+	SetAlphaBlend(true);
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -227,17 +220,12 @@ void Render() {
 
 // ------ BEGIN WATER
 
-	pn::SetShaderProgram(wave_program);
+	pn::SetStandardShaderProgram(wave_program);
 
-	SetProgramConstant("global_constants" , global_constants);
-	SetProgramConstant("camera_constants" , camera_constants);
-	SetProgramConstant("model_constants"  , model_constants);
 	SetProgramConstant("directional_light", directional_light);
 	SetProgramConstant("wave"             , wave);
 
 	// update uniform buffers that are shared across shaders
-	UpdateBuffer(global_constants);
-	UpdateBuffer(camera_constants);
 	UpdateBuffer(directional_light);
 
 	auto& wave_mesh = wave_mesh_buffer;
@@ -261,7 +249,6 @@ void Render() {
 	SetProgramSampler(wave_program, "ss", ss);
 
 	// send updates to constant buffers
-	UpdateBuffer(model_constants);
 	UpdateBuffer(wave);
 
 	pn::DrawIndexed(wave_mesh);

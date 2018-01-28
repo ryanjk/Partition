@@ -191,7 +191,6 @@ struct shader_program_t {
 
 extern dx_device         _device;
 extern dx_context        _context;
-extern shader_program_t* _program;
 
 // ------------------- FUNCTIONS ----------------------
 
@@ -384,8 +383,6 @@ void ResizeRenderTargetViewportCamera(
 
 // --------- SHADER STATE ----------------
 
-void SetShaderProgram(shader_program_t& shader_program);
-
 void SetVertexShader(dx_vertex_shader shader);
 void SetPixelShader(dx_pixel_shader shader);
 
@@ -396,26 +393,25 @@ void SetVertexBuffers(const mesh_buffer_t& mesh_buffer);
 void SetVSConstant(dx_shader_reflection reflection, const pn::string& buffer_name, const dx_buffer& buffer);
 void SetPSConstant(dx_shader_reflection reflection, const pn::string& buffer_name, const dx_buffer& buffer);
 void SetProgramConstant(const shader_program_t& program, const pn::string& buffer_name, const dx_buffer& buffer);
-void SetProgramConstant(const pn::string& buffer_name, const dx_buffer& buffer);
 
 void SetVSResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view);
 void SetPSResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view);
 void SetProgramResource(const shader_program_t& program, const pn::string& resource_name, dx_resource_view& resource_view);
-void SetProgramResource(const pn::string& resource_name, dx_resource_view& resource_view);
 
 void SetVSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state);
 void SetPSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state);
 void SetProgramSampler(const shader_program_t& program, const pn::string& sampler_name, dx_sampler_state& sampler_state);
-void SetProgramSampler(const pn::string& sampler_name, dx_sampler_state& sampler_state);
 
 
 // ---------- BLENDING -----------------
 
 CD3D11_BLEND_DESC CreateAlphaBlendDesc(const int render_target = 0);
-dx_blend_state   CreateBlendState(CD3D11_BLEND_DESC* blend_desc = nullptr);
+dx_blend_state    CreateBlendState(CD3D11_BLEND_DESC* blend_desc = nullptr);
 
 void SetBlendState();
 void SetBlendState(dx_blend_state blend_state);
+
+dx_blend_state GetBlendState();
 
 // --------- DEPTH STENCIL -------------
 
@@ -424,12 +420,16 @@ dx_depth_stencil_state CreateDepthStencilState(CD3D11_DEPTH_STENCIL_DESC* desc =
 void SetDepthStencilState();
 void SetDepthStencilState(dx_depth_stencil_state depth_stencil_state);
 
+dx_depth_stencil_state GetDepthStencilState();
+
 // -------- RASTERIZER -------------
 
 dx_rasterizer_state CreateRasterizerState(CD3D11_RASTERIZER_DESC* desc = nullptr);
 
 void SetRasterizerState();
 void SetRasterizerState(dx_rasterizer_state rasterizer_state);
+
+dx_rasterizer_state GetRasterizerState();
 
 // -------- DRAWING FUNCTIONS ---------------
 

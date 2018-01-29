@@ -12,6 +12,23 @@ FUNCTION(CreateExample exampleName)
 	TARGET_LINK_LIBRARIES(${exampleName} Partition)
 	SET_PROPERTY(TARGET ${exampleName} PROPERTY CXX_STANDARD 17)
 	SET_PROPERTY(TARGET ${exampleName} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${exampleName}")
+	
+	ADD_CUSTOM_COMMAND(
+        TARGET ${exampleName} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SOURCE_DIR}/dll/x64/assimp-vc140-mt.dll
+                $<TARGET_FILE_DIR:${exampleName}>/assimp-vc140-mt.dll)
+
+	IF(NOT EXISTS ${CMAKE_SOURCE_DIR}/partition.json)
+		MESSAGE(SEND_ERROR "Missing configuration file `${CMAKE_SOURCE_DIR}/partition.json`. \n"
+			"You can use `${CMAKE_SOURCE_DIR}/partition.config.json` as template ")
+	ENDIF()
+
+	ADD_CUSTOM_COMMAND(
+        TARGET ${exampleName} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SOURCE_DIR}/partition.json
+                $<TARGET_FILE_DIR:${exampleName}>/partition.json)
 ENDFUNCTION(CreateExample)
 
 CreateExample(DetailMapping)

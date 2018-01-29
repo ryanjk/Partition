@@ -5,6 +5,7 @@
 
 #include <Application\Global.h>
 #include <IO\PathUtil.h>
+#include <Utilities\JsonUtil.h>
 
 namespace pn {
 
@@ -54,32 +55,24 @@ void LoadEngineConfiguration() {
 	JsonConfiguration() = LoadJsonConfiguration(PARTION_CONFIGURATION_FILE_NAME);
 	Json& config = JsonConfiguration();
 
-#define GET_STRING(JSON, DEFAULT) (((JSON).is_string()) ? ((JSON).string_value()): (DEFAULT))
-#define GET_INT(JSON, DEFAULT) (((JSON).is_number()) ? ((JSON).int_value()): (DEFAULT))
-#define GET_BOOL(JSON, DEFAULT) (((JSON).is_bool()) ? ((JSON).bool_value()): (DEFAULT))
-
 	if (config.is_object()){
 		LogInfo("Loading custom configuration");
 
 		const Json& screen = config["screen"];
 		if (screen.is_object()) {
 			LogDebug("Loading Screen Configuration");
-			window_desc.width = GET_INT(screen["width"], 1366);
-			window_desc.height = GET_INT(screen["height"], 768);
-			window_desc.fullscreen = GET_BOOL(screen["full_screen"], false);
+			window_desc.width = LogValueInfo("Window Width: {}", as_int(screen["width"], 1366));
+			window_desc.height = LogValueInfo("Window Height: {}", as_int(screen["height"], 768));
+			window_desc.fullscreen = LogValueInfo("Window Fullscreen: {}", as_bool(screen["full_screen"], false));
 		}
 
 		const Json& resources = config["resources"];
 		if (resources.is_object()){
 			LogDebug("Loading Resources Configuration");
-			pn::SetWorkingDirectory(GET_STRING(resources["path"], "."));
-			pn::SetResourceDirectoryName(GET_STRING(resources["name"], "resources"));
+			pn::SetWorkingDirectory(LogValueInfo("Resources Folder Path: {}", as_string(resources["path"], ".")));
+			pn::SetResourceDirectoryName(LogValueInfo("Resources Folder Name: {}", as_string(resources["name"], "resources")));
 		}
 	}
-
-#undef GET_STRING
-#undef GET_INT
-#undef GET_BOOL
 }
 
 // ---------- FUNCTIONS ---------

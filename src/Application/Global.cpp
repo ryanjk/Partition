@@ -22,6 +22,8 @@ double time_since_application_start;
 
 bool exit;
 
+// ---------- FUNCTIONS ---------
+
 json11::Json& JsonConfiguration() {
 	static json11::Json config;
 	return config;
@@ -52,7 +54,7 @@ json11::Json LoadJsonConfiguration(const std::string& file_name) {
 void LoadEngineConfiguration() {
 	using namespace json11;
 
-	JsonConfiguration() = LoadJsonConfiguration(PARTION_CONFIGURATION_FILE_NAME);
+	JsonConfiguration() = LoadJsonConfiguration(PARTITION_CONFIGURATION_FILE_NAME);
 	Json& config = JsonConfiguration();
 
 	if (config.is_object()){
@@ -74,8 +76,6 @@ void LoadEngineConfiguration() {
 		}
 	}
 }
-
-// ---------- FUNCTIONS ---------
 
 void Exit() {
 	exit = true;

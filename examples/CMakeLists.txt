@@ -13,6 +13,7 @@ FUNCTION(CreateExample exampleName)
 
 	SET_PROPERTY(TARGET ${exampleName} PROPERTY CXX_STANDARD 17)
 	SET_PROPERTY(TARGET ${exampleName} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${exampleName}")
+	SET_PROPERTY(TARGET ${exampleName} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)")
 	
 	ADD_CUSTOM_COMMAND(
         TARGET ${exampleName} POST_BUILD
@@ -30,6 +31,8 @@ FUNCTION(CreateExample exampleName)
         COMMAND ${CMAKE_COMMAND} -E copy
                 ${CMAKE_SOURCE_DIR}/partition.json
                 $<TARGET_FILE_DIR:${exampleName}>/partition.json)
+				
+	
 ENDFUNCTION(CreateExample)
 
 CreateExample(DetailMapping)

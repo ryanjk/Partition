@@ -6,7 +6,7 @@ namespace pn {
 
 namespace app {
 
-#define PARTION_CONFIGURATION_FILE_NAME "partition.json"
+#define PARTITION_CONFIGURATION_FILE_NAME "./partition.json"
 
 // -------- VARIABLES -----------
 

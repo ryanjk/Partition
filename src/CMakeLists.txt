@@ -1,5 +1,5 @@
 ﻿file(GLOB_RECURSE ENGINE_SOURCE *.cpp)
-file(GLOB_RECURSE ENGINE_HEADERS *.h)
+file(GLOB_RECURSE ENGINE_HEADERS *.h *.inc)
 
 GroupSources(src)
 
@@ -14,6 +14,7 @@ SET(PARTITION_DEPENDENCIES
 	d3dcompiler 
 	dxgi 
 	d3d11
+	json11
 )
 
 SET(${CXX_STANDARD_REQUIRED} ON)

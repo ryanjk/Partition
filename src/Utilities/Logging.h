@@ -39,3 +39,4 @@ void __Log(const spdlog::level::level_enum level, const std::string& filename, c
 #define Log(...) BaseLog(spdlog::level::level_enum::trace, __VA_ARGS__)
 #define LogDebug(...) BaseLog(spdlog::level::level_enum::debug, __VA_ARGS__)
 #define LogError(...) BaseLog(spdlog::level::level_enum::err, __VA_ARGS__)
+#define LogInfo(...) BaseLog(spdlog::level::level_enum::info, __VA_ARGS__)

@@ -6,6 +6,8 @@ namespace pn {
 
 namespace app {
 
+#define PARTION_CONFIGURATION_FILE_NAME "partition.json"
+
 // -------- VARIABLES -----------
 
 extern pn::application_window_desc window_desc;
@@ -16,6 +18,8 @@ extern double dt;
 extern double time_since_application_start;
 
 // ------ FUNCTIONS ------------
+
+void LoadEngineConfiguration();
 
 void Exit();
 bool ShouldExit();

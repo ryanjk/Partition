@@ -178,25 +178,20 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		LogError("Couldn't initialize COM: {}", pn::ErrMsg(hr));
 	}
 
+	// Load Custom Configuration
+	pn::app::LoadEngineConfiguration();
+
 	// INIT WINDOWS
 
 	auto& awd		= pn::app::window_desc;
 	awd.h_instance	= hInstance;
-	awd.width		= 1366;
-	awd.height		= 768;
-	awd.fullscreen	= false;
 	h_wnd			= pn::CreateApplicationWindow(awd, WindowProc);
 
 	// INIT DIRECTX
-
 	auto device	= pn::CreateDevice();
 	pn::SetDevice(device);
 
 	// ------- POST DX INIT ---------
-
-	pn::SetWorkingDirectory("C:/Users/Ryan/Documents/Visual Studio 2017/Projects/Partition/");
-	pn::SetResourceDirectoryName("resources");
-
 	InitRenderSystem(h_wnd, awd);
 	InitMeshLoadUtil(device);
 	debug::InitDebugDraw();

@@ -37,6 +37,12 @@ pn::vec4f InverseTransformVector(const transform_t& transform, const pn::vec4f& 
 
 pn::mat4f TransformToMatrix(const transform_t& transform);
 
+void TranslateLocal(transform_t& t, const vec3f& translation);
+void TranslateWorld(transform_t& t, const vec3f& translation);
+
+void RotateLocal(transform_t& t, const vec3f& axis, const float angle);
+void RotateWorld(transform_t& t, const vec3f& axis, const float angle);
+
 namespace gui {
 
 template<>

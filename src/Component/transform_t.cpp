@@ -71,6 +71,26 @@ pn::mat4f TransformToMatrix(const transform_t& transform) {
 	return SRTMatrix(transform.scale, transform.rotation, transform.position);
 }
 
+void TranslateLocal(transform_t& t, const vec3f& translation) {
+	auto local_translation = RotateVector(translation, t.rotation);
+	t.position += local_translation;
+}
+
+void TranslateWorld(transform_t& t, const vec3f& translation) {
+	t.position += translation;
+}
+
+void RotateLocal(transform_t& t, const vec3f& axis, const float angle) {
+	auto rotation_axis = RotateVector(axis, t.rotation);
+	auto rotation = AxisAngleToQuaternion(rotation_axis, angle);
+	t.rotation *= rotation;
+}
+
+void RotateWorld(transform_t& t, const vec3f& axis, const float angle) {
+	auto rotation = AxisAngleToQuaternion(axis, angle);
+	t.rotation *= rotation;
+}
+
 namespace gui {
 
 template<>

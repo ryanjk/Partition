@@ -22,6 +22,8 @@
 #include <Application\ResourceDatabase.h>
 #include <Application\MainLoop.inc>
 
+#include <System\Flycam.h>
+
 using namespace pn;
 
 // -- Uniform buffer data definitions ----
@@ -163,48 +165,7 @@ void Init() {
 }
 
 void Update(const double dt) {
-
-	transform_t& transform = MAIN_CAMERA.transform;
-
-	static const float SPEED = 20.0f * dt;
-	pn::vec3f camera_translation{ 0.0f, 0.0f, 0.0f };
-	if (pn::input::GetKeyState(pn::input::W) == pn::input::key_state::PRESSED) {
-		camera_translation += pn::vec3f(0.0f, 0.0f, SPEED);
-	}
-	if (pn::input::GetKeyState(pn::input::S) == pn::input::key_state::PRESSED) {
-		camera_translation += pn::vec3f(0.0f, 0.0f, -SPEED);
-	}
-	if (pn::input::GetKeyState(pn::input::A) == pn::input::key_state::PRESSED) {
-		camera_translation += pn::vec3f(-SPEED, 0.0f, 0.0f);
-	}
-	if (pn::input::GetKeyState(pn::input::D) == pn::input::key_state::PRESSED) {
-		camera_translation += pn::vec3f(SPEED, 0.0f, 0.0f);
-	}
-
-	auto mouse_pos_delta = pn::input::GetMousePosDelta();
-	if (mouse_pos_delta.x != 0 || mouse_pos_delta.y != 0) {
-		Log("X: {}, Y: {}", mouse_pos_delta.x, mouse_pos_delta.y);
-
-		static const float ROT_SPEED = 0.5f;
-		vec2f md (mouse_pos_delta.x, mouse_pos_delta.y );
-		md = md * ROT_SPEED * dt;
-
-		auto x_axis = RotateVector(vec3f::UnitX, transform.rotation);
-		auto y_axis = vec3f::UnitY;
-		auto rot = AxisAngleToQuaternion(x_axis, md.y) * AxisAngleToQuaternion(y_axis, md.x);
-		transform.rotation = transform.rotation * rot;
-	}
-	
-	auto local_x = RotateVector(vec3f::UnitX, transform.rotation);
-	auto local_y = RotateVector(vec3f::UnitY, transform.rotation);
-	auto local_z = RotateVector(vec3f::UnitZ, transform.rotation);
-	const vec3f o = transform.position;
-	debug::DrawLine(o, local_x, 10.0f, { 1, 0, 0});
-	debug::DrawLine(o, local_y, 10.0f, { 0, 1, 0});
-	debug::DrawLine(o, local_z, 10.0f, { 0, 0, 1});
-
-	transform.position += RotateVector(camera_translation, transform.rotation);
-	
+	UpdateFlycam(MAIN_CAMERA.transform, 20, 0.5);
 }
 
 void Render() {

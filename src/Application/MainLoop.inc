@@ -49,6 +49,7 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 
 	switch (uMsg) {
 	case WM_SIZE:
+		Log("WM_SIZE");
 		if (GetDevice() != nullptr && wParam != SIZE_MINIMIZED) {
 			auto width = (unsigned int) LOWORD(lParam);
 			auto height = (unsigned int) HIWORD(lParam);

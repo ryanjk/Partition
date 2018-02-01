@@ -165,7 +165,7 @@ void Init() {
 }
 
 void Update(const double dt) {
-	UpdateFlycam(MAIN_CAMERA.transform, 20, 0.5);
+	//UpdateFlycam(MAIN_CAMERA.transform, 20, 0.5);
 }
 
 void Render() {

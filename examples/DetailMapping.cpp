@@ -6,8 +6,6 @@
 #include <Application\ResourceDatabase.h>
 #include <Application\MainLoop.inc>
 
-
-
 struct alignas(16) directional_light_t {
 	pn::vec3f direction;
 	float intensity;
@@ -44,17 +42,8 @@ void Init() {
 	normal_map	= pn::LoadTexture2D(pn::GetResourcePath("normal.png"));
 	height_map	= pn::LoadTexture2D(pn::GetResourcePath("depth.png"));
 
-	CD3D11_SAMPLER_DESC sampler_desc;
-	sampler_desc.Filter			= D3D11_FILTER::D3D11_FILTER_ANISOTROPIC;
-	sampler_desc.AddressU		= D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.AddressV		= D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.AddressW		= D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.MipLODBias		= 0.0f;
-	sampler_desc.MaxAnisotropy	= 16;
-	sampler_desc.ComparisonFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_NEVER;
-	sampler_desc.MinLOD			= -FLT_MAX;
-	sampler_desc.MaxLOD			= FLT_MAX;
-	ss							= pn::CreateSamplerState(sampler_desc);
+	CD3D11_SAMPLER_DESC sampler_desc(D3D11_DEFAULT);
+	ss	= pn::CreateSamplerState(sampler_desc);
 
 	// --------- LOAD SHADER -------------
 

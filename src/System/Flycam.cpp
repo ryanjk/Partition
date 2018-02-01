@@ -32,7 +32,7 @@ void UpdateFlycam(transform_t& camera, const float movement_speed, const float r
 		RotateWorld(camera, vec3f::UnitY, md.x);
 	}
 
-	static const float SPEED = movement_speed * dt;
+	const float SPEED = movement_speed * dt;
 	TranslateLocal(camera, camera_translation * SPEED);
 };
 

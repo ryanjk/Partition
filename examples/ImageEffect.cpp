@@ -63,9 +63,6 @@ pn::shader_program_t	wave_program;
 pn::dx_resource_view	tex;
 pn::dx_sampler_state	ss;
 
-// ---- misc d3d11 state -----
-pn::dx_blend_state        ENABLE_ALPHA_BLENDING;
-
 struct alignas(16) blur_params_t {
 	pn::vec2f dir;
 	float sigma;
@@ -81,7 +78,6 @@ pn::dx_render_target_view offscreen_render_target2;
 pn::dx_resource_view      offscreen_texture2;
 
 pn::shader_program_t      image_program;
-pn::mesh_buffer_t         screen_mesh;
 
 void Init() {
 
@@ -104,12 +100,6 @@ void Init() {
 
 	tex	= pn::LoadTexture2D(pn::GetResourcePath("image.png"));
 	ss	= pn::CreateSamplerState();
-
-	// ------- SET BLENDING STATE ------------
-
-	auto desc             = pn::CreateAlphaBlendDesc();
-	ENABLE_ALPHA_BLENDING = pn::CreateBlendState(&desc);
-	pn::SetBlendState(ENABLE_ALPHA_BLENDING);
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -145,26 +135,6 @@ void Init() {
 	blur_params.data.sigma = 1;
 
 	image_program = pn::CompileShaderProgram(pn::GetResourcePath("image_effect.hlsl"));
-
-	// ------- CREATE MESH BUFFER FOR SCREEN ---------
-
-	{
-		const pn::vector<pn::vec3f> vertices = {
-			pn::vec3f(-1,-1,0),
-			pn::vec3f(-1,1,0),
-			pn::vec3f(1,1,0),
-			pn::vec3f(1,-1,0),
-		};
-		const pn::vector<unsigned int> indices = {
-			0, 1, 2,
-			0, 2, 3
-		};
-		pn::mesh_t screen_mesh_data{};
-		screen_mesh_data.vertices = vertices;
-		screen_mesh_data.indices  = indices;
-		screen_mesh_data.topology = D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-		screen_mesh               = pn::CreateMeshBuffer(screen_mesh_data);
-	}
 
 	// ---- CREATE OFF-SCREEN RENDER TARGET -----
 
@@ -243,15 +213,12 @@ void Render() {
 	ImGui::End();
 
 	{
-		pn::SetStandardShaderProgram(image_program);
-
-		pn::SetVertexBuffers(screen_mesh);
-
+		SetStandardShaderProgram(image_program);
 		SetProgramConstant("blur_params", blur_params);
-
-		pn::SetProgramSampler("ss", ss);
-
+		SetProgramSampler("ss", ss);
 		SetDepthTest(false);
+
+		_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 		// ----- RENDER GAUSSIAN BLUR DIR 1 -----
 
@@ -262,7 +229,7 @@ void Render() {
 		blur_params.data.dir = pn::vec2f(1, 0);
 		UpdateBuffer(blur_params);
 
-		pn::DrawIndexed(screen_mesh);
+		_context->Draw(4, 0);
 
 		// ----- RENDER GAUSSIAN BLUR DIR 2 -----
 
@@ -273,7 +240,8 @@ void Render() {
 		blur_params.data.dir = pn::vec2f(0, 1);
 		UpdateBuffer(blur_params);
 
-		pn::DrawIndexed(screen_mesh);
+		_context->Draw(4, 0);
+
 	}
 }
 

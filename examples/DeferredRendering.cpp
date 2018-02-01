@@ -151,6 +151,7 @@ void Render() {
 	SetProgramResource("display_texture", specular.texture);
 	_context->Draw(4, 0);
 	
+	SetViewport(app::window_desc.width, app::window_desc.height);
 }
 
 void MainLoopBegin() {

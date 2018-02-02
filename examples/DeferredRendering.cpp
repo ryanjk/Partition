@@ -37,8 +37,9 @@ gbuffer world;
 gbuffer normal;
 gbuffer specular;
 
-pn::shader_program_t      gbuffer_fill_shader;
-pn::shader_program_t      simple_texture_shader;
+pn::shader_program_t gbuffer_fill_shader;
+pn::shader_program_t simple_texture_shader;
+pn::shader_program_t deferred_lighting_shader;
 
 rdb::mesh_resource_t scene_mesh;
 
@@ -69,8 +70,9 @@ void Init() {
 	CD3D11_SAMPLER_DESC sampler_desc(D3D11_DEFAULT);
 	ss = pn::CreateSamplerState(sampler_desc);
 
-	gbuffer_fill_shader   = pn::CompileShaderProgram(pn::GetResourcePath("gbuffer_fill.hlsl"));
-	simple_texture_shader = pn::CompileShaderProgram(pn::GetResourcePath("simple_texture.hlsl"));
+	gbuffer_fill_shader      = pn::CompileShaderProgram(pn::GetResourcePath("gbuffer_fill.hlsl"));
+	simple_texture_shader    = pn::CompileShaderProgram(pn::GetResourcePath("simple_texture.hlsl"));
+	deferred_lighting_shader = pn::CompileShaderProgram(pn::GetResourcePath("deferred_lighting.hlsl"));
 
 	// ---- CREATE GBUFFERS -----
 
@@ -84,9 +86,16 @@ void Init() {
 		g.render_target = pn::CreateRenderTargetView(tex);
 	};
 	
+	back_buffer_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	InitGBuffer(albedo  , back_buffer_desc);
+
+	back_buffer_desc.Format = DXGI_FORMAT_R32_FLOAT;
 	InitGBuffer(world   , back_buffer_desc);
+
+	back_buffer_desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	InitGBuffer(normal  , back_buffer_desc);
+
+	back_buffer_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	InitGBuffer(specular, back_buffer_desc);
 
 }
@@ -126,7 +135,20 @@ void Render() {
 
 	SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
 
-	SetShaderProgram(simple_texture_shader);
+	SetStandardShaderProgram(deferred_lighting_shader);
+	SetDepthTest(false);
+	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	
+	SetProgramSampler("ss", ss);
+
+	SetProgramResource("albedo", albedo.texture);
+	SetProgramResource("world", world.texture);
+	SetProgramResource("normal", normal.texture);
+	SetProgramResource("specular", specular.texture);
+
+	_context->Draw(4, 0);
+
+	/*SetShaderProgram(simple_texture_shader);
 	
 	SetDepthTest(false);
 	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
@@ -151,7 +173,7 @@ void Render() {
 	SetProgramResource("display_texture", specular.texture);
 	_context->Draw(4, 0);
 	
-	SetViewport(app::window_desc.width, app::window_desc.height);
+	SetViewport(app::window_desc.width, app::window_desc.height);*/
 }
 
 void MainLoopBegin() {

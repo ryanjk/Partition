@@ -41,7 +41,7 @@ VS_OUT VS_main(VS_IN i) {
 
 struct PS_OUT {
 	float4 albedo   : SV_TARGET0;
-	float4 world    : SV_TARGET1;
+	float world    : SV_TARGET1;
 	float4 normal   : SV_TARGET2;
 	float4 specular : SV_TARGET3;
 };
@@ -50,8 +50,10 @@ PS_OUT PS_main(VS_OUT i) {
 	PS_OUT o;
 
 	o.albedo = float4(1, 0, 0, 1);
-	o.normal = i.n;
-	o.world  = float4(i.world_pos.xyz, 1);
+	o.normal = float4(normalize(i.n.xyz),0);
+	//o.world  = float4(i.world_pos.xyz, 1);
+	o.world = i.screen_pos.z;
+	//o.world = float4(d, d, d, 1);
 	o.specular = float4(1, 1, 1, 1);
 
 	return o;

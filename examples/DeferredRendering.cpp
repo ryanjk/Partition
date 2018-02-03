@@ -25,6 +25,25 @@
 
 using namespace pn;
 
+// --- cbuffer ---
+
+struct alignas(16) light_t {
+	vec3f light_position; float p;
+	vec3f light_color;    float p2;
+	float light_intensity;
+};
+
+template<>
+void pn::gui::EditStruct(light_t& light) {
+	DragFloat3("position##", &light.light_position.x, -10, 10);
+	DragFloat3("color##", &light.light_color.x, 0, 1);
+	DragFloat("intensity", &light.light_intensity, 0, 100);
+}
+
+#define NUM_LIGHTS 2
+light_t lights[NUM_LIGHTS];
+cbuffer<light_t> light;
+
 // --- gbuffer data ---
 
 struct gbuffer {
@@ -46,6 +65,8 @@ rdb::mesh_resource_t scene_mesh;
 transform_t dragon_transform;
 
 pn::dx_sampler_state	ss;
+
+dx_blend_state additive_blend;
 
 void Init() {
 
@@ -98,6 +119,22 @@ void Init() {
 	back_buffer_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	InitGBuffer(specular, back_buffer_desc);
 
+	// ----- INITIALIZE LIGHT DATA -----
+
+	InitializeCBuffer(light);
+	
+	for (int i = 0; i < NUM_LIGHTS; ++i) {
+		lights[i].light_color     = vec3f(1, 1, 1);
+		lights[i].light_intensity = 2.0f;
+		lights[i].light_position  = vec3f(0, 0.5f, 0);
+	}
+
+	// ----- CREATE BLEND DESC -------
+
+	CD3D11_BLEND_DESC blend_desc(D3D11_DEFAULT);
+	blend_desc.RenderTarget[0].BlendEnable = true;
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	additive_blend = CreateBlendState(&blend_desc);
 }
 
 void Update(const double dt) {}
@@ -110,6 +147,15 @@ void Render() {
 	pn::ClearRenderTargetView(world.render_target, color);
 	pn::ClearRenderTargetView(specular.render_target, color);
 
+	/*
+	ImGui::Begin("Lights");
+	for (int i = 0; i < NUM_LIGHTS; ++i) {
+		ImGui::PushID(i);
+		gui::EditStruct(lights[i]);
+		ImGui::PopID();
+	}
+	ImGui::End();
+	*/
 	// ------ BEGIN RENDER
 
 	SetDepthTest(true);
@@ -137,6 +183,7 @@ void Render() {
 
 	SetStandardShaderProgram(deferred_lighting_shader);
 	SetDepthTest(false);
+	SetBlendState(additive_blend);
 	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	
 	SetProgramSampler("ss", ss);
@@ -146,7 +193,15 @@ void Render() {
 	SetProgramResource("normal", normal.texture);
 	SetProgramResource("specular", specular.texture);
 
-	_context->Draw(4, 0);
+	SetProgramConstant("light", light);
+	
+	for (int i = 0; i < NUM_LIGHTS; ++i) {
+		light.data = lights[i];
+		UpdateBuffer(light);
+		_context->Draw(4, 0);
+	}
+
+	SetBlendState();
 
 	/*SetShaderProgram(simple_texture_shader);
 	

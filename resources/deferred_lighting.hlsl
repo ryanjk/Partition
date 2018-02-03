@@ -7,6 +7,12 @@ Texture2D specular : register(t4);
 
 SamplerState ss	: register(s1);
 
+cbuffer light : register(b4) {
+	float3 light_position;
+	float3 light_color; float _padding;
+	float  light_intensity;
+}
+
 // ----- INPUT / OUTPUT --------
 
 struct VS_IN {
@@ -51,28 +57,21 @@ VS_OUT VS_main(VS_IN i) {
 
 // ----- PIXEL SHADER -------
 
-float  camera_near = 0.01;
-float  camera_far = 1000;
-
-float viewportToWorld(float z) {
-	float A = camera_far / (camera_far - camera_near);                                             
-	float B = -1 * A * camera_near;
-	return B / (z - A);
-}
-
 float4 PS_main(VS_OUT i) : SV_TARGET {
 	float3 t_albedo   = albedo.Sample(ss, i.uv).xyz;
 	float t_world     = world.Sample(ss, i.uv).x;
-	float3 t_normal   = normal.Sample(ss, i.uv).xyz;
+	float3 t_normal   = normalize(normal.Sample(ss, i.uv).xyz);
 	float3 t_specular = specular.Sample(ss, i.uv).xyz;
 
-	const float  LIGHT_POW = 20.0;
-	const float3 LIGHT_POS = float3(2, 2, 3);
-
 	float3 world_pos = i.frustum_dir * (t_world / i.frustum_dir.z);
-	float dist_to_l = length(LIGHT_POS - world_pos);
-	float3 s_to_l = normalize(LIGHT_POS - world_pos);
-	float3 c = dot(s_to_l, t_normal) * LIGHT_POW * (1/pow(dist_to_l,2));
+	float3 s_to_l = light_position - world_pos;
+	float dist_to_l = length(s_to_l);
+	float3 c = 
+		dot(normalize(s_to_l), t_normal) * 
+		light_intensity * 
+		(1/pow(dist_to_l,2)) *
+		light_color
+		;
 
 	return float4(c, 1);
 }

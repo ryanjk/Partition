@@ -35,6 +35,7 @@ void Init();
 void Update(const double dt);
 void Render();
 void Close();
+void Resize();
 
 void MainLoopBegin();
 void MainLoopEnd();
@@ -60,7 +61,6 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 
 			if (DISPLAY_RENDER_TARGET.Get() != nullptr) {
 				DISPLAY_RENDER_TARGET.ReleaseAndGetAddressOf();
-				DISPLAY_RENDER_TARGET = nullptr;
 			}
 
 			// Update swap chain
@@ -70,14 +70,15 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 			DISPLAY_RENDER_TARGET = CreateRenderTargetView(SWAP_CHAIN);
 			DISPLAY_DEPTH_STENCIL = CreateDepthStencilView(SWAP_CHAIN);
 
-			pn::SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
-
 			// Update viewport
 			pn::SetViewport(width, height);
 
 			// Update camera
 			MAIN_CAMERA.projection_matrix.SetViewWidth(static_cast<float>(width));
 			MAIN_CAMERA.projection_matrix.SetViewHeight(static_cast<float>(height));
+
+			// User-defined resize
+			Resize();
 		}
 		return 0;
 	case WM_CLOSE:

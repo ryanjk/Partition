@@ -137,6 +137,29 @@ void Init() {
 	additive_blend = CreateBlendState(&blend_desc);
 }
 
+void Resize() {
+	auto ResizeGBuffer = [](gbuffer& g, CD3D11_TEXTURE2D_DESC d) {		
+		D3D11_RENDER_TARGET_VIEW_DESC rt_desc;
+		g.render_target->GetDesc(&rt_desc);
+		d.Format = rt_desc.Format;
+
+		g.render_target.ReleaseAndGetAddressOf();
+		g.texture.ReleaseAndGetAddressOf();
+		
+		auto tex = pn::CreateTexture2D(d);
+		g.texture       = pn::CreateShaderResourceView(tex);
+		g.render_target = pn::CreateRenderTargetView(tex);
+	};
+
+	CD3D11_TEXTURE2D_DESC desc = GetDesc(GetSwapChainBuffer(SWAP_CHAIN));
+	desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+	ResizeGBuffer(albedo  , desc);
+	ResizeGBuffer(world   , desc);
+	ResizeGBuffer(normal  , desc);
+	ResizeGBuffer(specular, desc);
+}
+
 void Update(const double dt) {}
 
 void Render() {

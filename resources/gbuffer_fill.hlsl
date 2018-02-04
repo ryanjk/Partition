@@ -49,11 +49,9 @@ struct PS_OUT {
 PS_OUT PS_main(VS_OUT i) {
 	PS_OUT o;
 
-	o.albedo = float4(1, 0, 0, 1);
+	o.albedo = float4(0.7, 0.7, 0.7, 1);
 	o.normal = float4(normalize(i.n.xyz),0);
-	//o.world  = float4(i.world_pos.xyz, 1);
 	o.world = i.world_pos.z;
-	//o.world = float4(d, d, d, 1);
 	o.specular = float4(1, 1, 1, 1);
 
 	return o;

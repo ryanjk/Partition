@@ -57,10 +57,14 @@ VS_OUT VS_main(VS_IN i) {
 
 // ----- PIXEL SHADER -------
 
+float calculate_falloff(float r) {
+	return 1 / pow(r, 2);
+}
+
 float4 PS_main(VS_OUT i) : SV_TARGET {
 	float3 t_albedo   = albedo.Sample(ss, i.uv).xyz;
 	float t_world     = world.Sample(ss, i.uv).x;
-	float3 t_normal   = normalize(normal.Sample(ss, i.uv).xyz);
+	float3 t_normal   = normal.Sample(ss, i.uv).xyz;
 	float3 t_specular = specular.Sample(ss, i.uv).xyz;
 
 	float3 world_pos = i.frustum_dir * (t_world / i.frustum_dir.z);
@@ -69,8 +73,9 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 	float3 c = 
 		dot(normalize(s_to_l), t_normal) * 
 		light_intensity * 
-		(1/pow(dist_to_l,2)) *
-		light_color
+		calculate_falloff(length(s_to_l)) *
+		light_color *
+		t_albedo
 		;
 
 	return float4(c, 1);

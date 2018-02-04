@@ -49,7 +49,6 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 
 	switch (uMsg) {
 	case WM_SIZE:
-		Log("WM_SIZE");
 		if (GetDevice() != nullptr && wParam != SIZE_MINIMIZED) {
 			auto width = (unsigned int) LOWORD(lParam);
 			auto height = (unsigned int) HIWORD(lParam);
@@ -59,16 +58,26 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 
 			LogDebug("Resizing window to width: {}, height: {}", width, height);
 
-			ImGui_ImplDX11_InvalidateDeviceObjects();
 			if (DISPLAY_RENDER_TARGET.Get() != nullptr) {
 				DISPLAY_RENDER_TARGET.ReleaseAndGetAddressOf();
 				DISPLAY_RENDER_TARGET = nullptr;
 			}
 
+			// Update swap chain
 			SWAP_CHAIN->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-			pn::ResizeRenderTargetViewportCamera(width, height, SWAP_CHAIN, DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL, MAIN_CAMERA.projection_matrix);
+			
+			// Update render target and depth buffer
+			DISPLAY_RENDER_TARGET = CreateRenderTargetView(SWAP_CHAIN);
+			DISPLAY_DEPTH_STENCIL = CreateDepthStencilView(SWAP_CHAIN);
 
-			ImGui_ImplDX11_CreateDeviceObjects();
+			pn::SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
+
+			// Update viewport
+			pn::SetViewport(width, height);
+
+			// Update camera
+			MAIN_CAMERA.projection_matrix.SetViewWidth(static_cast<float>(width));
+			MAIN_CAMERA.projection_matrix.SetViewHeight(static_cast<float>(height));
 		}
 		return 0;
 	case WM_CLOSE:

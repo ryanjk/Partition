@@ -40,7 +40,7 @@ void pn::gui::EditStruct(light_t& light) {
 	DragFloat("intensity", &light.light_intensity, 0, 100);
 }
 
-#define NUM_LIGHTS 2
+#define NUM_LIGHTS 1
 light_t lights[NUM_LIGHTS];
 cbuffer<light_t> light;
 
@@ -125,7 +125,7 @@ void Init() {
 	
 	for (int i = 0; i < NUM_LIGHTS; ++i) {
 		lights[i].light_color     = vec3f(1, 1, 1);
-		lights[i].light_intensity = 2.0f;
+		lights[i].light_intensity = 50;
 		lights[i].light_position  = vec3f(0, 0.5f, 0);
 	}
 
@@ -147,7 +147,7 @@ void Render() {
 	pn::ClearRenderTargetView(world.render_target, color);
 	pn::ClearRenderTargetView(specular.render_target, color);
 
-	/*
+	
 	ImGui::Begin("Lights");
 	for (int i = 0; i < NUM_LIGHTS; ++i) {
 		ImGui::PushID(i);
@@ -155,7 +155,7 @@ void Render() {
 		ImGui::PopID();
 	}
 	ImGui::End();
-	*/
+	
 	// ------ BEGIN RENDER
 
 	SetDepthTest(true);

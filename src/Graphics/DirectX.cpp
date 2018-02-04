@@ -555,15 +555,9 @@ dx_render_target_view CreateRenderTargetView(dx_swap_chain swap_chain) {
 
 dx_depth_stencil_view CreateDepthStencilView(dx_swap_chain swap_chain) {
 	auto back_buffer = pn::GetSwapChainBuffer(swap_chain);
-	CD3D11_TEXTURE2D_DESC back_buffer_desc = pn::GetDesc(back_buffer);
-	CD3D11_TEXTURE2D_DESC depthStencilDesc(
-		DXGI_FORMAT_D24_UNORM_S8_UINT,
-		static_cast<UINT> (back_buffer_desc.Width),
-		static_cast<UINT> (back_buffer_desc.Height),
-		1, // This depth stencil view has only one texture.
-		1, // Use a single mipmap level.
-		D3D11_BIND_DEPTH_STENCIL
-	);
+	CD3D11_TEXTURE2D_DESC depthStencilDesc = pn::GetDesc(back_buffer);
+	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthStencilDesc.Format    = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	auto depth_stencil = pn::CreateTexture2D(depthStencilDesc);
 	return pn::CreateDepthStencilView(depth_stencil);

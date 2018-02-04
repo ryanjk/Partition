@@ -53,6 +53,7 @@ void InitRenderSystem(const window_handle h_wnd, const application_window_desc a
 
 	{
 		CD3D11_DEPTH_STENCIL_DESC desc(D3D11_DEFAULT);
+		desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 		auto depth_stencil_state = CreateDepthStencilState(&desc);
 		SetDepthStencilState(depth_stencil_state);
 	}
@@ -231,7 +232,7 @@ void SetWireframeMode(bool on) {
 	CD3D11_RASTERIZER_DESC desc;
 	state->GetDesc(&desc);
 
-	desc.FillMode = D3D11_FILL_WIREFRAME;
+	desc.FillMode =  on ? D3D11_FILL_WIREFRAME : D3D11_FILL_SOLID;
 
 	auto new_state = CreateRasterizerState(&desc);
 	SetRasterizerState(new_state);

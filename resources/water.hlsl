@@ -125,7 +125,7 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 	float ndotl		= saturate(dot(n, -direction));
 	float3 shade	= ndotl * intensity;
 
-	float3 view_pos = float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
+	float3 view_pos = -float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
 	float3 view_dir = normalize(view_pos - i.world_pos.xyz);
 	float3 halfw	= normalize(view_dir - direction);
 	float4 spec		= pow(saturate(dot(n,halfw)), 1000);

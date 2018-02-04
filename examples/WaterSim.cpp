@@ -66,6 +66,12 @@ pn::shader_program_t	wave_program;
 pn::dx_resource_view	tex;
 pn::dx_sampler_state	ss;
 
+// ----- cubemap data ------
+transform_t      cubemap_transform;
+dx_resource_view cubemap;
+shader_program_t cubemap_shader;
+mesh_buffer_t    cubemap_mesh_buffer;
+
 // ---- misc --------
 pn::linear_allocator frame_alloc(1024 * 1024);
 
@@ -99,8 +105,16 @@ void Init() {
 	// ---------- LOAD RESOURCES ----------------
 
 	{
-		auto cube_family = pn::LoadMesh(pn::GetResourcePath("cube_family.fbx"));
+		//auto cube_family = pn::LoadMesh(pn::GetResourcePath("cube_family.fbx"));
 		//monkey_mesh_buffer = pn::CreateMeshBuffer(device, mesh);
+	}
+
+	{
+		cubemap = LoadCubemap(GetResourcePath("earth-cubemap.dds"));
+		cubemap_shader = CompileShaderProgram(GetResourcePath("render_cubemap.hlsl"));
+		
+		LoadMesh(GetResourcePath("cubemap.fbx"));
+		cubemap_mesh_buffer = rdb::GetMeshResource("Cubemap");
 	}
 
 	pn::StartProfile("Loading all meshes");
@@ -165,7 +179,7 @@ void Init() {
 }
 
 void Update(const double dt) {
-	//UpdateFlycam(MAIN_CAMERA.transform, 20, 0.5);
+	UpdateFlycam(MAIN_CAMERA.transform, 20, 0.5);
 }
 
 void Render() {
@@ -178,6 +192,7 @@ void Render() {
 	directional_light.data.direction = directional_light.data.direction == pn::vec3f::Zero ? pn::vec3f::Zero : pn::Normalize(directional_light.data.direction);
 
 	ImGui::End(); // Lights
+
 
 // ------ BEGIN WATER
 
@@ -216,7 +231,22 @@ void Render() {
 
 // ----- END WATER
 
+// ------ RENDER CUBEMAP
+
+	SetStandardShaderProgram(cubemap_shader);
+	SetVertexBuffers(cubemap_mesh_buffer);
+
+	cubemap_transform.position = MAIN_CAMERA.transform.position;
+	UpdateModelConstantCBuffer(cubemap_transform);
+
+	SetProgramResource("cubemap", cubemap);
+	//SetWireframeMode(true);
+	DrawIndexed(cubemap_mesh_buffer);
+	//SetWireframeMode(false);
+
 }
+
+void Resize() {}
 
 void MainLoopBegin() {
 	frame_alloc.Release();

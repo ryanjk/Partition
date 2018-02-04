@@ -121,9 +121,10 @@ VS_OUT VS_main(VS_IN i) {
 // ------- PIXEL SHADER ---------
 
 float4 PS_main(VS_OUT i) : SV_TARGET {
-	float3 n		= normalize(i.n.xyz);
-	float ndotl		= saturate(dot(n, -direction));
-	float3 shade	= ndotl * intensity;
+	float3 n		 = normalize(i.n.xyz);
+	float3 light_dir = -mul(VIEW, direction);
+	float ndotl		 = saturate(dot(n, light_dir));
+	float3 shade	 = ndotl * intensity;
 
 	float3 view_pos = -float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
 	float3 view_dir = normalize(view_pos - i.world_pos.xyz);

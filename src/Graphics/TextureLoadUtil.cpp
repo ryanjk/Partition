@@ -43,7 +43,8 @@ dx_resource_view LoadCubemap(const string& filepath) {
 		(const uint8_t*) (image_data.data()), image_data.size(), 0,
 		D3D11_USAGE::D3D11_USAGE_DEFAULT,
 		D3D11_BIND_SHADER_RESOURCE,
-		0, 0, false,
+		0, 0,
+		false,
 		nullptr, cubemap_view.GetAddressOf(), 
 		nullptr
 		);

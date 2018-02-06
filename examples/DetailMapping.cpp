@@ -68,7 +68,11 @@ void Init() {
 	mapping_vars.data.height_offset = 0.0f;
 }
 
-void Update(const double dt) {}
+void Update() {}
+
+void FixedUpdate() {}
+
+void Resize() {}
 
 void Render() {
 

@@ -84,7 +84,7 @@ void Init() {
 
 	pn::EndProfile();
 
-	dragon_transform.position = vec3f(0, -4, 9.2);
+	dragon_transform.position = vec3f(0.0f, -4.0f, 9.2f);
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -160,7 +160,9 @@ void Resize() {
 	ResizeGBuffer(specular, desc);
 }
 
-void Update(const double dt) {}
+void Update() {}
+
+void FixedUpdate() {}
 
 void Render() {
 

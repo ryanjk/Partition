@@ -178,9 +178,11 @@ void Init() {
 	pn::frame_string::SetFrameAllocator(&frame_alloc);
 }
 
-void Update(const double dt) {
+void Update() {
 	UpdateFlycam(MAIN_CAMERA.transform, 20, 0.5);
 }
+
+void FixedUpdate() {}
 
 void Render() {
 

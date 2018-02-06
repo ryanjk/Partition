@@ -18,7 +18,7 @@ pn::application_window_desc window_desc;
 double FPS;
 double FIXED_DT;
 double dt;
-double time_since_application_start;
+double running_time;
 
 bool exit;
 

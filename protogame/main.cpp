@@ -24,7 +24,11 @@
 
 void Init() {}
 
-void Update(const double dt) {}
+void Resize() {}
+
+void Update() {}
+
+void FixedUpdate() {}
 
 void Render() {
 

@@ -32,7 +32,8 @@ pn::window_handle h_wnd;
 // -------- USER-DEFINED MAIN LOOP FUNCTIONS -----------
 
 void Init();
-void Update(const double dt);
+void Update();      // Called once per frame
+void FixedUpdate(); // Called at fixed rate independent of frame-rate
 void Render();
 void Close();
 void Resize();
@@ -243,31 +244,32 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 			continue;
 		}
 
-		pn::input::InputUpdate();
-
 		// Draw main menu
 		pn::gui::SetMainMenuVisible(show_main_menu);
 
 		// Update render system
-		ClearDepthStencil();
-		ClearDisplay();
-		ResetRenderTarget();
+		ClearDepthStencilView(DISPLAY_DEPTH_STENCIL, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		ClearRenderTargetView(DISPLAY_RENDER_TARGET, vec4f(0, 0, 0, 1));
+		SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
 
 		// Draw command line
 		show_command_line = pn::input::GetKeyState(input_key::TILDE) == key_state::JUST_PRESSED ? !show_command_line : show_command_line;
 		pn::gui::SetCommandLine(show_command_line);
 
 		// UPDATE
-		auto current_time                     = std::chrono::system_clock::now();
-		pn::app::dt                           = std::chrono::duration<double>(current_time - prev_time).count();
-		time_to_process                       += pn::app::dt;
-		pn::app::time_since_application_start += pn::app::dt;
-		prev_time                             = current_time;
+		auto current_time = std::chrono::system_clock::now();
+		
+		app::dt = std::chrono::duration<double>(current_time - prev_time).count();
+		time_to_process   += pn::app::dt;
+		app::running_time += pn::app::dt;
+		prev_time         = current_time;
 
 		while (time_to_process >= pn::app::FIXED_DT) {
-			Update(pn::app::FIXED_DT);
+			FixedUpdate();
 			time_to_process -= pn::app::FIXED_DT;
 		}
+
+		Update();
 
 		UpdateGlobalConstantCBuffer();
 		UpdateCameraConstantCBuffer(MAIN_CAMERA);
@@ -315,5 +317,4 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 #endif
 
 	Close();
-//	pn::SafeRelease(device);
 }

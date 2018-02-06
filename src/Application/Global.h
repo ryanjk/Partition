@@ -15,7 +15,7 @@ extern pn::application_window_desc window_desc;
 extern double FPS;
 extern double FIXED_DT;
 extern double dt;
-extern double time_since_application_start;
+extern double running_time;
 
 // ------ FUNCTIONS ------------
 

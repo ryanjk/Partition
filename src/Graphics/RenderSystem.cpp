@@ -116,6 +116,13 @@ void SetStandardShaderProgram(shader_program_t& shader_program) {
 	SetProgramConstant("model_constants", model_constants);
 }
 
+void ClearShaderProgram() {
+	CURRENT_SHADER = nullptr;
+	_context->PSSetShader(nullptr, nullptr, 0);
+	_context->VSSetShader(nullptr, nullptr, 0);
+	_context->IASetInputLayout(nullptr);
+}
+
 void SetVertexBuffers(const mesh_buffer_t& mesh_buffer) {
 	const input_layout_data_t& layout = CURRENT_SHADER->input_layout_data;
 	const auto NUM_PARAMETERS = layout.desc.size();
@@ -183,21 +190,29 @@ void SetVertexBuffers(const mesh_buffer_t& mesh_buffer) {
 		}
 	}
 
-	// @TODO: Create wrappers around these to simplify interfaces
 	_context->IASetVertexBuffers(0, vertex_buffers.size(), const_cast<const pn::vector<ID3D11Buffer*>&>(vertex_buffers).data(), strides.data(), offsets.data());
 	_context->IASetIndexBuffer(mesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
 	_context->IASetPrimitiveTopology(mesh_buffer.topology);
 }
 
+void ClearVertexBuffers() {
+	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED);
+	_context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+	_context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+}
+
 void SetProgramConstant(const pn::string& buffer_name, const dx_buffer& buffer) {
+	assert(CURRENT_SHADER != nullptr);
 	SetProgramConstant(*CURRENT_SHADER, buffer_name, buffer);
 }
 
 void SetProgramResource(const pn::string& resource_name, dx_resource_view& resource_view) {
+	assert(CURRENT_SHADER != nullptr);
 	SetProgramResource(*CURRENT_SHADER, resource_name, resource_view);
 }
 
 void SetProgramSampler(const pn::string& sampler_name, dx_sampler_state& sampler_state) {
+	assert(CURRENT_SHADER != nullptr);
 	SetProgramSampler(*CURRENT_SHADER, sampler_name, sampler_state);
 }
 

@@ -176,10 +176,20 @@ void Init() {
 
 	// --------- INIT CUSTOM ALLOCATORS -----------
 	pn::frame_string::SetFrameAllocator(&frame_alloc);
+
+
 }
 
 void Update() {
 	UpdateFlycam(MAIN_CAMERA.transform, 20, 0.5);
+
+	debug::DrawLine(wave_transform.position, RotateVector(vec3f::UnitX, wave_transform.rotation), 10.0f, vec3f());
+
+	// Input state
+	if (input::GetKeyState(SPACE) == input::key_state::JUST_PRESSED) {
+		SetCursorLock(!IsCursorLocked());
+		SetCursorVisible(false);
+	}
 }
 
 void FixedUpdate() {}
@@ -251,7 +261,7 @@ void Render() {
 void Resize() {}
 
 void MainLoopBegin() {
-	frame_alloc.Release();
+	
 }
 
 void MainLoopEnd() {}

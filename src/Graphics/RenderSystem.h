@@ -62,8 +62,10 @@ void ClearDisplay(const pn::vec4f color = { 0.0f, 0.0f, 0.0f, 1.000f });
 
 void SetShaderProgram(shader_program_t& shader_program);
 void SetStandardShaderProgram(shader_program_t& shader_program);
+void ClearShaderProgram();
 
 void SetVertexBuffers(const mesh_buffer_t& mesh_buffer);
+void ClearVertexBuffers();
 
 void SetProgramConstant(const pn::string& buffer_name, const dx_buffer& buffer);
 void SetProgramResource(const pn::string& resource_name, dx_resource_view& resource_view);

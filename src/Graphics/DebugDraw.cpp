@@ -39,8 +39,11 @@ void DrawLine(vec3f origin, vec3f direction, float length, vec4f color) {
 	UpdateBuffer(options);
 
 	SetVertexBuffers(line_mesh_buffer);
+	
 	_context->Draw(2, 0);
 
+	ClearVertexBuffers();
+	ClearShaderProgram();
 }
 
 }

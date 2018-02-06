@@ -10,14 +10,12 @@ struct VS_IN {
 
 struct VS_OUT {
 	float4 screen_pos : SV_POSITION;
-	float4 world_pos  : POSITION;
 };
 
 VS_OUT VS_main(VS_IN i) {
 	float4 pos   = float4(i.pos.xyz, 1.0);
 
 	VS_OUT o;
-	o.world_pos  = pos;
 	o.screen_pos = mul(PROJECTION, mul(VIEW, pos));
 	return o;
 }

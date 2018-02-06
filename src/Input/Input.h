@@ -61,9 +61,11 @@ enum input_key : unsigned char {
 
 // -------- TYPE DEFINITIONS ----------
 
+using mouse_coord_t = signed short;
+
 struct mouse_pos_t {
-	signed short x;
-	signed short y;
+	mouse_coord_t x;
+	mouse_coord_t y;
 };
 
 struct input_state_t {
@@ -84,6 +86,8 @@ key_state			GetKeyState(const input_key vkey);
 
 void				SetMousePos(const mouse_pos_t mouse_pos);
 mouse_pos_t			GetMousePos();
+
+void                SetMouseDelta(mouse_coord_t x, mouse_coord_t y);
 mouse_pos_t         GetMousePosDelta();
 
 void				SetMouseWheelState(const mouse_wheel_state state);
@@ -92,6 +96,16 @@ mouse_wheel_state	GetMouseWheelState();
 void				AddInputCharacter(const unsigned char c);
 const string&		GetInputCharacters();
 
+bool                IsCursorAtCenter();
+void                MoveCursorToCenter();
+
+void                ForceCursorPosition(mouse_coord_t x, mouse_coord_t y);
+
+void                SetCursorLock(bool on);
+bool                IsCursorLocked();
+
+void                SetCursorVisible(bool visibility);
+bool                IsCursorVisible();
 
 } // namespace input
 

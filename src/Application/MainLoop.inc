@@ -150,7 +150,25 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 		break;
 
 	case WM_MOUSEMOVE:
-		pn::input::SetMousePos({ (signed short) (lParam), (signed short) (lParam >> 16) });
+	{
+		auto new_x_c = (signed short) (lParam);
+		auto new_y_c = (signed short) (lParam >> 16);
+		POINT pt = { new_x_c, new_y_c };
+		ClientToScreen(hwnd, &pt);
+		signed short new_x = pt.x;
+		signed short new_y = pt.y;
+		auto current_mouse_pos = input::GetMousePos();
+		if (current_mouse_pos.x != new_x || current_mouse_pos.y != new_y) {
+			if (input::IsCursorLocked()) {
+				input::SetMouseDelta(new_x - static_cast<mouse_coord_t>(app::window_desc.width / 2), new_y - static_cast<mouse_coord_t>(app::window_desc.height / 2));
+				input::MoveCursorToCenter();
+			}
+			else {
+				input::SetMousePos({ new_x, new_y });
+				input::SetMouseDelta(new_x - current_mouse_pos.x, new_y - current_mouse_pos.y);
+			}
+		}
+	}
 		break;
 	
 	case WM_CHAR:
@@ -236,6 +254,8 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		// BEGINNING OF FRAME CALLS
 		MainLoopBegin();
 
+		InputUpdate();
+
 		// GET INPUT
 		bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
 		if (bGotMsg) {
@@ -247,14 +267,16 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		// Draw main menu
 		pn::gui::SetMainMenuVisible(show_main_menu);
 
-		// Update render system
-		ClearDepthStencilView(DISPLAY_DEPTH_STENCIL, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		ClearRenderTargetView(DISPLAY_RENDER_TARGET, vec4f(0, 0, 0, 1));
-		SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
-
 		// Draw command line
 		show_command_line = pn::input::GetKeyState(input_key::TILDE) == key_state::JUST_PRESSED ? !show_command_line : show_command_line;
 		pn::gui::SetCommandLine(show_command_line);
+
+		// Update render system
+		// Render system is updated before Update functions are called
+		// so debug draw calls work properly
+		ClearDepthStencilView(DISPLAY_DEPTH_STENCIL, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		ClearRenderTargetView(DISPLAY_RENDER_TARGET, vec4f(0, 0, 0, 1));
+		SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
 
 		// UPDATE
 		auto current_time = std::chrono::system_clock::now();
@@ -271,10 +293,10 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 		Update();
 
+		// RENDER
+
 		UpdateGlobalConstantCBuffer();
 		UpdateCameraConstantCBuffer(MAIN_CAMERA);
-
-		// RENDER
 
 		// Start new frame
 		ImGui_ImplDX11_NewFrame();

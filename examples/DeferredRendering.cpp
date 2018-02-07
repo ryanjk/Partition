@@ -44,6 +44,21 @@ void pn::gui::EditStruct(light_t& light) {
 light_t lights[NUM_LIGHTS];
 cbuffer<light_t> light;
 
+// ---------------------------------
+
+struct alignas(16) material_t {
+	float roughness;
+	float reflectivity;
+};
+
+template<>
+void gui::EditStruct(material_t& material) {
+	DragFloat("roughness", &material.roughness, 0, 10);
+	DragFloat("reflectivity", &material.reflectivity, 0, 10);
+}
+
+cbuffer<material_t> material;
+
 // --- gbuffer data ---
 
 struct gbuffer {
@@ -129,6 +144,12 @@ void Init() {
 		lights[i].light_position  = vec3f(0, 0.5f, 0);
 	}
 
+	// ----- INIT MATERIAL ------
+
+	InitializeCBuffer(material);
+	material.data.roughness    = 0.5f;
+	material.data.reflectivity = 0.5f;
+
 	// ----- CREATE BLEND DESC -------
 
 	CD3D11_BLEND_DESC blend_desc(D3D11_DEFAULT);
@@ -181,6 +202,12 @@ void Render() {
 	}
 	ImGui::End();
 	
+	ImGui::Begin("Material");
+	gui::EditStruct(material.data);
+	ImGui::End();
+
+	UpdateBuffer(material);
+
 	// ------ BEGIN RENDER
 
 	SetDepthTest(true);
@@ -219,7 +246,8 @@ void Render() {
 	SetProgramResource("specular", specular.texture);
 
 	SetProgramConstant("light", light);
-	
+	SetProgramConstant("material", material);
+
 	for (int i = 0; i < NUM_LIGHTS; ++i) {
 		light.data = lights[i];
 		UpdateBuffer(light);

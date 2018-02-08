@@ -1,3 +1,4 @@
+#include "ShaderUtil.hlsli"
 #include "GlobalConstants.hlsli"
 
 Texture2D albedo   : register(t1);
@@ -14,8 +15,8 @@ cbuffer light : register(b4) {
 }
 
 cbuffer material : register(b5) {
-	float roughness;
-	float reflectivity;
+	float4 albedoMetal; 
+	float4 specRough; 
 }
 
 // ----- INPUT / OUTPUT --------
@@ -63,21 +64,18 @@ VS_OUT VS_main(VS_IN i) {
 // ----- PIXEL SHADER -------
 
 float calculate_falloff(float r) {
-	return 1 / pow(r, 2);
+	float n = pow(saturate(1 - pow(r / 30, 4)), 2);
+	return n / ((r*r) + 1);
 }
 
-inline half4 Pow5(half4 x) {
-	return x*x * x*x * x;
+float3 fresnel(float3 F0, float ndotl) {
+	float t = Pow5(1 - ndotl);   // ala Schlick interpoliation
+	return F0 + (float3(1,1,1) - F0) * t;
 }
 
-inline half3 FresnelTerm(half3 F0, half cosA) {
-	half t = Pow5(1 - cosA);   // ala Schlick interpoliation
+float fresnelLerp(float F0, float ndotl) {
+	float t = Pow5(1 - ndotl);   // ala Schlick interpoliation
 	return F0 + (1 - F0) * t;
-}
-
-inline half3 FresnelLerp(half3 F0, half3 F90, half cosA) {
-	half t = Pow5(1 - cosA);   // ala Schlick interpoliation
-	return lerp(F0, F90, t);
 }
 
 float disneyDiffuse(float NdotV, float NdotL, float LdotH, float perceptualRoughness) {
@@ -89,54 +87,39 @@ float disneyDiffuse(float NdotV, float NdotL, float LdotH, float perceptualRough
 	return lightScatter * viewScatter;
 }
 
+/*
+https://de45xmedrsdbp.cloudfront.net/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
+Specular D
+*/
 float ndf(float ndoth, float roughness) {
 	// GGX
 	float r2 = roughness*roughness;
-	float d  = (ndoth * r2 - ndoth) * ndoth + 1.0f;
-	return r2 / (d*d + 1e-7f) * (1 / 3.1415926f);
+	float d  = pow(ndoth,2) * (r2 - 1) + 1;
+	return r2 / (d*d) * INV_PI;
 }
 
-float gsf(float NdotL, float NdotV, float roughness) {
-	// SmithJointGGX
-	float a = roughness;
-	float lambdaV = NdotL * (NdotV * (1 - a) + a);
-	float lambdaL = NdotV * (NdotL * (1 - a) + a);
+/*
+https://de45xmedrsdbp.cloudfront.net/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
+Specular G
+*/
+float g1(float ndot, float k) {
+	return ndot / (ndot * (1 - k) + k);
+}
 
-	return 0.5f / (lambdaV + lambdaL + 1e-5f);
-	
-	/*float roughnessSqr = roughness*roughness;
-
-
-	float SmithL = (NdotL) / (NdotL * (1 - roughnessSqr) + roughnessSqr);
-	float SmithV = (NdotV) / (NdotV * (1 - roughnessSqr) + roughnessSqr);
-
-
-	return (SmithL * SmithV);*/
-	
-	/*float roughnessSqr = roughness*roughness;
-	float NdotLSqr = NdotL*NdotL;
-	float NdotVSqr = NdotV*NdotV;
-
-
-	float SmithL = (2 * NdotL) / (NdotL + sqrt(roughnessSqr +
-		(1 - roughnessSqr) * NdotLSqr));
-	float SmithV = (2 * NdotV) / (NdotV + sqrt(roughnessSqr +
-		(1 - roughnessSqr) * NdotVSqr));
-
-
-	float Gs = (SmithL * SmithV);
-	return Gs;*/
+float gsf(float ndotl, float ndotv, float roughness) {
+	float k = pow((roughness + 1), 2) / 8;
+	return g1(ndotl, k) * g1(ndotv, k);
 }
 
 float4 PS_main(VS_OUT i) : SV_TARGET {
 
-	float3 t_albedo   = albedo.Sample(ss, i.uv).xyz;
+	//float3 t_albedo   = albedo.Sample(ss, i.uv).xyz;
 	float t_world     = world.Sample(ss, i.uv).x;
 	float3 t_normal   = normal.Sample(ss, i.uv).xyz;
-	float3 t_specular = specular.Sample(ss, i.uv).xyz;
+	//float3 t_specular = specular.Sample(ss, i.uv).xyz;
 
 	float3 world_pos = i.frustum_dir * (t_world / i.frustum_dir.z);
-	if (world_pos.z == 0) return float4(0, 0, 0, 1);
+	if (world_pos.z == 0) return float4(0.2, 0.2, 0.2, 1);
 	
 	float3 s_to_l    = normalize(light_position - world_pos);
 
@@ -148,28 +131,28 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 	float ndotv  = saturate(dot(t_normal, s_to_v));
 	float ldoth  = saturate(dot(s_to_l, h));
 
-	//float perceptualRoughness = SmoothnessToPerceptualRoughness(smoothness);
-	//float roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
+	float3 m_albedo = albedoMetal.rgb;
+	float metallic = albedoMetal.w;
+	//float3 specColor = specRough.rgb;
+	float roughness = specRough.w;
 
-	float diffuseTerm = disneyDiffuse(ndotv, ndotl, ldoth, sqrt(roughness)) * ndotl;
+	//float diffuseTerm = disneyDiffuse(ndotv, ndotl, ldoth, metallic) * ndotl;
+
+	float3 diffColor = m_albedo - m_albedo*metallic;
+
+	float3 specColor = lerp(0.0 * float3(0.5, 0.5, 0.5), m_albedo, metallic);
+
+	float3 c;
 
 	float D = ndf(ndoth, roughness);
-	float V = gsf(ndotl, ndotv, roughness);
-	float specularTerm = D * V * 3.14159;
-	specularTerm = max(0, specularTerm * ndotl);
+	float G = gsf(ndotl, ndotv, roughness);
+	float3 F = fresnel(specColor, ndotl);
+	float3 specTerm = D * G * F ;
 
-	float surfaceReduction = 1.0 / (roughness*roughness + 1.0);
-	float grazingTerm = saturate((1 - roughness) + (reflectivity));
-
-	float3 diffColor = t_albedo;
-	float3 specColor = t_specular;
-	float3 c = 
-		diffColor * (light_color * diffuseTerm) + 
-		specularTerm * light_color * FresnelTerm(specColor, ldoth) + 
-		surfaceReduction * FresnelLerp(specColor, grazingTerm, ndotv);
-
+	//float3 diffTerm = disneyDiffuse(ndotv, ndotl, ldoth, roughness) * m_albedo * INV_PI;
+	c = (diffColor + specTerm) * 0.25 / (ndotv);
 	float light_falloff = calculate_falloff(length(light_position - world_pos));
-	return float4(c * light_intensity * light_falloff, 1);
+	return float4(c * light_falloff * light_intensity, 1);
 
 	/*float dist_to_l  = length(s_to_l);
 	float3 c = 

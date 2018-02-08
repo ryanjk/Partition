@@ -47,14 +47,16 @@ cbuffer<light_t> light;
 // ---------------------------------
 
 struct alignas(16) material_t {
-	float roughness;
-	float reflectivity;
+	vec4f albedoMetal;
+	vec4f specRoughness;
 };
 
 template<>
 void gui::EditStruct(material_t& material) {
-	DragFloat("roughness", &material.roughness, 0, 10);
-	DragFloat("reflectivity", &material.reflectivity, 0, 10);
+	DragFloat3("albedo", &material.albedoMetal.x, 0, 1);
+	DragFloat3("specular", &material.specRoughness.x, 0, 1);
+	DragFloat("roughness", &material.specRoughness.w, 0, 1);
+	DragFloat("metallic", &material.albedoMetal.w, 0, 1);
 }
 
 cbuffer<material_t> material;
@@ -147,8 +149,8 @@ void Init() {
 	// ----- INIT MATERIAL ------
 
 	InitializeCBuffer(material);
-	material.data.roughness    = 0.5f;
-	material.data.reflectivity = 0.5f;
+	material.data.albedoMetal   = vec4f(0.5, 0.5, 0.5, 0.5);
+	material.data.specRoughness = vec4f(0.5, 0.5, 0.5, 0.5);
 
 	// ----- CREATE BLEND DESC -------
 

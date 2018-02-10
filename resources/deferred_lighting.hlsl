@@ -1,5 +1,6 @@
 #include "ShaderUtil.hlsli"
 #include "GlobalConstants.hlsli"
+#include "ShaderStructs.hlsli"
 
 Texture2D albedo   : register(t1);
 Texture2D world    : register(t2);
@@ -19,12 +20,6 @@ cbuffer material : register(b5) {
 	float4 specRough; 
 }
 
-// ----- INPUT / OUTPUT --------
-
-struct VS_IN {
-	uint vertex_id : SV_VertexID;
-};
-
 struct VS_OUT {
 	float4 screen_pos  : SV_POSITION;
 	float2 uv		   : TEXCOORD0;
@@ -33,7 +28,7 @@ struct VS_OUT {
 
 // ------- VERTEX SHADER --------
 
-VS_OUT VS_main(VS_IN i) {
+VS_OUT VS_main(VS_IN_SCREEN i) {
 	VS_OUT o;
 	float x = 779.98;
 	float y = 1573.57;
@@ -63,59 +58,8 @@ VS_OUT VS_main(VS_IN i) {
 
 // ----- PIXEL SHADER -------
 
-float calculate_falloff(float r) {
-	float n = pow(saturate(1 - pow(r / 30, 4)), 2);
-	return n / ((r*r) + 1);
-}
 
-float SchlickFresnel(float u) {
-	float m = clamp(1 - u, 0, 1);
-	float m2 = m*m;
-	return m2*m2*m; // pow(m,5)
-}
 
-float3 fresnel(float3 F0, float ndotl) {
-	float t = Pow5(1 - ndotl);   // ala Schlick interpoliation
-	return F0 + (float3(1,1,1) - F0) * t;
-}
-
-float fresnelLerp(float F0, float ndotl) {
-	float t = Pow5(1 - ndotl);   // ala Schlick interpoliation
-	return F0 + (1 - F0) * t;
-}
-
-float disneyDiffuse(float NdotV, float NdotL, float LdotH, float roughness) {
-	float fd90 = 0.5 + 2 * LdotH * LdotH * roughness;
-	// Two schlick fresnel term
-	float lightScatter = (1 + (fd90 - 1) * Pow5(1 - NdotL));
-	float viewScatter = (1 + (fd90 - 1) * Pow5(1 - NdotV));
-
-	return lightScatter * viewScatter;
-}
-
-/*
-https://de45xmedrsdbp.cloudfront.net/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
-Specular D
-*/
-float ndf(float ndoth, float roughness) {
-	// GGX
-	float r2 = roughness*roughness;
-	float d  = pow(ndoth,2) * (r2 - 1) + 1;
-	return r2 / (d*d) * INV_PI;
-}
-
-/*
-https://de45xmedrsdbp.cloudfront.net/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
-Specular G
-*/
-float g1(float ndot, float k) {
-	return ndot / (ndot * (1 - k) + k);
-}
-
-float gsf(float ndotl, float ndotv, float roughness) {
-	float k = pow((roughness + 1), 2) / 8;
-	return g1(ndotl, k) * g1(ndotv, k);
-}
 
 float4 PS_main(VS_OUT i) : SV_TARGET {
 
@@ -128,8 +72,8 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 	float3 m_albedo = albedoMetal.rgb;
 	float metallic = albedoMetal.w;
 	//float3 specColor = specRough.rgb;
-	float roughness = specRough.w;
-	roughness = roughness*roughness;
+	float roughness    = specRough.w;
+	float sqrRoughness = roughness*roughness;
 
 	// --- Calculate normal, light and view vector products and validate ---
 	float3 world_pos = i.frustum_dir * (t_world / i.frustum_dir.z);
@@ -152,9 +96,8 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 	float FH = SchlickFresnel(ldoth);
 	float3 Fs = lerp(Cs, float3(1, 1, 1), FH);
 
-	float r  = max(0.001, roughness);
-	float Ds  = ndf(ndoth, r);
-	float Gs  = gsf(ndotl, ndotv, r);
+	float Ds  = NDF_GGX(ndoth, max(0.001, sqrRoughness));
+	float Gs  = GSF_GGX(ndotl, ndotv, max(0.001, roughness));
 	float3 specColor = Fs * Ds * Gs / (4*ndotl*ndotv);
 
 	// --- Calculate diffuse fresnel term ---
@@ -166,6 +109,9 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 	float3 diffuseColor = INV_PI * Fd * m_albedo * (1 - metallic);
 	
 	// --- Calculate final color ---
-	return float4(diffuseColor + specColor, 1) * ndotl * light_intensity * calculate_falloff(length(light_position - world_pos));
-
+	return float4(diffuseColor + specColor, 1) * 
+		ndotl * 
+		light_intensity * 
+		LightFalloff(length(light_position - world_pos), 30) *
+		float4(light_color,1);
 }

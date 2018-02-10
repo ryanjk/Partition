@@ -1,4 +1,5 @@
 #include "GlobalConstants.hlsli"
+#include "ShaderStructs.hlsli"
 
 // ---- CONSTANT BUFFERS --------
 
@@ -9,12 +10,6 @@ cbuffer directional_light : register(b4) {
 
 // ----- INPUT / OUTPUT --------
 
-struct VS_IN {
-	float3 n	: NORMAL;
-	float3 pos	: POSITION;
-	float2 uv	: TEXCOORD0;
-};
-
 struct VS_OUT {
 	float4 screen_pos	: SV_POSITION;
 	float4 world_pos	: POSITION;
@@ -24,7 +19,7 @@ struct VS_OUT {
 
 // ------- VERTEX SHADER --------
 
-VS_OUT VS_main(VS_IN i) {
+VS_OUT VS_main(VS_IN_SIMPLE i) {
 	VS_OUT o;
 	float4 pos = float4(i.pos, 1.0);
 	pos = mul(MODEL, pos);

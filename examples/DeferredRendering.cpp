@@ -40,7 +40,7 @@ void pn::gui::EditStruct(light_t& light) {
 	DragFloat("intensity", &light.light_intensity, 0, 100);
 }
 
-#define NUM_LIGHTS 1
+#define NUM_LIGHTS 3
 light_t lights[NUM_LIGHTS];
 cbuffer<light_t> light;
 

@@ -1,4 +1,5 @@
 #include "GlobalConstants.hlsli"
+#include "ShaderStructs.hlsli"
 
 Texture2D normal_map	: register(t1);
 Texture2D diffuse_map	: register(t2);
@@ -20,14 +21,6 @@ cbuffer mapping_vars : register(b5) {
 
 // ----- INPUT / OUTPUT --------
 
-struct VS_IN {
-	float3 model_normal		: NORMAL;
-	float3 model_tangent	: TANGENT;
-	float3 model_bitangent	: TANGENT1;
-	float3 model_pos		: POSITION;
-	float2 uv				: TEXCOORD0;
-};
-
 struct VS_OUT {
 	float4 screen_pos		: SV_POSITION;
 	float2 uv				: TEXCOORD0;
@@ -37,17 +30,17 @@ struct VS_OUT {
 
 // ------- VERTEX SHADER --------
 
-VS_OUT VS_main(VS_IN i) {
+VS_OUT VS_main(VS_IN_FULL i) {
 	VS_OUT o;
-	float4 pos			= float4(i.model_pos, 1.0);
+	float4 pos			= float4(i.pos, 1.0);
 	pos					= mul(MODEL, pos);
 	float4 world_pos	= pos;
 	pos					= mul(VIEW, pos);
 	o.screen_pos		= mul(PROJECTION, pos);
 
-	float3 world_normal		= normalize(mul(MODEL,i.model_normal));
-	float3 world_tangent	= normalize(mul(MODEL,i.model_tangent));
-	float3 world_bitangent	= normalize(mul(MODEL,i.model_bitangent));
+	float3 world_normal		= normalize(mul(MODEL,i.n));
+	float3 world_tangent	= normalize(mul(MODEL,i.t));
+	float3 world_bitangent	= normalize(mul(MODEL,i.b));
 
 	float3 world_to_light	= -direction;
 	o.tspace_to_light		= float3(

@@ -1,14 +1,11 @@
 #include "GlobalConstants.hlsli"
+#include "ShaderStructs.hlsli"
 
 Texture2D offscreen_texture : register(t1);
 
 SamplerState ss			: register(s1);
 
 // ----- INPUT / OUTPUT --------
-
-struct VS_IN {
-	uint vertex_id : SV_VertexID;
-};
 
 struct VS_OUT {
 	float4 screen_pos : SV_POSITION;
@@ -17,7 +14,7 @@ struct VS_OUT {
 
 // ------- VERTEX SHADER --------
 
-VS_OUT VS_main(VS_IN i) {
+VS_OUT VS_main(VS_IN_SCREEN i) {
 	VS_OUT o;
 	if (i.vertex_id == 0) {
 		o.uv         = float2(0, 0);

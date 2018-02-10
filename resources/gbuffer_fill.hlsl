@@ -1,17 +1,7 @@
 #include "GlobalConstants.hlsli"
-
-// ------- FUNCTIONS ---------
-
+#include "ShaderStructs.hlsli"
 
 // ------- INPUT / OUTPUT ---
-
-struct VS_IN {
-	float3 n	: NORMAL;
-	float3 t	: TANGENT;
-	float3 b	: TANGENT1;
-	float3 pos	: POSITION;
-	float2 uv	: TEXCOORD0;
-};
 
 struct VS_OUT {
 	float4 screen_pos	: SV_POSITION;
@@ -22,7 +12,7 @@ struct VS_OUT {
 
 // ----- VERTEX SHADER -----
 
-VS_OUT VS_main(VS_IN i) {
+VS_OUT VS_main(VS_IN_FULL i) {
 	VS_OUT o;
 
 	float4 pos   = float4(i.pos, 1.0);
@@ -41,7 +31,7 @@ VS_OUT VS_main(VS_IN i) {
 
 struct PS_OUT {
 	float4 albedo   : SV_TARGET0;
-	float world    : SV_TARGET1;
+	float world     : SV_TARGET1;
 	float4 normal   : SV_TARGET2;
 	float4 specular : SV_TARGET3;
 };

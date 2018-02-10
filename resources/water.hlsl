@@ -1,4 +1,5 @@
 #include "GlobalConstants.hlsli"
+#include "ShaderStructs.hlsli"
 
 //#define USE_K
 
@@ -63,14 +64,6 @@ float sample_wave_nz(Wave w, float2 p, float t) {
 
 // ------- INPUT / OUTPUT ---
 
-struct VS_IN {
-	float3 n	: NORMAL;
-	float3 t	: TANGENT;
-	float3 b	: TANGENT1;
-	float3 pos	: POSITION;
-	float2 uv	: TEXCOORD0;
-};
-
 struct VS_OUT {
 	float4 screen_pos	: SV_POSITION;
 	float4 world_pos	: POSITION;
@@ -80,7 +73,7 @@ struct VS_OUT {
 
 // ----- VERTEX SHADER -----
 
-VS_OUT VS_main(VS_IN i) {
+VS_OUT VS_main(VS_IN_FULL i) {
 	VS_OUT o;
 
 	const float2 p = i.pos.xy;

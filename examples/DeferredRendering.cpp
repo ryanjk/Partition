@@ -101,7 +101,8 @@ void Init() {
 
 	pn::EndProfile();
 
-	dragon_transform.position = vec3f(0.0f, -4.0f, 9.2f);
+	dragon_transform.position = vec3f(0.0f, -4.0f, 9.0f);
+	//dragon_transform.position = vec3f(0.0f, 0.0f, 3.0f);
 
 	// --------- CREATE SHADER DATA ---------------
 

@@ -15,15 +15,10 @@ cbuffer light {
 	float  light_intensity;
 }
 
-cbuffer material {
-	float4 albedoMetal; 
-	float4 specRough; 
-}
-
 struct VS_OUT {
 	float4 screen_pos  : SV_POSITION;
 	float2 uv		   : TEXCOORD0;
-	float3 frustum_dir : COLOR;
+	float3 frustum_dir : TEXCOORD1;
 };
 
 // ------- VERTEX SHADER --------
@@ -42,22 +37,26 @@ VS_OUT VS_main(VS_IN_SCREEN_FULL i) {
 float4 PS_main(VS_OUT i) : SV_TARGET {
 
 	// --- Read material data ---
-	//float3 t_albedo   = albedo.Sample(ss, i.uv).xyz;
-	float t_world     = world.Sample(ss, i.uv).x;
+	float4 t_albedo   = albedo.Sample(ss, i.uv);
+	float  t_world    = world.Sample(ss, i.uv).x;
 	float3 t_normal   = normal.Sample(ss, i.uv).xyz;
-	//float3 t_specular = specular.Sample(ss, i.uv).xyz;
-	float3 m_albedo = albedoMetal.rgb;
-	float metallic = albedoMetal.w;
-	//float3 specColor = specRough.rgb;
-	float roughness    = specRough.w;
+	float4 t_specular = specular.Sample(ss, i.uv);
+
+	float3 m_albedo    = t_albedo.rgb;
+	float metallic     = t_albedo.w;
+	float roughness    = t_specular.w;
 	float sqrRoughness = roughness*roughness;
 
 	// --- Calculate normal, light and view vector products and validate ---
+
+	if (t_world == 0.0f) return float4(0.2, 0.2, 0.2, 1);
+
+	float3 vpos = float3(i.uv.x * 2 - 1, (1 - i.uv.y) * 2 - 1, t_world);
+	float4 wp;
+	wp = mul(INV_PROJECTION_VIEW, float4(vpos, 1));
+	float3 world_pos = wp.xyz / wp.w;
+
 	float3 camera_pos = -float3(VIEW[3][0], VIEW[3][1], VIEW[3][2]);
-	//float3 world_pos = normalize(i.frustum_dir) * (t_world) + camera_pos;
-	float3 world_pos = t_world * normalize(i.frustum_dir - camera_pos) + camera_pos;
-	//return float4(float3(1, 1, 1) * length(light_position - world_pos), 1);
-	//return float4(normalize(i.frustum_dir - camera_pos), 1);
 	float3 s_to_l = normalize(light_position - world_pos);
 	float3 s_to_v = -normalize(i.frustum_dir - camera_pos);
 

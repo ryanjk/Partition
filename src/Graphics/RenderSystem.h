@@ -17,11 +17,15 @@ struct alignas(16) global_constants_t {
 
 struct camera_constants_t {
 	pn::mat4f view;
+	pn::mat4f inv_view;
 	pn::mat4f proj;
+	pn::mat4f inv_proj;
+	pn::mat4f inv_proj_view;
 };
 
 struct model_constants_t {
 	pn::mat4f model;
+	pn::mat4f model_view;
 	pn::mat4f model_view_inverse_transpose;
 	pn::mat4f mvp;
 };

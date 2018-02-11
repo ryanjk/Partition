@@ -82,6 +82,8 @@ pn::shader_program_t deferred_lighting_shader;
 rdb::mesh_resource_t scene_mesh;
 
 transform_t dragon_transform;
+dx_resource_view dragon_albedo;
+dx_resource_view dragon_rough;
 
 pn::dx_sampler_state ss;
 
@@ -105,6 +107,9 @@ void Init() {
 
 	dragon_transform.position = vec3f(0.0f, -4.0f, 9.0f);
 	//dragon_transform.position = vec3f(0.0f, 0.0f, 3.0f);
+
+	dragon_albedo = LoadTexture2D(GetResourcePath("AlbedoMetal.png"));
+	dragon_rough  = LoadTexture2D(GetResourcePath("SomethingRough.png"));
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -247,11 +252,16 @@ void Render() {
 	gui::EditStruct(dragon_transform);
 	UpdateModelConstantCBuffer(dragon_transform);
 
+	SetProgramResource("albedo", dragon_albedo);
+	SetProgramResource("roughness", dragon_rough);
+
 	DrawIndexed(scene_mesh);
 
 	// --- DISPLAY GBUFFERS ---
 
 	SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
+
+	//debug::DrawLine(dragon_transform.position, Normalize(lights[0].light_position - dragon_transform.position), 5.0f, vec3f(1,1,1));
 
 	SetStandardShaderProgram(deferred_lighting_shader);
 	SetVertexBuffersScreen();

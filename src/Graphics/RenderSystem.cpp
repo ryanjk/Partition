@@ -75,13 +75,17 @@ void UpdateGlobalConstantCBuffer() {
 void UpdateCameraConstantCBuffer(const camera_t& camera) {
 	// Update camera buffer
 	camera_constants.data.view = Inverse(TransformToMatrix(camera.transform));
+	camera_constants.data.inv_view = TransformToMatrix(camera.transform);
 	camera_constants.data.proj = camera.projection_matrix.GetMatrix();
+	camera_constants.data.inv_proj = Inverse(camera.projection_matrix.GetMatrix());
+	camera_constants.data.inv_proj_view = Inverse(camera_constants.data.view * camera_constants.data.proj);
 
 	UpdateBuffer(camera_constants);
 }
 
 void UpdateModelConstantCBuffer(const transform_t& transform) {
 	model_constants.data.model = LocalToWorldMatrix(transform);
+	model_constants.data.model_view = model_constants.data.model * camera_constants.data.view;
 	model_constants.data.model_view_inverse_transpose = pn::Transpose(pn::Inverse(model_constants.data.model * camera_constants.data.view));
 	model_constants.data.mvp = model_constants.data.model * camera_constants.data.view * camera_constants.data.proj;
 
@@ -198,7 +202,7 @@ void SetVertexBuffers(const mesh_buffer_t& mesh_buffer) {
 void SetVertexBuffersScreen() {
 	auto inverse_view = Inverse(camera_constants.data.view);
 	auto inverse_projection = Inverse(camera_constants.data.proj);
-	mat4f corners{
+	const mat4f corners{
 		vec4f(-1.f, 1.f , 1.f, 1.f),
 		vec4f(1.f , 1.f , 1.f, 1.f),
 		vec4f(-1.f, -1.f, 1.f, 1.f),
@@ -206,7 +210,7 @@ void SetVertexBuffersScreen() {
 	};
 
 	{
-		vec3f screen_vertex_data[4] = {
+		const vec3f screen_vertex_data[4] = {
 			vec3f(corners[0].xy(),0),
 			vec3f(corners[1].xy(),0),
 			vec3f(corners[2].xy(),0),
@@ -228,8 +232,14 @@ void SetVertexBuffersScreen() {
 			rcorners[2] / rcorners[2].w,
 			rcorners[3] / rcorners[3].w
 		);
+		rcorners = mat4f(
+			vec4f(rcorners[0].xyz(), 0.0f),
+			vec4f(rcorners[1].xyz(), 0.0f),
+			vec4f(rcorners[2].xyz(), 0.0f),
+			vec4f(rcorners[3].xyz(), 0.0f)
+		);
 		rcorners = rcorners * inverse_view;
-		vec3f screen_vertex_data[4] = {
+		const vec3f screen_vertex_data[4] = {
 			rcorners[0].xyz(),
 			rcorners[1].xyz(),
 			rcorners[2].xyz(),

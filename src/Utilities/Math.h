@@ -268,7 +268,7 @@ struct mat4f {
 		return *this;
 	}
 
-	mat4f operator+(const mat4f& m) {
+	mat4f operator+(const mat4f& m) const {
 		return mat4f(
 			_00 + m._00, _01 + m._01, _02 + m._02, _03 + m._03,
 			_10 + m._10, _11 + m._11, _12 + m._12, _13 + m._13,
@@ -276,7 +276,7 @@ struct mat4f {
 			_30 + m._30, _31 + m._31, _32 + m._32, _33 + m._33
 		);
 	}
-	mat4f operator-(const mat4f& m) {
+	mat4f operator-(const mat4f& m) const {
 		return mat4f(
 			_00 - m._00, _01 - m._01, _02 - m._02, _03 - m._03,
 			_10 - m._10, _11 - m._11, _12 - m._12, _13 - m._13,
@@ -284,7 +284,7 @@ struct mat4f {
 			_30 - m._30, _31 - m._31, _32 - m._32, _33 - m._33
 		);
 	}
-	mat4f operator*(const mat4f& m) {
+	mat4f operator*(const mat4f& m) const {
 		mat4f result;
 
 		result._00 = _00*m._00 + _01*m._10 + _02*m._20 + _03*m._30;
@@ -309,7 +309,7 @@ struct mat4f {
 
 		return result;
 	}
-	mat4f operator*(const float c) {
+	mat4f operator*(const float c) const {
 		return mat4f(
 			_00*c, _01*c, _02*c, _03*c,
 			_10*c, _11*c, _12*c, _13*c,
@@ -317,7 +317,7 @@ struct mat4f {
 			_30*c, _31*c, _32*c, _33*c
 		);
 	}
-	mat4f operator/(const float c) {
+	mat4f operator/(const float c) const {
 		return mat4f(
 			_00/c, _01/c, _02/c, _03/c,
 			_10/c, _11/c, _12/c, _13/c,
@@ -326,7 +326,7 @@ struct mat4f {
 		);
 	}
 
-	vec4f operator[](const int i) {
+	vec4f operator[](const int i) const {
 		auto p = &_00 + i * sizeof(float);
 		return vec4f(p[0], p[1], p[2], p[3]);
 	}

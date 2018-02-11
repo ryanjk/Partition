@@ -1,6 +1,15 @@
 #include "GlobalConstants.hlsli"
 #include "ShaderStructs.hlsli"
 
+Texture2D albedo    : register(t1);
+Texture2D roughness : register(t2);
+
+SamplerState tex_sampler : register(s1) {
+	Filter   = MIN_MAG_MIP_LINEAR;
+	AddressU = Wrap;
+	AddressV = Wrap;
+};
+
 // ------- INPUT / OUTPUT ---
 
 struct VS_OUT {
@@ -16,7 +25,7 @@ VS_OUT VS_main(VS_IN_FULL i) {
 	VS_OUT o;
 
 	float4 pos   = float4(i.pos, 1.0);
-	o.world_pos  = mul(MODEL, pos);
+	o.world_pos  = mul(MVP, pos);
 	o.screen_pos = mul(MVP, pos);
 
 	o.n = float4(i.n, 0.0);
@@ -39,10 +48,10 @@ struct PS_OUT {
 PS_OUT PS_main(VS_OUT i) {
 	PS_OUT o;
 
-	o.albedo = float4(0.7, 0.7, 0.7, 1);
+	o.albedo = albedo.Sample(tex_sampler, i.uv);
 	o.normal = float4(normalize(i.n.xyz),0);
-	o.world = length(i.world_pos.xyz);
-	o.specular = float4(1, 1, 1, 1);
+	o.world = i.screen_pos.z;
+	o.specular = roughness.Sample(tex_sampler, i.uv);
 
 	return o;
 }

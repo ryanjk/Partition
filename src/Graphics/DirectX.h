@@ -348,6 +348,8 @@ void ClearRenderTargetView(dx_render_target_view view, pn::vec4f color);
 
 void SetRenderTarget(dx_render_target_view render_target, dx_depth_stencil_view depth_stencil = nullptr);
 
+
+
 // ---------- SHADER REFLECTION ----------------
 
 dx_shader_reflection			GetShaderReflector(const pn::bytes& shader_byte_code);
@@ -362,6 +364,10 @@ unsigned int					GetShaderResourceStartSlot(dx_shader_reflection reflector, cons
 // ----------- VIEWPORT -----------------------
 
 void SetViewport(const int width, const int height, const int top_left_x = 0, const int top_left_y = 0);
+
+D3D11_VIEWPORT GetViewport(int viewport_id = 0);
+
+mat4f GetViewportMatrix(D3D11_VIEWPORT viewport);
 
 dx_render_target_view CreateRenderTargetView(dx_swap_chain swap_chain);
 

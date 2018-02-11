@@ -24,3 +24,7 @@ struct VS_IN_SCREEN {
 	VERTEX_ID_DEF;
 };
 
+struct VS_IN_SCREEN_FULL {
+	POSITION_DEF;
+	float3 frustum_dir : POSITION1;
+};

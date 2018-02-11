@@ -69,6 +69,8 @@ struct vec3f {
 	vec3f& operator*=(const float c) { x *= c; y *= c; z *= c; return *this; }
 	vec3f& operator/=(const float c) { x /= c; y /= c; z /= c; return *this; }
 
+	vec2f xy() const { return vec2f(x, y); }
+
 	static const vec3f Zero;
 	static const vec3f One;
 	static const vec3f UnitX;
@@ -94,6 +96,7 @@ struct vec4f {
 	vec4f(float x, const vec2f& yz, float w)	noexcept : x(x), y(yz.x), z(yz.y), w(w) {}
 	vec4f(float x, float y, const vec2f& zw)	noexcept : x(x), y(y), z(zw.x), w(zw.y) {}
 
+	vec2f xy()  const { return vec2f(x, y); }
 	vec3f xyz() const { return vec3f(x, y, z); }
 
 	vec4f operator+(const vec4f& rhs) const { return vec4f(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w); }
@@ -321,6 +324,11 @@ struct mat4f {
 			_20/c, _21/c, _22/c, _23/c,
 			_30/c, _31/c, _32/c, _33/c
 		);
+	}
+
+	vec4f operator[](const int i) {
+		auto p = &_00 + i * sizeof(float);
+		return vec4f(p[0], p[1], p[2], p[3]);
 	}
 
 	static const mat4f Identity;

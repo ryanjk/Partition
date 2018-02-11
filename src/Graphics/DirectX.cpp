@@ -548,6 +548,22 @@ void SetViewport(const int width, const int height, const int top_left_x, const 
 	);
 }
 
+D3D11_VIEWPORT GetViewport(int viewport_id) {
+	UINT n_viewports = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
+	D3D11_VIEWPORT viewports[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+	_context->RSGetViewports(&n_viewports, viewports);
+	return viewports[viewport_id];
+}
+
+mat4f GetViewportMatrix(D3D11_VIEWPORT viewport) {
+	return mat4f(
+		viewport.Width / 2, 0, 0, 0,
+		0, -viewport.Height / 2, 0, 0,
+		0, 0, viewport.MaxDepth - viewport.MinDepth, 0,
+		viewport.TopLeftX + viewport.Width / 2, viewport.TopLeftY + viewport.Height / 2, viewport.MinDepth, 1
+	);
+}
+
 dx_render_target_view CreateRenderTargetView(dx_swap_chain swap_chain) {
 	auto back_buffer = pn::GetSwapChainBuffer(swap_chain);
 	return pn::CreateRenderTargetView(back_buffer);

@@ -20,7 +20,7 @@ VS_OUT VS_main(VS_IN_FULL i) {
 	o.screen_pos = mul(MVP, pos);
 
 	o.n = float4(i.n, 0.0);
-	o.n = mul(MODEL_VIEW_INVERSE_TRANSPOSE, o.n);
+	o.n = mul(MODEL, o.n);
 	o.n = normalize(o.n);
 
 	o.uv = i.uv;
@@ -41,7 +41,7 @@ PS_OUT PS_main(VS_OUT i) {
 
 	o.albedo = float4(0.7, 0.7, 0.7, 1);
 	o.normal = float4(normalize(i.n.xyz),0);
-	o.world = i.world_pos.z;
+	o.world = length(i.world_pos.xyz);
 	o.specular = float4(1, 1, 1, 1);
 
 	return o;

@@ -49,6 +49,8 @@ extern shader_program_t* CURRENT_SHADER;
 
 void InitRenderSystem(const window_handle hwnd, const application_window_desc awd);
 
+// Functions to update data for some global buffers that most shaders will use
+// e.g. global buffer contains data like screen size
 void UpdateGlobalConstantCBuffer();
 void UpdateCameraConstantCBuffer(const camera_t& camera);
 void UpdateModelConstantCBuffer(const transform_t& transform);
@@ -65,6 +67,7 @@ void SetStandardShaderProgram(shader_program_t& shader_program);
 void ClearShaderProgram();
 
 void SetVertexBuffers(const mesh_buffer_t& mesh_buffer);
+void SetVertexBuffersScreen();
 void ClearVertexBuffers();
 
 void SetProgramConstant(const pn::string& buffer_name, const dx_buffer& buffer);

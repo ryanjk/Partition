@@ -16,8 +16,9 @@ float Pow5(float x) {
 // --- Lighting functions ---
 
 float LightFalloff(float r, float light_radius) {
-	float n = pow(saturate(1 - pow(r / light_radius, 4)), 2);
-	return n / ((r*r) + 1);
+	return 1 / pow(r, 2);
+	//float n = pow(saturate(1 - pow(r / light_radius, 4)), 2);
+	//return n / ((r*r) + 1);
 }
 
 float SchlickFresnel(float u) {

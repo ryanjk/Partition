@@ -34,7 +34,7 @@ void InitRenderSystem(const window_handle h_wnd, const application_window_desc a
 	MAIN_CAMERA.transform = transform_t{};
 	MAIN_CAMERA.projection_matrix = pn::ProjectionMatrix{ pn::ProjectionType::PERSPECTIVE,
 		static_cast<float>(pn::app::window_desc.width), static_cast<float>(pn::app::window_desc.height),
-		0.01f, 1000.0f,
+		0.01f, 100.0f,
 		70.0f, 0.1f
 	};
 	UpdateCameraConstantCBuffer(MAIN_CAMERA);
@@ -193,6 +193,57 @@ void SetVertexBuffers(const mesh_buffer_t& mesh_buffer) {
 	_context->IASetVertexBuffers(0, vertex_buffers.size(), const_cast<const pn::vector<ID3D11Buffer*>&>(vertex_buffers).data(), strides.data(), offsets.data());
 	_context->IASetIndexBuffer(mesh_buffer.indices.Get(), DXGI_FORMAT_R32_UINT, 0);
 	_context->IASetPrimitiveTopology(mesh_buffer.topology);
+}
+
+void SetVertexBuffersScreen() {
+	auto inverse_view = Inverse(camera_constants.data.view);
+	auto inverse_projection = Inverse(camera_constants.data.proj);
+	mat4f corners{
+		vec4f(-1.f, 1.f , 1.f, 1.f),
+		vec4f(1.f , 1.f , 1.f, 1.f),
+		vec4f(-1.f, -1.f, 1.f, 1.f),
+		vec4f(1.f , -1.f, 1.f, 1.f)
+	};
+
+	{
+		vec3f screen_vertex_data[4] = {
+			vec3f(corners[0].xy(),0),
+			vec3f(corners[1].xy(),0),
+			vec3f(corners[2].xy(),0),
+			vec3f(corners[3].xy(),0)
+		};
+
+		auto screen_vertex_buffer = CreateVertexBuffer(screen_vertex_data, 4);
+		ID3D11Buffer* buffers[1] = { screen_vertex_buffer.Get() };
+		UINT strides[1] = { sizeof(vec3f) };
+		UINT offsets[1] = { 0 };
+		_context->IASetVertexBuffers(0, 1, buffers, strides, offsets);
+	}
+
+	{
+		auto rcorners = corners * inverse_projection;
+		rcorners = mat4f(
+			rcorners[0] / rcorners[0].w,
+			rcorners[1] / rcorners[1].w,
+			rcorners[2] / rcorners[2].w,
+			rcorners[3] / rcorners[3].w
+		);
+		rcorners = rcorners * inverse_view;
+		vec3f screen_vertex_data[4] = {
+			rcorners[0].xyz(),
+			rcorners[1].xyz(),
+			rcorners[2].xyz(),
+			rcorners[3].xyz()
+		};
+
+		auto screen_vertex_buffer = CreateVertexBuffer(screen_vertex_data, 4);
+		ID3D11Buffer* buffers[1] = { screen_vertex_buffer.Get() };
+		UINT strides[1] = { sizeof(vec3f) };
+		UINT offsets[1] = { 0 };
+		_context->IASetVertexBuffers(1, 1, buffers, strides, offsets);
+	}
+
+	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 }
 
 void ClearVertexBuffers() {

@@ -23,6 +23,8 @@
 #include <Application\ResourceDatabase.h>
 #include <Application\MainLoop.inc>
 
+#include <System\Flycam.h>
+
 using namespace pn;
 
 // --- cbuffer ---
@@ -37,7 +39,7 @@ template<>
 void pn::gui::EditStruct(light_t& light) {
 	DragFloat3("position##", &light.light_position.x, -10, 10);
 	DragFloat3("color##", &light.light_color.x, 0, 1);
-	DragFloat("intensity", &light.light_intensity, 0, 100);
+	DragFloat("intensity##", &light.light_intensity, 0, 100);
 }
 
 #define NUM_LIGHTS 3
@@ -81,7 +83,7 @@ rdb::mesh_resource_t scene_mesh;
 
 transform_t dragon_transform;
 
-pn::dx_sampler_state	ss;
+pn::dx_sampler_state ss;
 
 dx_blend_state additive_blend;
 
@@ -115,8 +117,8 @@ void Init() {
 
 	// ---- CREATE GBUFFERS -----
 
-	auto back_buffer = pn::GetSwapChainBuffer(SWAP_CHAIN);
-	auto back_buffer_desc = pn::GetDesc(back_buffer);
+	auto back_buffer           = pn::GetSwapChainBuffer(SWAP_CHAIN);
+	auto back_buffer_desc      = pn::GetDesc(back_buffer);
 	back_buffer_desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
 	auto InitGBuffer = [](gbuffer& g, CD3D11_TEXTURE2D_DESC d) {
@@ -157,7 +159,8 @@ void Init() {
 
 	CD3D11_BLEND_DESC blend_desc(D3D11_DEFAULT);
 	blend_desc.RenderTarget[0].BlendEnable = true;
-	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].SrcBlend    = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].DestBlend   = D3D11_BLEND_ONE;
 	additive_blend = CreateBlendState(&blend_desc);
 }
 
@@ -184,18 +187,28 @@ void Resize() {
 	ResizeGBuffer(specular, desc);
 }
 
-void Update() {}
+void Update() {
+	static bool fon = false;
+	if (input::GetKeyState(SPACE) == input::key_state::JUST_PRESSED) {
+		fon = !fon;
+	}
 
-void FixedUpdate() {}
+	if (fon) {
+		UpdateFlycam(MAIN_CAMERA.transform, 10.0f, 0.5f);
+	}
+}
+
+void FixedUpdate() {
+
+}
 
 void Render() {
 
-	static const pn::vec4f color = { 0.0f, 0.0f, 0.0f, 1.000f };
+	static const pn::vec4f color = { 0.0f, 0.0f, 0.0f, 1.0f };
 	pn::ClearRenderTargetView(albedo.render_target, color);
 	pn::ClearRenderTargetView(normal.render_target, color);
 	pn::ClearRenderTargetView(world.render_target, color);
 	pn::ClearRenderTargetView(specular.render_target, color);
-
 	
 	ImGui::Begin("Lights");
 	for (int i = 0; i < NUM_LIGHTS; ++i) {
@@ -210,6 +223,10 @@ void Render() {
 	ImGui::End();
 
 	UpdateBuffer(material);
+
+	ImGui::Begin("Camera");
+	gui::EditStruct(MAIN_CAMERA.transform);
+	ImGui::End();
 
 	// ------ BEGIN RENDER
 
@@ -237,17 +254,16 @@ void Render() {
 	SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
 
 	SetStandardShaderProgram(deferred_lighting_shader);
+	SetVertexBuffersScreen();
+	
 	SetDepthTest(false);
 	SetBlendState(additive_blend);
-	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	
 	SetProgramSampler("ss", ss);
-
 	SetProgramResource("albedo", albedo.texture);
 	SetProgramResource("world", world.texture);
 	SetProgramResource("normal", normal.texture);
 	SetProgramResource("specular", specular.texture);
-
 	SetProgramConstant("light", light);
 	SetProgramConstant("material", material);
 

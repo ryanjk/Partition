@@ -13,12 +13,17 @@ float Pow5(float x) {
 	return x*x * x*x * x;
 }
 
+float3 WorldPosFromDepth(float2 uv, float depth, float4x4 inverse_projection_view) {
+	float3 vpos = float3(uv.x * 2 - 1, (1 - uv.y) * 2 - 1, depth);
+	float4 wp = mul(inverse_projection_view, float4(vpos, 1));
+	return wp.xyz / wp.w;
+}
+
 // --- Lighting functions ---
 
 float LightFalloff(float r, float light_radius) {
-	return 1 / pow(r, 2);
-	//float n = pow(saturate(1 - pow(r / light_radius, 4)), 2);
-	//return n / ((r*r) + 1);
+	float n = pow(saturate(1 - pow(r / light_radius, 4)), 2);
+	return n / ((r*r) + 1);
 }
 
 float SchlickFresnel(float u) {

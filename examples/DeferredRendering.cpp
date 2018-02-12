@@ -42,7 +42,7 @@ void pn::gui::EditStruct(light_t& light) {
 	DragFloat("intensity##", &light.light_intensity, 0, 100);
 }
 
-#define NUM_LIGHTS 3
+#define NUM_LIGHTS 1
 light_t lights[NUM_LIGHTS];
 cbuffer<light_t> light;
 
@@ -78,16 +78,23 @@ gbuffer specular;
 pn::shader_program_t gbuffer_fill_shader;
 pn::shader_program_t simple_texture_shader;
 pn::shader_program_t deferred_lighting_shader;
+pn::shader_program_t deferred_env_lighting_shader;
+pn::shader_program_t render_cubemap;
 
 rdb::mesh_resource_t scene_mesh;
 
+// Dragon data
 transform_t dragon_transform;
 dx_resource_view dragon_albedo;
 dx_resource_view dragon_rough;
 
 pn::dx_sampler_state ss;
-
 dx_blend_state additive_blend;
+
+// Environment map
+transform_t      cubemap_transform;
+dx_resource_view cubemap;
+mesh_buffer_t    cubemap_mesh_buffer;
 
 void Init() {
 
@@ -111,6 +118,10 @@ void Init() {
 	dragon_albedo = LoadTexture2D(GetResourcePath("AlbedoMetal.png"));
 	dragon_rough  = LoadTexture2D(GetResourcePath("SomethingRough.png"));
 
+	cubemap = LoadCubemap(GetResourcePath("earth-cubemap.dds"));
+	LoadMesh(GetResourcePath("cubemap.fbx"));
+	cubemap_mesh_buffer = rdb::GetMeshResource("Cubemap");
+
 	// --------- CREATE SHADER DATA ---------------
 
 	CD3D11_SAMPLER_DESC sampler_desc(D3D11_DEFAULT);
@@ -119,6 +130,8 @@ void Init() {
 	gbuffer_fill_shader      = pn::CompileShaderProgram(pn::GetResourcePath("gbuffer_fill.hlsl"));
 	simple_texture_shader    = pn::CompileShaderProgram(pn::GetResourcePath("simple_texture.hlsl"));
 	deferred_lighting_shader = pn::CompileShaderProgram(pn::GetResourcePath("deferred_lighting.hlsl"));
+	deferred_env_lighting_shader = pn::CompileShaderProgram(pn::GetResourcePath("deferred_env_lighting.hlsl"));
+	render_cubemap = CompileShaderProgram(GetResourcePath("render_cubemap.hlsl"));
 
 	// ---- CREATE GBUFFERS -----
 
@@ -257,17 +270,35 @@ void Render() {
 
 	DrawIndexed(scene_mesh);
 
-	// --- DISPLAY GBUFFERS ---
 
-	SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
 
-	//debug::DrawLine(dragon_transform.position, Normalize(lights[0].light_position - dragon_transform.position), 5.0f, vec3f(1,1,1));
+	// --- SHADER GBUFFERS ---
 
-	SetStandardShaderProgram(deferred_lighting_shader);
-	SetVertexBuffersScreen();
-	
+	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);
 	SetBlendState(additive_blend);
+
+	// --- ENVIRONMENT LIGHTING ---
+
+	SetStandardShaderProgram(deferred_env_lighting_shader);
+	SetVertexBuffersScreen();
+	
+	SetProgramSampler("ss", ss);
+	SetProgramResource("albedo", albedo.texture);
+	SetProgramResource("world", world.texture);
+	SetProgramResource("normal", normal.texture);
+	SetProgramResource("specular", specular.texture);
+	
+	SetProgramConstant("material", material);
+
+	SetProgramResource("environment", cubemap);
+
+	_context->Draw(4, 0);
+
+	// --- DIRECT LIGHTING ---
+
+	SetStandardShaderProgram(deferred_lighting_shader);
+	SetVertexBuffersScreen();	
 	
 	SetProgramSampler("ss", ss);
 	SetProgramResource("albedo", albedo.texture);
@@ -275,6 +306,7 @@ void Render() {
 	SetProgramResource("normal", normal.texture);
 	SetProgramResource("specular", specular.texture);
 	SetProgramConstant("light", light);
+	
 	SetProgramConstant("material", material);
 
 	for (int i = 0; i < NUM_LIGHTS; ++i) {
@@ -284,6 +316,23 @@ void Render() {
 	}
 
 	SetBlendState();
+
+	// ---- RENDER ENVIRONMENT ---
+
+	SetStandardShaderProgram(render_cubemap);
+	SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
+	SetDepthTest(true);
+
+	CD3D11_DEPTH_STENCIL_DESC desc(D3D11_DEFAULT);
+	desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	auto depth_stencil_state = CreateDepthStencilState(&desc);
+	SetDepthStencilState(depth_stencil_state);
+
+	SetVertexBuffers(cubemap_mesh_buffer);
+	cubemap_transform.position = MAIN_CAMERA.transform.position;
+	UpdateModelConstantCBuffer(cubemap_transform);
+	SetProgramResource("cubemap", cubemap);
+	DrawIndexed(cubemap_mesh_buffer);
 
 	/*SetShaderProgram(simple_texture_shader);
 	

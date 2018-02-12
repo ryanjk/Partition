@@ -17,6 +17,7 @@ pn::camera_t			        MAIN_CAMERA;
 
 shader_program_t* CURRENT_SHADER;
 
+
 // ----- FUNCTIONS -----
 
 void InitRenderSystem(const window_handle h_wnd, const application_window_desc awd) {
@@ -224,6 +225,8 @@ void SetVertexBuffersScreen() {
 		_context->IASetVertexBuffers(0, 1, buffers, strides, offsets);
 	}
 
+	/*
+	Comment this out for now -- building the corners of the view frustum on the back plane
 	{
 		auto rcorners = corners * inverse_projection;
 		rcorners = mat4f(
@@ -252,7 +255,7 @@ void SetVertexBuffersScreen() {
 		UINT offsets[1] = { 0 };
 		_context->IASetVertexBuffers(1, 1, buffers, strides, offsets);
 	}
-
+	*/
 	_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 }
 

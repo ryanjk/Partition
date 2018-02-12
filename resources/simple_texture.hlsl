@@ -15,22 +15,9 @@ struct VS_OUT {
 
 VS_OUT VS_main(VS_IN_SCREEN i) {
 	VS_OUT o;
-	if (i.vertex_id == 0) {
-		o.uv         = float2(0, 0);
-		o.screen_pos = float4(-1, 1, 0, 1);
-	}
-	else if (i.vertex_id == 1) {
-		o.uv = float2(1, 0);
-		o.screen_pos = float4(1, 1, 0, 1);
-	}
-	else if (i.vertex_id == 2) {
-		o.uv = float2(0, 1);
-		o.screen_pos = float4(-1, -1, 0, 1);
-	}
-	else if (i.vertex_id == 3) {
-		o.uv = float2(1, 1);
-		o.screen_pos = float4(1, -1, 0, 1);
-	}
+	o.screen_pos = float4(i.pos, 1);
+	o.uv = (float2(1, 1) + i.pos.xy) * 0.5;
+	o.uv.y = 1 - o.uv.y;
 	return o;
 }
 

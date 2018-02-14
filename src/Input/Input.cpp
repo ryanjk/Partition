@@ -14,10 +14,11 @@ namespace input {
 
 // -------- VARIABLES ---------------
 
-input_state_t	       input_state;
-pn::string		       input_characters;
+input_state_t input_state;
+pn::string    input_characters;
 
 static bool cursor_locked;
+static bool cursor_visibility;
 
 // ------- FUNCTIONS --------
 
@@ -34,7 +35,8 @@ void InitInput() {
 	
 	input_state.mouse_wheel     = mouse_wheel_state::NO_CHANGE;
 
-	cursor_locked = false;
+	cursor_locked     = false;
+	cursor_visibility = true;
 }
 
 void InputOnEndOfFrame() {
@@ -55,10 +57,6 @@ void InputOnEndOfFrame() {
 
 	if (GetMouseWheelState() == mouse_wheel_state::SCROLL_DOWN || GetMouseWheelState() == mouse_wheel_state::SCROLL_UP) {
 		SetMouseWheelState(mouse_wheel_state::NO_CHANGE);
-	}
-
-	if (cursor_locked) {
-		//MoveCursorToCenter();
 	}
 
 	SetMouseDelta(0, 0);
@@ -87,7 +85,6 @@ mouse_pos_t GetMousePos() {
 
 void SetMouseDelta(mouse_coord_t x, mouse_coord_t y) {
 	input_state.mouse_pos_delta = { x, y };
-	if (x != 0 || y != 0 ) Log("Delta: {}, {}", x, y);
 }
 
 mouse_pos_t GetMousePosDelta() {
@@ -110,12 +107,6 @@ const string& GetInputCharacters() {
 	return input_characters;
 }
 
-bool IsCursorAtCenter() {
-	auto window_center_x = static_cast<mouse_coord_t>(app::window_desc.width) / 2;
-	auto window_center_y = static_cast<mouse_coord_t>(app::window_desc.height) / 2;
-	return input_state.mouse_pos.x == window_center_x && input_state.mouse_pos.y == window_center_y;
-}
-
 void MoveCursorToCenter() {
 	auto window_center_x = static_cast<mouse_coord_t>(app::window_desc.width) / 2;
 	auto window_center_y = static_cast<mouse_coord_t>(app::window_desc.height) / 2;
@@ -136,13 +127,11 @@ bool IsCursorLocked() {
 }
 
 void SetCursorVisible(bool visibility) {
-	ShowCursor(visibility);
+	cursor_visibility = visibility;
 }
 
 bool IsCursorVisible() {
-	CURSORINFO cursor_info{};
-	GetCursorInfo(&cursor_info);
-	return cursor_info.flags == 1;
+	return cursor_visibility;
 }
 
 } // namespace input

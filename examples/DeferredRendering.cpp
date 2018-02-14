@@ -4,6 +4,7 @@
 #include <Graphics\TextureLoadUtil.h>
 #include <Graphics\ProjectionMatrix.h>
 #include <Graphics\RenderSystem.h>
+#include <Graphics\GBuffer.h>
 
 #include <Utilities\Logging.h>
 #include <Utilities\frame_string.h>
@@ -76,15 +77,10 @@ cbuffer<material_t> material;
 
 // --- gbuffer data ---
 
-struct gbuffer {
-	pn::dx_render_target_view render_target;
-	pn::dx_resource_view      texture;
-};
-
-gbuffer albedo;
-gbuffer world;
-gbuffer normal;
-gbuffer specular;
+gbuffer_t albedo;
+gbuffer_t world;
+gbuffer_t normal;
+gbuffer_t specular;
 
 pn::shader_program_t gbuffer_fill_shader;
 pn::shader_program_t simple_texture_shader;
@@ -149,12 +145,6 @@ void Init() {
 	auto back_buffer           = pn::GetSwapChainBuffer(SWAP_CHAIN);
 	auto back_buffer_desc      = pn::GetDesc(back_buffer);
 	back_buffer_desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-
-	auto InitGBuffer = [](gbuffer& g, CD3D11_TEXTURE2D_DESC d) {
-		auto tex        = pn::CreateTexture2D(d);
-		g.texture       = pn::CreateShaderResourceView(tex);
-		g.render_target = pn::CreateRenderTargetView(tex);
-	};
 	
 	back_buffer_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	InitGBuffer(albedo  , back_buffer_desc);
@@ -197,36 +187,24 @@ void Init() {
 }
 
 void Resize() {
-	auto ResizeGBuffer = [](gbuffer& g, CD3D11_TEXTURE2D_DESC d) {		
-		D3D11_RENDER_TARGET_VIEW_DESC rt_desc;
-		g.render_target->GetDesc(&rt_desc);
-		d.Format = rt_desc.Format;
-
-		g.render_target.ReleaseAndGetAddressOf();
-		g.texture.ReleaseAndGetAddressOf();
-		
-		auto tex = pn::CreateTexture2D(d);
-		g.texture       = pn::CreateShaderResourceView(tex);
-		g.render_target = pn::CreateRenderTargetView(tex);
-	};
-
 	CD3D11_TEXTURE2D_DESC desc = GetDesc(GetSwapChainBuffer(SWAP_CHAIN));
-	desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-	ResizeGBuffer(albedo  , desc);
-	ResizeGBuffer(world   , desc);
-	ResizeGBuffer(normal  , desc);
-	ResizeGBuffer(specular, desc);
+	ResizeGBuffer(albedo  , desc.Width, desc.Height);
+	ResizeGBuffer(world   , desc.Width, desc.Height);
+	ResizeGBuffer(normal  , desc.Width, desc.Height);
+	ResizeGBuffer(specular, desc.Width, desc.Height);
 }
 
 void Update() {
 	static bool fon = false;
 	if (input::GetKeyState(SPACE) == input::key_state::JUST_PRESSED) {
 		fon = !fon;
+		input::SetCursorVisible(!input::IsCursorVisible());
+		input::SetCursorLock(!input::IsCursorLocked());
 	}
 
 	if (fon) {
-		UpdateFlycam(MAIN_CAMERA.transform, 10.0f, 0.5f);
+		UpdateFlycam(MAIN_CAMERA.transform, 10.0f, 0.2f);
 	}
 }
 

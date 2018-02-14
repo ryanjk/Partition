@@ -96,7 +96,6 @@ mouse_wheel_state	GetMouseWheelState();
 void				AddInputCharacter(const unsigned char c);
 const string&		GetInputCharacters();
 
-bool                IsCursorAtCenter();
 void                MoveCursorToCenter();
 
 void                ForceCursorPosition(mouse_coord_t x, mouse_coord_t y);

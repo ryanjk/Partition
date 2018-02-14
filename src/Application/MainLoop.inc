@@ -82,6 +82,19 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 			Resize();
 		}
 		return 0;
+	case WM_SETCURSOR:
+	{
+		if (input::IsCursorVisible()) {
+			Log("CURSOR ON");
+			SetCursor(LoadCursor(NULL, IDC_ARROW));
+		}
+		else {
+			Log("CURSOR OFF");
+			SetCursor(NULL);
+		}
+		return 0;
+	}
+	break;
 	case WM_CLOSE:
 	{
 		pn::menu_handle hMenu;

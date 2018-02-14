@@ -2,18 +2,11 @@
 #include "GlobalConstants.hlsli"
 #include "ShaderStructs.hlsli"
 
-Texture2D world    : register(t2);
-Texture2D normal   : register(t3);
+#include "DeferredShading.hlsli"
 
-#ifdef USE_MATERIAL_TEX
-Texture2D albedo   : register(t1);
-Texture2D specular : register(t4);
-#else
-cbuffer material {
-	float4 albedo;
-	float4 specular;
+cbuffer environment_lighting {
+	float environment_intensity;
 }
-#endif
 
 TextureCube environment : register(t5);
 
@@ -85,6 +78,7 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 	float3 m_albedo = t_albedo.rgb;
 	float metallic = t_albedo.w;
 	float roughness = t_specular.w;
+	float3 ao = t_specular.xyz;
 	float sqrRoughness = roughness*roughness;
 
 	// --- Calculate normal, light and view vector products and validate ---
@@ -99,7 +93,7 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 	const uint n_samples = 256;
 	for (uint i = 0; i < n_samples; i++) {
 		float2 Xi = Hammersley(i, n_samples);
-		float3 H = ImportanceSampleGGX(Xi, max(0.001, roughness), t_normal);
+		float3 H = ImportanceSampleGGX(Xi, roughness, t_normal);
 		float3 L = 2 * dot(s_to_v, H) * H - s_to_v;
 
 		float ndotv = saturate(dot(t_normal, s_to_v));
@@ -117,5 +111,5 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 		}
 	}
 
-	return float4(specular_lighting / n_samples, 1);
+	return float4(specular_lighting / n_samples * environment_intensity * ao, 1);
 }

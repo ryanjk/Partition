@@ -46,6 +46,17 @@ void pn::gui::EditStruct(light_t& light) {
 light_t lights[NUM_LIGHTS];
 cbuffer<light_t> light;
 
+struct alignas(16) environment_lighting_t {
+	float environment_intensity;
+};
+
+template<>
+void pn::gui::EditStruct(environment_lighting_t& light) {
+	DragFloat("intensity##", &light.environment_intensity, 0, 100);
+}
+
+cbuffer<environment_lighting_t> environment_lighting;
+
 // ---------------------------------
 
 struct alignas(16) material_t {
@@ -57,8 +68,8 @@ template<>
 void gui::EditStruct(material_t& material) {
 	DragFloat3("albedo", &material.albedoMetal.x, 0, 1);
 	DragFloat3("specular", &material.specRoughness.x, 0, 1);
-	DragFloat("roughness", &material.specRoughness.w, 0, 1);
-	DragFloat("metallic", &material.albedoMetal.w, 0, 1);
+	DragFloat("roughness", &material.specRoughness.w, 0, 1, 0.2f);
+	DragFloat("metallic", &material.albedoMetal.w, 0, 1, 0.2f);
 }
 
 cbuffer<material_t> material;
@@ -167,6 +178,9 @@ void Init() {
 		lights[i].light_position  = vec3f(0, 0.5f, 0);
 	}
 
+	InitializeCBuffer(environment_lighting);
+	environment_lighting.data.environment_intensity = 1.0f;
+
 	// ----- INIT MATERIAL ------
 
 	InitializeCBuffer(material);
@@ -236,6 +250,12 @@ void Render() {
 	}
 	ImGui::End();
 	
+	ImGui::Begin("Environment");
+	gui::EditStruct(environment_lighting.data);
+	ImGui::End();
+
+	UpdateBuffer(environment_lighting);
+
 	ImGui::Begin("Material");
 	gui::EditStruct(material.data);
 	ImGui::End();
@@ -271,9 +291,6 @@ void Render() {
 	DrawIndexed(scene_mesh);
 
 
-
-	// --- SHADER GBUFFERS ---
-
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);
 	SetBlendState(additive_blend);
@@ -290,6 +307,7 @@ void Render() {
 	SetProgramResource("specular", specular.texture);
 	
 	SetProgramConstant("material", material);
+	SetProgramConstant("environment_lighting", environment_lighting);
 
 	SetProgramResource("environment", cubemap);
 

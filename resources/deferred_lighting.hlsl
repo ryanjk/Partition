@@ -2,20 +2,10 @@
 #include "GlobalConstants.hlsli"
 #include "ShaderStructs.hlsli"
 
-Texture2D world    : register(t2);
-Texture2D normal   : register(t3);
+#include "DeferredShading.hlsli"
 
 SamplerState ss	: register(s1);
 
-#ifdef USE_MATERIAL_TEX
-Texture2D albedo   : register(t1);
-Texture2D specular : register(t4);
-#else
-cbuffer material {
-	float4 albedo;
-	float4 specular;
-}
-#endif
 
 cbuffer light {
 	float3 light_position;

@@ -204,7 +204,7 @@ void Update() {
 	}
 
 	if (fon) {
-		UpdateFlycam(MAIN_CAMERA.transform, 10.0f, 0.2f);
+		UpdateFlycam(MAIN_CAMERA.transform, 10.0f, 0.1f);
 	}
 }
 

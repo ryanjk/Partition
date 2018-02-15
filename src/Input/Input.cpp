@@ -128,6 +128,7 @@ bool IsCursorLocked() {
 
 void SetCursorVisible(bool visibility) {
 	cursor_visibility = visibility;
+	ShowCursor(visibility);
 }
 
 bool IsCursorVisible() {

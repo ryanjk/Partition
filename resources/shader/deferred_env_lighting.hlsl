@@ -10,7 +10,11 @@ cbuffer environment_lighting {
 
 TextureCube environment : register(t5);
 
-SamplerState ss	: register(s1);
+SamplerState ss : register(s1) {
+	Filter = MIN_MAG_MIP_LINEAR;
+	AddressU = Wrap;
+	AddressV = Wrap;
+};
 
 struct VS_OUT {
 	float4 screen_pos  : SV_POSITION;
@@ -64,16 +68,10 @@ float3 ImportanceSampleGGX(float2 Xi, float roughness, float3 n) {
 float4 PS_main(VS_OUT i) : SV_TARGET{
 
 	// --- Read material data ---
-	float  t_world = world.Sample(ss, i.uv).x;
-	float3 t_normal = normal.Sample(ss, i.uv).xyz;
-
-#ifdef USE_MATERIAL_TEX
-	float4 t_albedo = albedo.Sample(ss, i.uv);
+	float  t_world    = world.Sample(ss, i.uv).x;
+	float3 t_normal   = normal.Sample(ss, i.uv).xyz;
+	float4 t_albedo   = albedo.Sample(ss, i.uv);
 	float4 t_specular = specular.Sample(ss, i.uv);
-#else
-	float4 t_albedo = albedo;
-	float4 t_specular = specular;
-#endif
 
 	float3 m_albedo = t_albedo.rgb;
 	float metallic = t_albedo.w;

@@ -15,6 +15,10 @@ pn::dx_render_target_view		DISPLAY_RENDER_TARGET;
 pn::dx_depth_stencil_view		DISPLAY_DEPTH_STENCIL;
 pn::camera_t			        MAIN_CAMERA;
 
+dx_blend_state         default_blend_state;
+dx_rasterizer_state    default_rasterizer_state;
+dx_depth_stencil_state default_depth_stencil_state;
+
 shader_program_t* CURRENT_SHADER;
 
 
@@ -42,21 +46,21 @@ void InitRenderSystem(const window_handle h_wnd, const application_window_desc a
 
 	{
 		CD3D11_BLEND_DESC desc(D3D11_DEFAULT);
-		auto blend_state = CreateBlendState(&desc);
-		SetBlendState(blend_state);
+		default_blend_state = CreateBlendState(&desc);
+		SetBlendState(default_blend_state);
 	}
 
 	{
 		CD3D11_RASTERIZER_DESC desc(D3D11_DEFAULT);
-		auto rasterizer_state = CreateRasterizerState(&desc);
-		SetRasterizerState(rasterizer_state);
+		default_rasterizer_state = CreateRasterizerState(&desc);
+		SetRasterizerState(default_rasterizer_state);
 	}
 
 	{
 		CD3D11_DEPTH_STENCIL_DESC desc(D3D11_DEFAULT);
 		desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-		auto depth_stencil_state = CreateDepthStencilState(&desc);
-		SetDepthStencilState(depth_stencil_state);
+		default_depth_stencil_state = CreateDepthStencilState(&desc);
+		SetDepthStencilState(default_depth_stencil_state);
 	}
 }
 

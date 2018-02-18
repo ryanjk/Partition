@@ -1,11 +1,18 @@
 #include "GlobalConstants.hlsli"
 #include "ShaderStructs.hlsli"
 
-Texture2D albedo    : register(t1);
-Texture2D roughness : register(t2);
+#ifdef USE_MATERIAL_TEX
+Texture2D albedo   : register(t1);
+Texture2D specular : register(t2);
+#else
+cbuffer material {
+	float4 albedo;
+	float4 specular;
+}
+#endif
 
 SamplerState tex_sampler : register(s1) {
-	Filter   = MIN_MAG_MIP_LINEAR;
+	Filter = MIN_MAG_MIP_LINEAR;
 	AddressU = Wrap;
 	AddressV = Wrap;
 };
@@ -38,6 +45,8 @@ VS_OUT VS_main(VS_IN_FULL i) {
 
 // ------- PIXEL SHADER ---------
 
+
+
 struct PS_OUT {
 	float4 albedo   : SV_TARGET0;
 	float world     : SV_TARGET1;
@@ -48,10 +57,16 @@ struct PS_OUT {
 PS_OUT PS_main(VS_OUT i) {
 	PS_OUT o;
 
-	o.albedo = albedo.Sample(tex_sampler, i.uv);
+#ifdef USE_MATERIAL_TEX
+	o.albedo   = albedo.Sample(tex_sampler, i.uv);
+	o.specular = specular.Sample(tex_sampler, i.uv);
+#else
+	o.albedo   = albedo;
+	o.specular = specular;
+#endif
+	
 	o.normal = float4(normalize(i.n.xyz),0);
 	o.world = i.screen_pos.z;
-	o.specular = roughness.Sample(tex_sampler, i.uv);
 
 	return o;
 }

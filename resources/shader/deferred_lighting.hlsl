@@ -4,8 +4,11 @@
 
 #include "DeferredShading.hlsli"
 
-SamplerState ss	: register(s1);
-
+SamplerState ss : register(s1) {
+	Filter = MIN_MAG_MIP_LINEAR;
+	AddressU = Wrap;
+	AddressV = Wrap;
+};
 
 cbuffer light {
 	float3 light_position;
@@ -35,14 +38,8 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 	// --- Read material data ---
 	float  t_world    = world.Sample(ss, i.uv).x;
 	float3 t_normal   = normal.Sample(ss, i.uv).xyz;
-
-#ifdef USE_MATERIAL_TEX
-	float4 t_albedo = albedo.Sample(ss, i.uv);
+	float4 t_albedo   = albedo.Sample(ss, i.uv);
 	float4 t_specular = specular.Sample(ss, i.uv);
-#else
-	float4 t_albedo = albedo;
-	float4 t_specular = specular;
-#endif
 
 	float3 m_albedo    = t_albedo.rgb;
 	float metallic     = t_albedo.w;
@@ -51,8 +48,6 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 
 	// --- Calculate normal, light and view vector products and validate ---
 	float3 world_pos = WorldPosFromDepth(i.uv, t_world, INV_PROJECTION_VIEW);
-	//return float4(exp(-pow(world_pos.z - 5.0,2)/0.02) * float3(1, 1, 1), 1);
-	//return float4(pow(world_pos.z - 5, 1 / 2.2) * float3(1, 1, 1), 1);
 
 	float3 camera_pos = float3(INV_VIEW[0][3], INV_VIEW[1][3], INV_VIEW[2][3]);
 	float3 light_pos = light_position;

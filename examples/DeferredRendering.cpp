@@ -60,32 +60,11 @@ cbuffer<environment_lighting_t> environment_lighting;
 
 // ---------------------------------
 
-struct alignas(16) material_t {
-	vec4f albedoMetal;
-	vec4f specRoughness;
-};
-
-template<>
-void gui::EditStruct(material_t& material) {
-	DragFloat3("albedo", &material.albedoMetal.x, 0, 1);
-	DragFloat3("specular", &material.specRoughness.x, 0, 1);
-	DragFloat("roughness", &material.specRoughness.w, 0, 1, 0.2f);
-	DragFloat("metallic", &material.albedoMetal.w, 0, 1, 0.2f);
-}
-
-cbuffer<material_t> material;
+cbuffer<deferred_material_t> material;
 
 // --- gbuffer data ---
 
-gbuffer_t albedo;
-gbuffer_t world;
-gbuffer_t normal;
-gbuffer_t specular;
-
-pn::shader_program_t gbuffer_fill_shader;
 pn::shader_program_t simple_texture_shader;
-pn::shader_program_t deferred_lighting_shader;
-pn::shader_program_t deferred_env_lighting_shader;
 pn::shader_program_t render_cubemap;
 
 rdb::mesh_resource_t scene_mesh;
@@ -102,6 +81,7 @@ dx_blend_state additive_blend;
 transform_t      cubemap_transform;
 dx_resource_view cubemap;
 mesh_buffer_t    cubemap_mesh_buffer;
+dx_depth_stencil_state less_equal_depth;
 
 transform_t sphere_body_transform;
 mesh_buffer_t sphere_body_mesh;
@@ -113,7 +93,11 @@ void Init() {
 
 	// ---------- LOAD RESOURCES ----------------
 
-	auto mesh_handle = pn::LoadMesh(pn::GetResourcePath("dragon.fbx"));
+	LoadMesh(GetResourcePath("dragon.fbx"));
+	LoadMesh(GetResourcePath("reflection_sphere.fbx"));
+	LoadMesh(GetResourcePath("round_sphere.fbx"));
+	LoadMesh(GetResourcePath("cubemap.fbx"));
+	
 	scene_mesh = pn::rdb::GetMeshResource("default");
 	dragon_transform.position = vec3f(0.0f, -4.0f, 9.0f);
 
@@ -121,17 +105,14 @@ void Init() {
 	dragon_rough  = LoadTexture2D(GetResourcePath("SomethingRough.png"));
 
 	cubemap = LoadCubemap(GetResourcePath("space-cubemap.dds"));
-	LoadMesh(GetResourcePath("cubemap.fbx"));
 	cubemap_mesh_buffer = rdb::GetMeshResource("Cubemap");
 
-	LoadMesh(pn::GetResourcePath("reflection_sphere.fbx"));
 	sphere_body_mesh = rdb::GetMeshResource("SphereBody");
 	sphere_body_transform.position = { 0,0,3 };
 
 	sphere_face_mesh = rdb::GetMeshResource("SphereFace");
 	sphere_face_transform.position = { 0,0,3 };
 
-	LoadMesh(pn::GetResourcePath("round_sphere.fbx"));
 	//sphere_body_mesh = rdb::GetMeshResource("RoundSphere");
 
 
@@ -140,29 +121,12 @@ void Init() {
 	CD3D11_SAMPLER_DESC sampler_desc(D3D11_DEFAULT);
 	ss = pn::CreateSamplerState(sampler_desc);
 
-	gbuffer_fill_shader      = pn::CompileShaderProgram(pn::GetResourcePath("gbuffer_fill.hlsl"));
 	simple_texture_shader    = pn::CompileShaderProgram(pn::GetResourcePath("simple_texture.hlsl"));
-	deferred_lighting_shader = pn::CompileShaderProgram(pn::GetResourcePath("deferred_lighting.hlsl"));
-	deferred_env_lighting_shader = pn::CompileShaderProgram(pn::GetResourcePath("deferred_env_lighting.hlsl"));
 	render_cubemap = CompileShaderProgram(GetResourcePath("render_cubemap.hlsl"));
 
-	// ---- CREATE GBUFFERS -----
+	// ---- INIT DEFERRED SHADING STATE -----
 
-	auto back_buffer           = pn::GetSwapChainBuffer(SWAP_CHAIN);
-	auto back_buffer_desc      = pn::GetDesc(back_buffer);
-	back_buffer_desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-	
-	back_buffer_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	InitGBuffer(albedo  , back_buffer_desc);
-
-	back_buffer_desc.Format = DXGI_FORMAT_R32_FLOAT;
-	InitGBuffer(world   , back_buffer_desc);
-
-	back_buffer_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	InitGBuffer(normal  , back_buffer_desc);
-
-	back_buffer_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	InitGBuffer(specular, back_buffer_desc);
+	InitGBuffers();
 
 	// ----- INITIALIZE LIGHT DATA -----
 
@@ -190,15 +154,14 @@ void Init() {
 	blend_desc.RenderTarget[0].SrcBlend    = D3D11_BLEND_ONE;
 	blend_desc.RenderTarget[0].DestBlend   = D3D11_BLEND_ONE;
 	additive_blend = CreateBlendState(&blend_desc);
+
+	CD3D11_DEPTH_STENCIL_DESC desc(D3D11_DEFAULT);
+	desc.DepthFunc   = D3D11_COMPARISON_LESS_EQUAL;
+	less_equal_depth = CreateDepthStencilState(&desc);
 }
 
 void Resize() {
-	CD3D11_TEXTURE2D_DESC desc = GetDesc(GetSwapChainBuffer(SWAP_CHAIN));
-
-	ResizeGBuffer(albedo  , desc.Width, desc.Height);
-	ResizeGBuffer(world   , desc.Width, desc.Height);
-	ResizeGBuffer(normal  , desc.Width, desc.Height);
-	ResizeGBuffer(specular, desc.Width, desc.Height);
+	ResizeGBuffers();
 }
 
 void Update() {
@@ -220,11 +183,7 @@ void FixedUpdate() {
 
 void Render() {
 
-	static const pn::vec4f color = { 0.0f, 0.0f, 0.0f, 1.0f };
-	pn::ClearRenderTargetView(albedo.render_target, color);
-	pn::ClearRenderTargetView(normal.render_target, color);
-	pn::ClearRenderTargetView(world.render_target, color);
-	pn::ClearRenderTargetView(specular.render_target, color);
+	ClearGBufferRenderTargets();
 	
 	ImGui::Begin("Lights");
 	for (int i = 0; i < NUM_LIGHTS; ++i) {
@@ -254,46 +213,40 @@ void Render() {
 
 	SetDepthTest(true);
 	
-	ID3D11RenderTargetView * const gbuffers[4] = {
-		albedo.render_target.Get(),
-		world.render_target.Get(),
-		normal.render_target.Get(),
-		specular.render_target.Get()
-	};
+	SetGBufferRenderTargets();
 
-	_context->OMSetRenderTargets(4, gbuffers, DISPLAY_DEPTH_STENCIL.Get());
+	SetStandardShaderProgram(GBUFFER_FILL);
 
-	SetStandardShaderProgram(gbuffer_fill_shader);
+	SetProgramConstant("material", material);
 
-	SetProgramResource("albedo", dragon_albedo);
-	SetProgramResource("roughness", dragon_rough);
+	SetVertexBuffers(scene_mesh);
+	gui::EditStruct(dragon_transform);
+	UpdateModelConstantCBuffer(dragon_transform);
+	DrawIndexed(scene_mesh);
+
+	/*
 
 	SetVertexBuffers(sphere_face_mesh);
 	gui::EditStruct(sphere_face_transform);
 	UpdateModelConstantCBuffer(sphere_face_transform);
 	DrawIndexed(sphere_face_mesh);
 
-	/*SetVertexBuffers(sphere_body_mesh);
+	
+	SetVertexBuffers(sphere_body_mesh);
 	gui::EditStruct(sphere_body_transform);
 	UpdateModelConstantCBuffer(sphere_body_transform);
 	DrawIndexed(sphere_body_mesh);
 	*/
+
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);
 	SetBlendState(additive_blend);
 
 	// --- ENVIRONMENT LIGHTING ---
 
-	SetStandardShaderProgram(deferred_env_lighting_shader);
-	SetVertexBuffersScreen();
+	SetDeferredShaderProgram(DEFERRED_CUBEMAP_LIGHTING);
+
 	
-	SetProgramSampler("ss", ss);
-	SetProgramResource("albedo", albedo.texture);
-	SetProgramResource("world", world.texture);
-	SetProgramResource("normal", normal.texture);
-	SetProgramResource("specular", specular.texture);
-	
-	SetProgramConstant("material", material);
 	SetProgramConstant("environment_lighting", environment_lighting);
 
 	SetProgramResource("environment", cubemap);
@@ -302,17 +255,9 @@ void Render() {
 
 	// --- DIRECT LIGHTING ---
 
-	SetStandardShaderProgram(deferred_lighting_shader);
-	SetVertexBuffersScreen();	
-	
-	SetProgramSampler("ss", ss);
-	SetProgramResource("albedo", albedo.texture);
-	SetProgramResource("world", world.texture);
-	SetProgramResource("normal", normal.texture);
-	SetProgramResource("specular", specular.texture);
+	SetDeferredShaderProgram(DEFERRED_LIGHTING);
+
 	SetProgramConstant("light", light);
-	
-	SetProgramConstant("material", material);
 
 	for (int i = 0; i < NUM_LIGHTS; ++i) {
 		light.data = lights[i];
@@ -328,10 +273,7 @@ void Render() {
 	SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
 	SetDepthTest(true);
 
-	CD3D11_DEPTH_STENCIL_DESC desc(D3D11_DEFAULT);
-	desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-	auto depth_stencil_state = CreateDepthStencilState(&desc);
-	SetDepthStencilState(depth_stencil_state);
+	SetDepthStencilState(less_equal_depth);
 
 	SetVertexBuffers(cubemap_mesh_buffer);
 	cubemap_transform.position = MAIN_CAMERA.transform.position;

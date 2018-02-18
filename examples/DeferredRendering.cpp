@@ -120,7 +120,7 @@ void Init() {
 	dragon_albedo = LoadTexture2D(GetResourcePath("AlbedoMetal.png"));
 	dragon_rough  = LoadTexture2D(GetResourcePath("SomethingRough.png"));
 
-	cubemap = LoadCubemap(GetResourcePath("earth-cubemap.dds"));
+	cubemap = LoadCubemap(GetResourcePath("space-cubemap.dds"));
 	LoadMesh(GetResourcePath("cubemap.fbx"));
 	cubemap_mesh_buffer = rdb::GetMeshResource("Cubemap");
 
@@ -129,9 +129,10 @@ void Init() {
 	sphere_body_transform.position = { 0,0,3 };
 
 	sphere_face_mesh = rdb::GetMeshResource("SphereFace");
+	sphere_face_transform.position = { 0,0,3 };
 
 	LoadMesh(pn::GetResourcePath("round_sphere.fbx"));
-	sphere_body_mesh = rdb::GetMeshResource("RoundSphere");
+	//sphere_body_mesh = rdb::GetMeshResource("RoundSphere");
 
 
 	// --------- CREATE SHADER DATA ---------------
@@ -267,16 +268,16 @@ void Render() {
 	SetProgramResource("albedo", dragon_albedo);
 	SetProgramResource("roughness", dragon_rough);
 
-	//SetVertexBuffers(sphere_face_mesh);
-	//gui::EditStruct(sphere_face_transform);
-	//UpdateModelConstantCBuffer(sphere_face_transform);
-	//DrawIndexed(sphere_face_mesh);
+	SetVertexBuffers(sphere_face_mesh);
+	gui::EditStruct(sphere_face_transform);
+	UpdateModelConstantCBuffer(sphere_face_transform);
+	DrawIndexed(sphere_face_mesh);
 
-	SetVertexBuffers(sphere_body_mesh);
+	/*SetVertexBuffers(sphere_body_mesh);
 	gui::EditStruct(sphere_body_transform);
 	UpdateModelConstantCBuffer(sphere_body_transform);
 	DrawIndexed(sphere_body_mesh);
-
+	*/
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);
 	SetBlendState(additive_blend);

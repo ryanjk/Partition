@@ -400,8 +400,8 @@ void SetVSConstant(dx_shader_reflection reflection, const pn::string& buffer_nam
 void SetPSConstant(dx_shader_reflection reflection, const pn::string& buffer_name, const dx_buffer& buffer);
 void SetProgramConstant(const shader_program_t& program, const pn::string& buffer_name, const dx_buffer& buffer);
 
-void SetVSResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view);
-void SetPSResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view);
+void SetVSShaderResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view);
+void SetPSShaderResource(dx_shader_reflection reflection, const pn::string& resource_name, dx_resource_view& resource_view);
 void SetProgramResource(const shader_program_t& program, const pn::string& resource_name, dx_resource_view& resource_view);
 
 void SetVSSampler(dx_shader_reflection reflection, const pn::string& sampler_name, dx_sampler_state& sampler_state);

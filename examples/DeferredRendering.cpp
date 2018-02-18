@@ -103,24 +103,19 @@ transform_t      cubemap_transform;
 dx_resource_view cubemap;
 mesh_buffer_t    cubemap_mesh_buffer;
 
+transform_t sphere_body_transform;
+mesh_buffer_t sphere_body_mesh;
+
+transform_t sphere_face_transform;
+mesh_buffer_t sphere_face_mesh;
+
 void Init() {
 
 	// ---------- LOAD RESOURCES ----------------
 
-	pn::StartProfile("Loading all meshes");
-
-	{
-		pn::StartProfile("Loading dragon mesh");
-		auto mesh_handle = pn::LoadMesh(pn::GetResourcePath("dragon.fbx"));
-		pn::EndProfile();
-
-		scene_mesh = pn::rdb::GetMeshResource("default");
-	}
-
-	pn::EndProfile();
-
+	auto mesh_handle = pn::LoadMesh(pn::GetResourcePath("dragon.fbx"));
+	scene_mesh = pn::rdb::GetMeshResource("default");
 	dragon_transform.position = vec3f(0.0f, -4.0f, 9.0f);
-	//dragon_transform.position = vec3f(0.0f, 0.0f, 3.0f);
 
 	dragon_albedo = LoadTexture2D(GetResourcePath("AlbedoMetal.png"));
 	dragon_rough  = LoadTexture2D(GetResourcePath("SomethingRough.png"));
@@ -128,6 +123,16 @@ void Init() {
 	cubemap = LoadCubemap(GetResourcePath("earth-cubemap.dds"));
 	LoadMesh(GetResourcePath("cubemap.fbx"));
 	cubemap_mesh_buffer = rdb::GetMeshResource("Cubemap");
+
+	LoadMesh(pn::GetResourcePath("reflection_sphere.fbx"));
+	sphere_body_mesh = rdb::GetMeshResource("SphereBody");
+	sphere_body_transform.position = { 0,0,3 };
+
+	sphere_face_mesh = rdb::GetMeshResource("SphereFace");
+
+	LoadMesh(pn::GetResourcePath("round_sphere.fbx"));
+	sphere_body_mesh = rdb::GetMeshResource("RoundSphere");
+
 
 	// --------- CREATE SHADER DATA ---------------
 
@@ -152,7 +157,7 @@ void Init() {
 	back_buffer_desc.Format = DXGI_FORMAT_R32_FLOAT;
 	InitGBuffer(world   , back_buffer_desc);
 
-	back_buffer_desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	back_buffer_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	InitGBuffer(normal  , back_buffer_desc);
 
 	back_buffer_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -258,16 +263,19 @@ void Render() {
 	_context->OMSetRenderTargets(4, gbuffers, DISPLAY_DEPTH_STENCIL.Get());
 
 	SetStandardShaderProgram(gbuffer_fill_shader);
-	SetVertexBuffers(scene_mesh);
-
-	gui::EditStruct(dragon_transform);
-	UpdateModelConstantCBuffer(dragon_transform);
 
 	SetProgramResource("albedo", dragon_albedo);
 	SetProgramResource("roughness", dragon_rough);
 
-	DrawIndexed(scene_mesh);
+	//SetVertexBuffers(sphere_face_mesh);
+	//gui::EditStruct(sphere_face_transform);
+	//UpdateModelConstantCBuffer(sphere_face_transform);
+	//DrawIndexed(sphere_face_mesh);
 
+	SetVertexBuffers(sphere_body_mesh);
+	gui::EditStruct(sphere_body_transform);
+	UpdateModelConstantCBuffer(sphere_body_transform);
+	DrawIndexed(sphere_body_mesh);
 
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);

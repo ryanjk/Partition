@@ -7,6 +7,8 @@
 #define HALF_PI       1.57079632679f
 #define INV_HALF_PI   0.636619772367f
 
+#define RETURN(scalar) return float4(scalar*float3(1,1,1),1)
+
 // --- General functions ---
 
 float Pow5(float x) {
@@ -14,7 +16,7 @@ float Pow5(float x) {
 }
 
 float3 WorldPosFromDepth(float2 uv, float depth, float4x4 inverse_projection_view) {
-	float3 vpos = float3(uv.x * 2 - 1, (1 - uv.y) * 2 - 1, depth);
+	float3 vpos = float3(uv.x * 2.0 - 1.0, (1.0 - uv.y) * 2.0 - 1.0, depth);
 	float4 wp = mul(inverse_projection_view, float4(vpos, 1));
 	return wp.xyz / wp.w;
 }

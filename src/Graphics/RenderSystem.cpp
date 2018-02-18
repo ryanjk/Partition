@@ -35,7 +35,7 @@ void InitRenderSystem(const window_handle h_wnd, const application_window_desc a
 	MAIN_CAMERA.transform = transform_t{};
 	MAIN_CAMERA.projection_matrix = pn::ProjectionMatrix{ pn::ProjectionType::PERSPECTIVE,
 		static_cast<float>(pn::app::window_desc.width), static_cast<float>(pn::app::window_desc.height),
-		0.01f, 100.0f,
+		0.1f, 100.0f,
 		70.0f, 0.1f
 	};
 	UpdateCameraConstantCBuffer(MAIN_CAMERA);

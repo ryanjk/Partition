@@ -51,9 +51,13 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 
 	// --- Calculate normal, light and view vector products and validate ---
 	float3 world_pos = WorldPosFromDepth(i.uv, t_world, INV_PROJECTION_VIEW);
+	//return float4(exp(-pow(world_pos.z - 5.0,2)/0.02) * float3(1, 1, 1), 1);
+	//return float4(pow(world_pos.z - 5, 1 / 2.2) * float3(1, 1, 1), 1);
 
 	float3 camera_pos = float3(INV_VIEW[0][3], INV_VIEW[1][3], INV_VIEW[2][3]);
-	float3 s_to_l = normalize(light_position - world_pos);
+	float3 light_pos = light_position;
+
+	float3 s_to_l = normalize(light_pos - world_pos);
 	float3 s_to_v = normalize(camera_pos - world_pos);
 
 	float ndotl = dot(s_to_l, t_normal);
@@ -67,7 +71,7 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 	// --- Calculate specular color ---
 	const float3 DEFAULT_SPEC_COLOR = float3(0.04, 0.04, 0.04);
 	float3 Cs = lerp(DEFAULT_SPEC_COLOR, m_albedo, metallic);
-	float FH = SchlickFresnel(ldoth);
+	float FH  = SchlickFresnel(ldoth);
 	float3 Fs = lerp(Cs, float3(1, 1, 1), FH);
 
 	float Ds  = NDF_GGX(ndoth, max(0.001, sqrRoughness));
@@ -86,7 +90,7 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 	float3 finalColor = (diffuseColor + specColor) *
 		ndotl *
 		light_intensity *
-		LightFalloff(length(light_position - world_pos), 30) *
+		LightFalloff(length(light_pos - world_pos), 30) *
 		light_color
 		;
 	return float4(finalColor, 1);

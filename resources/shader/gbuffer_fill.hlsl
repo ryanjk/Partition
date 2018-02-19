@@ -1,6 +1,12 @@
 #include "GlobalConstants.hlsli"
 #include "ShaderStructs.hlsli"
 
+SamplerState tex_sampler : register(s1) {
+	Filter = MIN_MAG_MIP_LINEAR;
+	AddressU = Wrap;
+	AddressV = Wrap;
+};
+
 #ifdef USE_MATERIAL_TEX
 Texture2D albedo   : register(t1);
 Texture2D specular : register(t2);
@@ -11,11 +17,11 @@ cbuffer material {
 }
 #endif
 
-SamplerState tex_sampler : register(s1) {
-	Filter = MIN_MAG_MIP_LINEAR;
-	AddressU = Wrap;
-	AddressV = Wrap;
-};
+Texture2D height_map : register(t3);
+cbuffer height_map_params {
+	float height_map_scale;
+}
+
 
 // ------- INPUT / OUTPUT ---
 
@@ -31,21 +37,21 @@ struct VS_OUT {
 VS_OUT VS_main(VS_IN_FULL i) {
 	VS_OUT o;
 
-	float4 pos   = float4(i.pos, 1.0);
-	o.world_pos  = mul(MVP, pos);
-	o.screen_pos = mul(MVP, pos);
-
 	o.n = float4(i.n, 0.0);
 	o.n = mul(MODEL, o.n);
 	o.n = normalize(o.n);
+
+	float4 pos   = float4(i.pos, 1.0);
+	o.world_pos  = mul(MODEL, pos);
+	o.world_pos += float4(height_map.SampleLevel(tex_sampler, i.uv, 0).x * o.n.xyz * height_map_scale, 0);
+
+	o.screen_pos = mul(PROJECTION, mul(VIEW, o.world_pos));
 
 	o.uv = i.uv;
 	return o;
 }
 
 // ------- PIXEL SHADER ---------
-
-
 
 struct PS_OUT {
 	float4 albedo   : SV_TARGET0;
@@ -65,7 +71,16 @@ PS_OUT PS_main(VS_OUT i) {
 	o.specular = specular;
 #endif
 	
-	o.normal = float4(normalize(i.n.xyz),0);
+	const float DELTA = 0.01;
+	float h_mx = height_map.Sample(tex_sampler, i.uv - float2(DELTA, 0)).x * height_map_scale;
+	float h_px = height_map.Sample(tex_sampler, i.uv + float2(DELTA, 0)).x * height_map_scale;
+	float h_my = height_map.Sample(tex_sampler, i.uv - float2(0, DELTA)).x * height_map_scale;
+	float h_py = height_map.Sample(tex_sampler, i.uv + float2(0, DELTA)).x * height_map_scale;
+
+	float3 n = normalize(float3((h_mx - h_px) / (2 * DELTA), (h_my - h_py) / (2 * DELTA), -1));
+
+	//o.normal = float4(normalize(i.n.xyz),0);
+	o.normal = mul(MODEL, float4(n, 0));
 	o.world = i.screen_pos.z;
 
 	return o;

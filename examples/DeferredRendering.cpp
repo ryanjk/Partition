@@ -113,7 +113,7 @@ void Init() {
 	sphere_face_mesh = rdb::GetMeshResource("SphereFace");
 	sphere_face_transform.position = { 0,0,3 };
 
-	//sphere_body_mesh = rdb::GetMeshResource("RoundSphere");
+	sphere_body_mesh = rdb::GetMeshResource("RoundSphere");
 
 
 	// --------- CREATE SHADER DATA ---------------
@@ -219,24 +219,25 @@ void Render() {
 
 	SetProgramConstant("material", material);
 
+	/*
 	SetVertexBuffers(scene_mesh);
 	gui::EditStruct(dragon_transform);
 	UpdateModelConstantCBuffer(dragon_transform);
 	DrawIndexed(scene_mesh);
-
+	*/
+	
 	/*
-
 	SetVertexBuffers(sphere_face_mesh);
 	gui::EditStruct(sphere_face_transform);
 	UpdateModelConstantCBuffer(sphere_face_transform);
 	DrawIndexed(sphere_face_mesh);
-
+	*/
 	
 	SetVertexBuffers(sphere_body_mesh);
 	gui::EditStruct(sphere_body_transform);
 	UpdateModelConstantCBuffer(sphere_body_transform);
 	DrawIndexed(sphere_body_mesh);
-	*/
+	
 
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);

@@ -94,15 +94,21 @@ transform_t      cubemap_transform;
 mesh_buffer_t    cubemap_mesh;
 dx_resource_view cubemap;
 
-void Init() {
+void LoadResources() {
 	LoadMesh(GetResourcePath("cubemap.fbx"));
-	LoadMesh(GetResourcePath("water.fbx"));
+	LoadMesh(GetResourcePath("plane.fbx"));
+
+	height_map = LoadTexture2D(GetResourcePath("height.jpg"));
+	cubemap = LoadCubemap(GetResourcePath("space-cubemap.dds"));
+}
+
+void Init() {
+
 
 	CD3D11_SAMPLER_DESC sampler_desc(D3D11_DEFAULT);
 	ss = pn::CreateSamplerState(sampler_desc);
 
-	height_map = LoadTexture2D(GetResourcePath("height.jpg"));
-	cubemap = LoadCubemap(GetResourcePath("space-cubemap.dds"));
+
 
 	cubemap_mesh = rdb::GetMeshResource("Cubemap");
 	plane_mesh   = rdb::GetMeshResource("Plane");

@@ -35,6 +35,11 @@ struct camera_t {
 	pn::transform_t			transform;
 };
 
+struct renderable_t {
+	transform_t   transform;
+	mesh_buffer_t mesh;
+};
+
 // ----- GLOBALS ------
 
 extern pn::dx_swap_chain SWAP_CHAIN;
@@ -58,6 +63,8 @@ void InitRenderSystem(const window_handle hwnd, const application_window_desc aw
 void UpdateGlobalConstantCBuffer();
 void UpdateCameraConstantCBuffer(const camera_t& camera);
 void UpdateModelConstantCBuffer(const transform_t& transform);
+
+void DrawIndexed(const renderable_t& r);
 
 // ----- STATE ACCESS -------
 

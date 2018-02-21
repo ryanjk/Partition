@@ -85,35 +85,31 @@ dx_sampler_state ss;
 
 cbuffer<deferred_material_t> material;
 
-transform_t   plane_transform;
-mesh_buffer_t plane_mesh;
+renderable_t plane;
+renderable_t cubemap;
 
 dx_resource_view height_map;
+dx_resource_view cubemap_texture;
 
-transform_t      cubemap_transform;
-mesh_buffer_t    cubemap_mesh;
-dx_resource_view cubemap;
 
 void LoadResources() {
 	LoadMesh(GetResourcePath("cubemap.fbx"));
 	LoadMesh(GetResourcePath("plane.fbx"));
 
-	height_map = LoadTexture2D(GetResourcePath("height.jpg"));
-	cubemap = LoadCubemap(GetResourcePath("space-cubemap.dds"));
+	height_map      = LoadTexture2D(GetResourcePath("height.jpg"));
+	cubemap_texture = LoadCubemap(GetResourcePath("space-cubemap.dds"));
 }
 
 void Init() {
-
-
 	CD3D11_SAMPLER_DESC sampler_desc(D3D11_DEFAULT);
 	ss = pn::CreateSamplerState(sampler_desc);
 
+	LoadResources();
 
-
-	cubemap_mesh = rdb::GetMeshResource("Cubemap");
-	plane_mesh   = rdb::GetMeshResource("Plane");
-	plane_transform.position = { 0, 0, 12.4f };
-	plane_transform.rotation = EulerToQuaternion({ 1.06f, 0, 0 });
+	cubemap.mesh = rdb::GetMeshResource("Cubemap");
+	plane.mesh   = rdb::GetMeshResource("Plane");
+	plane.transform.position = { 0, 0, 12.4f };
+	plane.transform.rotation = EulerToQuaternion({ 1.06f, 0, 0 });
 
 	InitGBuffers();
 
@@ -175,37 +171,26 @@ void Render() {
 	}
 	ImGui::End();
 
-	ImGui::Begin("Environment");
-	gui::EditStruct(environment_lighting.data);
-	ImGui::End();
+	gui::EditStruct("Environment"   , environment_lighting.data);
+	gui::EditStruct("Height Map"    , height_map_params.data);
+	gui::EditStruct("Plane Material", material.data);
+	
 	UpdateBuffer(environment_lighting);
+	UpdateBuffer(height_map_params);
+	UpdateBuffer(material);
 
 	SetDepthTest(true);
 	SetGBufferRenderTargets();
 	SetStandardShaderProgram(GBUFFER_FILL);
 
-	ImGui::Begin("Height Map");
-	gui::EditStruct(height_map_params.data);
-	ImGui::End();
-	UpdateBuffer(height_map_params);
-
-	ImGui::Begin("Plane Material");
-	gui::EditStruct(material.data);
-	ImGui::End();
-	UpdateBuffer(material);
-
 	SetProgramSampler("tex_sampler", ss);
 	SetProgramConstant("material", material);
 	SetProgramConstant("height_map_params", height_map_params);
 	SetProgramResource("height_map", height_map);
-	SetVertexBuffers(plane_mesh);
 
-	ImGui::Begin("Plane Transform");
-	gui::EditStruct(plane_transform);
-	ImGui::End();
+	gui::EditStruct("Plane Transform", plane.transform);
 
-	UpdateModelConstantCBuffer(plane_transform);
-	DrawIndexed(plane_mesh);
+	DrawIndexed(plane);
 
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);
@@ -222,7 +207,7 @@ void Render() {
 
 	SetDeferredShaderProgram(DEFERRED_CUBEMAP_LIGHTING);
 	SetProgramConstant("environment_lighting", environment_lighting);
-	SetProgramResource("environment", cubemap);
+	SetProgramResource("environment", cubemap_texture);
 
 	_context->Draw(4, 0);
 

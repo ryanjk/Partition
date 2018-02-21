@@ -67,10 +67,7 @@ cbuffer<deferred_material_t> material;
 pn::shader_program_t simple_texture_shader;
 pn::shader_program_t render_cubemap;
 
-rdb::mesh_resource_t scene_mesh;
-
 // Dragon data
-transform_t dragon_transform;
 dx_resource_view dragon_albedo;
 dx_resource_view dragon_rough;
 
@@ -78,16 +75,13 @@ pn::dx_sampler_state ss;
 dx_blend_state additive_blend;
 
 // Environment map
-transform_t      cubemap_transform;
-dx_resource_view cubemap;
-mesh_buffer_t    cubemap_mesh_buffer;
+dx_resource_view cubemap_texture;
 dx_depth_stencil_state less_equal_depth;
 
-transform_t sphere_body_transform;
-mesh_buffer_t sphere_body_mesh;
-
-transform_t sphere_face_transform;
-mesh_buffer_t sphere_face_mesh;
+renderable_t dragon;
+renderable_t cubemap;
+renderable_t sphere_body;
+renderable_t sphere_face;
 
 void Init() {
 
@@ -98,22 +92,22 @@ void Init() {
 	LoadMesh(GetResourcePath("round_sphere.fbx"));
 	LoadMesh(GetResourcePath("cubemap.fbx"));
 	
-	scene_mesh = pn::rdb::GetMeshResource("default");
-	dragon_transform.position = vec3f(0.0f, -4.0f, 9.0f);
+	dragon.mesh        = pn::rdb::GetMeshResource("default");
+	dragon.transform.position = vec3f(0.0f, -4.0f, 9.0f);
 
 	dragon_albedo = LoadTexture2D(GetResourcePath("AlbedoMetal.png"));
 	dragon_rough  = LoadTexture2D(GetResourcePath("SomethingRough.png"));
 
-	cubemap = LoadCubemap(GetResourcePath("space-cubemap.dds"));
-	cubemap_mesh_buffer = rdb::GetMeshResource("Cubemap");
+	cubemap_texture = LoadCubemap(GetResourcePath("space-cubemap.dds"));
+	cubemap.mesh = rdb::GetMeshResource("Cubemap");
 
-	sphere_body_mesh = rdb::GetMeshResource("SphereBody");
-	sphere_body_transform.position = { 0,0,3 };
+	sphere_body.mesh = rdb::GetMeshResource("SphereBody");
+	sphere_body.transform.position = { 0,0,3 };
 
-	sphere_face_mesh = rdb::GetMeshResource("SphereFace");
-	sphere_face_transform.position = { 0,0,3 };
+	sphere_face.mesh = rdb::GetMeshResource("SphereFace");
+	sphere_face.transform.position = { 0,0,3 };
 
-	sphere_body_mesh = rdb::GetMeshResource("RoundSphere");
+	sphere_body.mesh = rdb::GetMeshResource("RoundSphere");
 
 
 	// --------- CREATE SHADER DATA ---------------
@@ -220,24 +214,17 @@ void Render() {
 	SetProgramConstant("material", material);
 
 	/*
-	SetVertexBuffers(scene_mesh);
-	gui::EditStruct(dragon_transform);
-	UpdateModelConstantCBuffer(dragon_transform);
-	DrawIndexed(scene_mesh);
+	gui::EditStruct(dragon.transform);
+	DrawIndexed(dragon);
 	*/
 	
 	/*
-	SetVertexBuffers(sphere_face_mesh);
-	gui::EditStruct(sphere_face_transform);
-	UpdateModelConstantCBuffer(sphere_face_transform);
-	DrawIndexed(sphere_face_mesh);
+	gui::EditStruct(sphere_face.transform);
+	DrawIndexed(sphere_face);
 	*/
 	
-	SetVertexBuffers(sphere_body_mesh);
-	gui::EditStruct(sphere_body_transform);
-	UpdateModelConstantCBuffer(sphere_body_transform);
-	DrawIndexed(sphere_body_mesh);
-	
+	gui::EditStruct(sphere_body.transform);
+	DrawIndexed(sphere_body);
 
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);
@@ -250,7 +237,7 @@ void Render() {
 	
 	SetProgramConstant("environment_lighting", environment_lighting);
 
-	SetProgramResource("environment", cubemap);
+	SetProgramResource("environment", cubemap_texture);
 
 	_context->Draw(4, 0);
 
@@ -276,11 +263,9 @@ void Render() {
 
 	SetDepthStencilState(less_equal_depth);
 
-	SetVertexBuffers(cubemap_mesh_buffer);
-	cubemap_transform.position = MAIN_CAMERA.transform.position;
-	UpdateModelConstantCBuffer(cubemap_transform);
-	SetProgramResource("cubemap", cubemap);
-	DrawIndexed(cubemap_mesh_buffer);
+	SetProgramResource("cubemap", cubemap_texture);
+	cubemap.transform.position = MAIN_CAMERA.transform.position;
+	DrawIndexed(cubemap);
 
 	/*SetShaderProgram(simple_texture_shader);
 	

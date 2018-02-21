@@ -97,6 +97,12 @@ void UpdateModelConstantCBuffer(const transform_t& transform) {
 	UpdateBuffer(model_constants);
 }
 
+void DrawIndexed(const renderable_t& r) {
+	SetVertexBuffers(r.mesh);
+	UpdateModelConstantCBuffer(r.transform);
+	DrawIndexed(r.mesh);
+}
+
 // ----- STATE ACCESS -------
 
 void ResetRenderTarget() {

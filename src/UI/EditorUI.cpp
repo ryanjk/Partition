@@ -193,7 +193,7 @@ struct AppConsole {
 		}
 		break;
 		default:
-			AddLog("YOU SHOULDN'T SEE THIS");
+			AddLog("EditorUI.cpp:: YOU SHOULDN'T SEE THIS");
 		}
 
 		// Process command

@@ -109,5 +109,5 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 		}
 	}
 
-	return float4(specular_lighting / n_samples * environment_intensity * ao, 1);
+	return float4(specular_lighting / n_samples * environment_intensity, 1);
 }

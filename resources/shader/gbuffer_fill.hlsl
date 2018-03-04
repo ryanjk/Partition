@@ -17,6 +17,8 @@ cbuffer material {
 }
 #endif
 
+#define USE_HEIGHT_MAP
+
 Texture2D height_map : register(t3);
 cbuffer height_map_params {
 	float height_map_scale;

@@ -28,6 +28,7 @@ using namespace pn;
 using namespace pn::input;
 
 pn::window_handle h_wnd;
+bool display_imgui = true;
 
 // -------- USER-DEFINED MAIN LOOP FUNCTIONS -----------
 
@@ -45,9 +46,9 @@ void MainLoopEnd();
 extern IMGUI_API LRESULT	ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, pn::window_uint wParam, pn::window_long lParam) {
-	if (ImGui_ImplDX11_WndProcHandler(hwnd, uMsg, wParam, lParam)) {
-		//return true;
-	}
+	if (display_imgui) {
+		ImGui_ImplDX11_WndProcHandler(hwnd, uMsg, wParam, lParam);
+	}	
 
 	switch (uMsg) {
 	case WM_SIZE:
@@ -232,7 +233,6 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		pn::gui::InitEditorUI();
 	}
 
-	bool display_imgui		= true;
 	bool show_test_window	= false;
 	bool show_command_line	= false;
 	bool show_main_menu		= true;
@@ -276,6 +276,9 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		show_command_line = pn::input::GetKeyState(input_key::TILDE) == key_state::JUST_PRESSED ? !show_command_line : show_command_line;
 		pn::gui::SetCommandLine(show_command_line);
 
+		// Toggle imGUI
+		display_imgui = pn::input::GetKeyState(input_key::I) == key_state::JUST_PRESSED ? !display_imgui : display_imgui;
+
 		// Update render system
 		// Render system is updated before Update functions are called
 		// so debug draw calls work properly
@@ -304,22 +307,26 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		UpdateCameraConstantCBuffer(MAIN_CAMERA);
 
 		// Start new frame
-		ImGui_ImplDX11_NewFrame();
+		if (display_imgui) {
+			ImGui_ImplDX11_NewFrame();
 
-		if (show_test_window) {
-			ImGui::ShowTestWindow(nullptr);
+			if (show_test_window) {
+				ImGui::ShowTestWindow(nullptr);
+			}
+
+			// Draw main menu
+			pn::gui::DrawMainMenu(awd.width);
+
+			// Draw command line
+			pn::gui::DrawCommandLine();
 		}
-
-		// Draw main menu
-		pn::gui::DrawMainMenu(awd.width);
-
-		// Draw command line
-		pn::gui::DrawCommandLine();
 
 		// USER-DEFINED RENDER CALL
 		Render();
 
-		ImGui::Render();
+		if (display_imgui) {
+			ImGui::Render();
+		}
 
 		auto hr = SWAP_CHAIN->Present(1, 0);
 		if (FAILED(hr)) {

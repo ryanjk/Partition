@@ -5,9 +5,9 @@
 #include <Graphics\ProjectionMatrix.h>
 #include <Graphics\RenderSystem.h>
 #include <Graphics\GBuffer.h>
+#include <Graphics\Lighting.h>
 
 #include <Utilities\Logging.h>
-#include <Utilities\frame_string.h>
 #include <Utilities\Profile.h>
 
 #include <IO\FileUtil.h>
@@ -28,35 +28,9 @@
 
 using namespace pn;
 
-// ---------------
-// --- CBUFFER ---
-// ---------------
-
-struct alignas(16) light_t {
-	vec3f light_position; float p;
-	vec3f light_color;    float p2;
-	float light_intensity;
-};
-
-template<>
-void pn::gui::EditStruct(light_t& light) {
-	DragFloat3("position##", &light.light_position.x, -10, 10);
-	DragFloat3("color##"   , &light.light_color.x, 0, 1);
-	DragFloat("intensity##", &light.light_intensity, 0, 100);
-}
-
 #define NUM_LIGHTS 1
 light_t lights[NUM_LIGHTS];
 cbuffer<light_t> light;
-
-struct alignas(16) environment_lighting_t {
-	float environment_intensity;
-};
-
-template<>
-void pn::gui::EditStruct(environment_lighting_t& light) {
-	DragFloat("intensity##", &light.environment_intensity, 0, 100);
-}
 
 cbuffer<environment_lighting_t> environment_lighting;
 
@@ -108,7 +82,7 @@ void Init() {
 
 	cubemap.mesh = rdb::GetMeshResource("Cubemap");
 	plane.mesh   = rdb::GetMeshResource("Plane");
-	plane.transform.position = { 0, 0, 12.4f };
+	plane.transform.position = { 0, 0, 2.8f };
 	plane.transform.rotation = EulerToQuaternion({ 1.06f, 0, 0 });
 
 	InitGBuffers();
@@ -194,6 +168,7 @@ void Render() {
 
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);
+
 	SetBlendState(additive_blend);
 
 	SetDeferredShaderProgram(DEFERRED_LIGHTING);

@@ -37,8 +37,6 @@ static ID3D11BlendState*        g_pBlendState = NULL;
 static ID3D11DepthStencilState* g_pDepthStencilState = NULL;
 static int                      g_VertexBufferSize = 5000, g_IndexBufferSize = 10000;
 
-extern int						g_debugVariableCount;
-
 struct VERTEX_CONSTANT_BUFFER
 {
     float        mvp[4][4];
@@ -580,8 +578,6 @@ void ImGui_ImplDX11_NewFrame()
     // Hide OS mouse cursor if ImGui is drawing it
     if (io.MouseDrawCursor)
         SetCursor(NULL);
-
-	g_debugVariableCount = 0;
 
     // Start the frame
     ImGui::NewFrame();

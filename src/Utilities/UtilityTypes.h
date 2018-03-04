@@ -112,6 +112,7 @@ auto	Get(vector<T>& v, size_t i) -> decltype(v[i]) {
 template<typename T>
 auto	Erase(vector<T>& v, const T& el) {
 	LogError("Vector erase not implemented yet");
+	assert(false);
 }
 
 // -------- MAP FUNCTIONS ------------

@@ -17,6 +17,15 @@ namespace pn {
 
 namespace gui {
 
+void SetGUI(bool on);
+bool IsGUIOn();
+
+void Begin(const char* name);
+void End();
+
+void PushID(int id);
+void PopID();
+
 bool DragFloat(const char* label, float* v, float min, float max, float speed_modifier = 1.0f, const char* display_format = "%.3f", float power = 1.0f);
 bool DragFloat2(const char* label, float* v, float min, float max, float speed_modifier = 1.0f, const char* display_format = "%.3f", float power = 1.0f);
 bool DragFloat3(const char* label, float* v, float min, float max, float speed_modifier = 1.0f, const char* display_format = "%.3f", float power = 1.0f);

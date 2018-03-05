@@ -28,7 +28,6 @@ using namespace pn;
 using namespace pn::input;
 
 pn::window_handle h_wnd;
-bool display_imgui = true;
 
 // -------- USER-DEFINED MAIN LOOP FUNCTIONS -----------
 
@@ -46,7 +45,7 @@ void MainLoopEnd();
 extern IMGUI_API LRESULT	ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, pn::window_uint wParam, pn::window_long lParam) {
-	if (display_imgui) {
+	if (pn::gui::IsGUIOn()) {
 		ImGui_ImplDX11_WndProcHandler(hwnd, uMsg, wParam, lParam);
 	}	
 
@@ -233,6 +232,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		pn::gui::InitEditorUI();
 	}
 
+	pn::gui::SetGUI(false);
 	bool show_test_window	= false;
 	bool show_command_line	= false;
 	bool show_main_menu		= true;
@@ -256,11 +256,6 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	pn::app::FIXED_DT     = 1 / pn::app::FPS;
 	while (!pn::app::ShouldExit()) {
 
-		// BEGINNING OF FRAME CALLS
-		MainLoopBegin();
-
-		InputUpdate();
-
 		// GET INPUT
 		bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
 		if (bGotMsg) {
@@ -268,6 +263,9 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 			DispatchMessage(&msg);
 			continue;
 		}
+		
+		// BEGINNING OF FRAME CALLS
+		MainLoopBegin();
 
 		// Draw main menu
 		pn::gui::SetMainMenuVisible(show_main_menu);
@@ -277,7 +275,13 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		pn::gui::SetCommandLine(show_command_line);
 
 		// Toggle imGUI
-		display_imgui = pn::input::GetKeyState(input_key::I) == key_state::JUST_PRESSED ? !display_imgui : display_imgui;
+		if (pn::input::GetKeyState(input_key::I) == key_state::JUST_PRESSED) {
+			pn::gui::SetGUI(!pn::gui::IsGUIOn());
+		}
+
+		if (pn::gui::IsGUIOn()) {
+			ImGui_ImplDX11_NewFrame();
+		}
 
 		// Update render system
 		// Render system is updated before Update functions are called
@@ -307,8 +311,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		UpdateCameraConstantCBuffer(MAIN_CAMERA);
 
 		// Start new frame
-		if (display_imgui) {
-			ImGui_ImplDX11_NewFrame();
+		if (pn::gui::IsGUIOn()) {
 
 			if (show_test_window) {
 				ImGui::ShowTestWindow(nullptr);
@@ -324,7 +327,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		// USER-DEFINED RENDER CALL
 		Render();
 
-		if (display_imgui) {
+		if (pn::gui::IsGUIOn()) {
 			ImGui::Render();
 		}
 

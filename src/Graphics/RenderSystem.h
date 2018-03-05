@@ -64,7 +64,7 @@ void UpdateGlobalConstantCBuffer();
 void UpdateCameraConstantCBuffer(const camera_t& camera);
 void UpdateModelConstantCBuffer(const transform_t& transform);
 
-void DrawIndexed(const renderable_t& r);
+void Draw(const renderable_t& r);
 
 // ----- STATE ACCESS -------
 

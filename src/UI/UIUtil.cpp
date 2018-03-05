@@ -9,6 +9,8 @@
 const float NORMAL_DRAG_SPEED = 0.1f;
 const float SLOW_DRAG_SPEED = 0.01f;
 
+static bool is_gui_on = false;
+#define VALIDATE_GUI_ON if (!is_gui_on) return
 
 // ------ FUNCTIONS ----------
 
@@ -16,26 +18,67 @@ namespace pn {
 
 namespace gui {
 
+void SetGUI(bool on) {
+	is_gui_on = on;
+}
+
+bool IsGUIOn() {
+	return is_gui_on;
+}
+
 float GetDragSpeed() {
 	float DRAG_SPEED = NORMAL_DRAG_SPEED;
 	if (pn::input::GetKeyState(pn::input::input_key::CONTROL) == pn::input::key_state::PRESSED) DRAG_SPEED = SLOW_DRAG_SPEED;
 	return DRAG_SPEED;
 }
 
+void Begin(const char* name) {
+	VALIDATE_GUI_ON;
+
+	ImGui::Begin(name);
+}
+void End() {
+	VALIDATE_GUI_ON;
+
+	ImGui::End();
+}
+
+void PushID(int id) {
+	VALIDATE_GUI_ON;
+
+	ImGui::PushID(id);
+}
+
+void PopID() {
+	VALIDATE_GUI_ON;
+
+	ImGui::PopID();
+}
+
 bool DragFloat(const char* label, float* v, float min, float max, float speed_modifer, const char* display_format, float power) {
+	VALIDATE_GUI_ON false;
+
 	return ImGui::DragFloat(label, v, GetDragSpeed() * speed_modifer, min, max, display_format, power);
 }
 bool DragFloat2(const char* label, float* v, float min, float max, float speed_modifier, const char* display_format, float power) {
+	VALIDATE_GUI_ON false;
+
 	return ImGui::DragFloat2(label, v, GetDragSpeed() * speed_modifier, min, max, display_format, power);
 }
 bool DragFloat3(const char* label, float* v, float min, float max, float speed_modifer, const char* display_format, float power) {
+	VALIDATE_GUI_ON false;
+
 	return ImGui::DragFloat3(label, v, GetDragSpeed() * speed_modifer, min, max, display_format, power);
 }
 bool DragFloat4(const char* label, float* v, float min, float max, float speed_modifer, const char* display_format, float power) {
+	VALIDATE_GUI_ON false;
+
 	return ImGui::DragFloat4(label, v, GetDragSpeed() * speed_modifer, min, max, display_format, power);
 }
 
-void DragRotation(const char* label, quaternion* q, vec3f x, vec3f y, vec3f z, float speed_modifier) {
+void DragRotation(const char* label, quaternion* q, const vec3f x, const vec3f y, const vec3f z, float speed_modifier) {
+	VALIDATE_GUI_ON;
+
 	const float ROT_SCALE = 0.01f * speed_modifier;
 
 	auto euler = QuaternionToEuler(*q);
@@ -45,7 +88,7 @@ void DragRotation(const char* label, quaternion* q, vec3f x, vec3f y, vec3f z, f
 	ImGuiContext& g = *GImGui;
 	float return_delta = 0.0f;
 	BeginGroup();
-	PushID(label);
+	ImGui::PushID(label);
 	ImGuiWindow* window = ImGui::GetCurrentWindow();
 	const ImGuiStyle& style = GImGui->Style;
 	auto w_full = ImGui::CalcItemWidth();

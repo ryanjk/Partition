@@ -28,12 +28,6 @@
 
 using namespace pn;
 
-#define NUM_LIGHTS 1
-light_t lights[NUM_LIGHTS];
-cbuffer<light_t> light;
-
-cbuffer<environment_lighting_t> environment_lighting;
-
 struct alignas(16) height_map_params_t {
 	float scale;
 };
@@ -42,6 +36,12 @@ template<>
 void gui::EditStruct(height_map_params_t& h) {
 	DragFloat("scale", &h.scale, 0, 5);
 }
+
+#define NUM_LIGHTS 1
+light_t lights[NUM_LIGHTS];
+
+cbuffer<light_t> light;
+cbuffer<environment_lighting_t> environment_lighting;
 cbuffer<height_map_params_t> height_map_params;
 
 // --------------
@@ -130,28 +130,34 @@ void Update() {
 	if (fon) {
 		UpdateFlycam(MAIN_CAMERA.transform, 10.0f, 0.1f);
 	}
+
+	pn::gui::Begin("Lights");
+	for (int i = 0; i < NUM_LIGHTS; ++i) {
+		pn::gui::PushID(i);
+		gui::EditStruct(lights[i]);
+		pn::gui::PopID();
+	}
+	pn::gui::End();
+
+	gui::EditStruct("Environment", environment_lighting.data);
+	UpdateBuffer(environment_lighting);
+	
+	gui::EditStruct("Height Map", height_map_params.data);
+	UpdateBuffer(height_map_params);
+	
+	gui::EditStruct("Plane Material", material.data);
+	UpdateBuffer(material);
+
+	gui::EditStruct("Plane Transform", plane.transform);
+
 }
 
 void FixedUpdate() {}
 
 void Render() {
 	ClearGBufferRenderTargets();
-
-	ImGui::Begin("Lights");
-	for (int i = 0; i < NUM_LIGHTS; ++i) {
-		ImGui::PushID(i);
-		gui::EditStruct(lights[i]);
-		ImGui::PopID();
-	}
-	ImGui::End();
-
-	gui::EditStruct("Environment"   , environment_lighting.data);
-	gui::EditStruct("Height Map"    , height_map_params.data);
-	gui::EditStruct("Plane Material", material.data);
 	
-	UpdateBuffer(environment_lighting);
-	UpdateBuffer(height_map_params);
-	UpdateBuffer(material);
+	// --- Fill GBuffers
 
 	SetDepthTest(true);
 	SetGBufferRenderTargets();
@@ -162,9 +168,9 @@ void Render() {
 	SetProgramConstant("height_map_params", height_map_params);
 	SetProgramResource("height_map", height_map);
 
-	gui::EditStruct("Plane Transform", plane.transform);
-
-	DrawIndexed(plane);
+	Draw(plane);
+	
+	// --- End Fill GBuffers
 
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);

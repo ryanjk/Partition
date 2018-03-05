@@ -224,7 +224,7 @@ void Render() {
 	*/
 	
 	gui::EditStruct(sphere_body.transform);
-	DrawIndexed(sphere_body);
+	Draw(sphere_body);
 
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);
@@ -265,7 +265,7 @@ void Render() {
 
 	SetProgramResource("cubemap", cubemap_texture);
 	cubemap.transform.position = MAIN_CAMERA.transform.position;
-	DrawIndexed(cubemap);
+	Draw(cubemap);
 
 	/*SetShaderProgram(simple_texture_shader);
 	

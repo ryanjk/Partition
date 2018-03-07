@@ -232,7 +232,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		pn::gui::InitEditorUI();
 	}
 
-	pn::gui::SetGUI(false);
+	pn::gui::SetGUI(true);
 	bool show_test_window	= false;
 	bool show_command_line	= false;
 	bool show_main_menu		= true;

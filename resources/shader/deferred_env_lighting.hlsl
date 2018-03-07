@@ -106,7 +106,9 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 			float3 F = (1 - Fc) * specColor + Fc;
 
 			specular_lighting += SampleColor * F * G * vdoth / (ndoth * ndotv);
+			//specular_lighting += float3(0, 0, 1);
 		}
+		//else specular_lighting += float3(1, 0, 0);
 	}
 
 	return float4(specular_lighting / n_samples * environment_intensity, 1);

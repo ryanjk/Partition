@@ -69,6 +69,7 @@ dx_resource_view cubemap_texture;
 void LoadResources() {
 	LoadMesh(GetResourcePath("cubemap.fbx"));
 	LoadMesh(GetResourcePath("plane.fbx"));
+	LoadMesh(GetResourcePath("sphere.fbx"));
 
 	height_map      = LoadTexture2D(GetResourcePath("height.jpg"));
 	cubemap_texture = LoadCubemap(GetResourcePath("space-cubemap.dds"));

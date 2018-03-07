@@ -10,7 +10,7 @@ const float NORMAL_DRAG_SPEED = 0.1f;
 const float SLOW_DRAG_SPEED = 0.01f;
 
 static bool is_gui_on = false;
-#define VALIDATE_GUI_ON if (!is_gui_on) return
+#define VALIDATE_GUI_ON if (!IsGUIOn()) return
 
 // ------ FUNCTIONS ----------
 

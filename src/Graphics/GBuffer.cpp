@@ -44,7 +44,6 @@ void InitGBuffers() {
 	back_buffer_desc.Format = DXGI_FORMAT_R32_FLOAT;
 	InitGBuffer(DEPTH_GBUFFER, back_buffer_desc);
 
-	//back_buffer_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	back_buffer_desc.Format = DXGI_FORMAT_R16G16B16A16_SNORM;
 	InitGBuffer(NORMAL_GBUFFER, back_buffer_desc);
 

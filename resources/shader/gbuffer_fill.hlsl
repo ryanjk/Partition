@@ -88,7 +88,7 @@ PS_OUT PS_main(VS_OUT i) {
 
 	float3 va = normalize(float3(2 * DELTA, 0, h_mx - h_px));
 	float3 vb = normalize(float3(0, 2 * DELTA, h_py - h_my));
-	float3 n = cross(va, vb);
+	float3 n = normalize(cross(va, vb));
 
 	float3x3 tbn = { i.t.xyz, i.b.xyz, i.n.xyz };
 	float3 n_p = mul(MODEL, mul(tbn, n));

@@ -58,11 +58,15 @@ float3 ImportanceSampleGGX(float2 Xi, float roughness, float3 n) {
 	H.y = sin_theta * sin(phi);
 	H.z = cos_theta;
 
-	float3 up = abs(n.z) < 0.999 ? float3(0, 0, 1) : float3(1, 0, 0);
+	float3 up = abs(n.z) < 0.999 ? float3(0, 1, 0) : float3(1, 0, 0);
 	float3 tangentX = normalize(cross(up, n));
 	float3 tangentY = cross(n, tangentX);
 
 	return tangentX * H.x + tangentY * H.y + n * H.z;
+}
+
+float3 SampleEnvironment(float3 direction) {
+	return environment.Sample(ss, direction, 0).rgb;
 }
 
 float4 PS_main(VS_OUT i) : SV_TARGET{
@@ -94,13 +98,13 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 		float3 H = ImportanceSampleGGX(Xi, roughness, t_normal);
 		float3 L = 2 * dot(s_to_v, H) * H - s_to_v;
 
-		float ndotv = saturate(dot(t_normal, s_to_v));
 		float ndotl = saturate(dot(t_normal, L));
-		float ndoth = saturate(dot(t_normal, H));
-		float vdoth = saturate(dot(s_to_v, H));
-
 		if (ndotl > 0) {
-			float3 SampleColor = environment.Sample(ss, L, 0).rgb;
+			float ndotv = saturate(dot(t_normal, s_to_v	));
+			float ndoth = saturate(dot(t_normal, H));
+			float vdoth = saturate(dot(s_to_v, H));
+
+			float3 SampleColor = SampleEnvironment(L);
 			float G = GSF_GGX(ndotl, ndotv, max(0.001, roughness));
 			float Fc = pow(1 - vdoth, 5);
 			float3 F = (1 - Fc) * specColor + Fc;

@@ -57,7 +57,7 @@ float4 PS_main(VS_OUT i) : SV_TARGET {
 
 	float ndotl = dot(s_to_l, t_normal);
 	float ndotv = dot(t_normal, s_to_v);
-	if (ndotl < 0 || ndotv < 0) return float4(0, 0, 0, 1);
+	if (ndotl < 0/* || ndotv < 0*/) return float4(0, 0, 0, 1);
 
 	float3 h    = normalize(s_to_v + s_to_l);
 	float ndoth = saturate(dot(t_normal, h));

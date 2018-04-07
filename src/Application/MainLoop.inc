@@ -2,12 +2,15 @@
 
 #include <stdafx.h>
 #include <Graphics\Window.h>
+
+/*
 #include <Graphics\DirectX.h>
 #include <Graphics\RenderSystem.h>
 #include <Graphics\TextureLoadUtil.h>
 #include <Graphics\MeshLoadUtil.h>
 #include <Graphics\CBuffer.h>
 #include <Graphics\DebugDraw.h>
+*/
 
 #include <Utilities\Logging.h>
 #include <Utilities\Memory.h>
@@ -17,8 +20,8 @@
 #include <IO\FileUtil.h>
 #include <IO\PathUtil.h>
 
-#include <UI\UIUtil.h>
-#include <UI\EditorUI.h>
+//#include <UI\UIUtil.h>
+//#include <UI\EditorUI.h>
 
 #include <Application\Global.h>
 
@@ -42,16 +45,16 @@ void MainLoopBegin();
 void MainLoopEnd();
 
 // ----------- LOOP FUNCTIONS --------------
-extern IMGUI_API LRESULT	ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+//extern IMGUI_API LRESULT	ImGui_ImplDX11_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, pn::window_uint wParam, pn::window_long lParam) {
-	if (pn::gui::IsGUIOn()) {
+	/*if (pn::gui::IsGUIOn()) {
 		ImGui_ImplDX11_WndProcHandler(hwnd, uMsg, wParam, lParam);
-	}	
+	}	*/
 
 	switch (uMsg) {
 	case WM_SIZE:
-		if (GetDevice() != nullptr && wParam != SIZE_MINIMIZED) {
+		/*if (GetDevice() != nullptr && wParam != SIZE_MINIMIZED) {
 			auto width = (unsigned int) LOWORD(lParam);
 			auto height = (unsigned int) HIWORD(lParam);
 
@@ -77,10 +80,10 @@ pn::window_long CALLBACK	WindowProc(pn::window_handle hwnd, unsigned int uMsg, p
 			// Update camera
 			MAIN_CAMERA.projection_matrix.SetViewWidth(static_cast<float>(width));
 			MAIN_CAMERA.projection_matrix.SetViewHeight(static_cast<float>(height));
-
+			
 			// User-defined resize
 			Resize();
-		}
+		}*/
 		return 0;
 	case WM_SETCURSOR:
 	{
@@ -216,23 +219,12 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	h_wnd			= pn::CreateApplicationWindow(awd, WindowProc);
 
 	// INIT DIRECTX
-	auto device	= pn::CreateDevice();
-	pn::SetDevice(device);
 
 	// ------- POST DX INIT ---------
-	InitRenderSystem(h_wnd, awd);
-	InitMeshLoadUtil(device);
-	debug::InitDebugDraw();
 
 	// ------ SET UP IMGUI ------------------------------
-	
-	{
-		auto context = pn::GetContext(device);
-		ImGui_ImplDX11_Init(h_wnd, device.Get(), context.Get());
-		pn::gui::InitEditorUI();
-	}
 
-	pn::gui::SetGUI(true);
+	//pn::gui::SetGUI(true);
 	bool show_test_window	= false;
 	bool show_command_line	= false;
 	bool show_main_menu		= true;
@@ -268,27 +260,24 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 		MainLoopBegin();
 
 		// Draw main menu
-		pn::gui::SetMainMenuVisible(show_main_menu);
+		//pn::gui::SetMainMenuVisible(show_main_menu);
 
 		// Draw command line
 		show_command_line = pn::input::GetKeyState(input_key::TILDE) == key_state::JUST_PRESSED ? !show_command_line : show_command_line;
-		pn::gui::SetCommandLine(show_command_line);
+		//pn::gui::SetCommandLine(show_command_line);
 
 		// Toggle imGUI
 		if (pn::input::GetKeyState(input_key::I) == key_state::JUST_PRESSED) {
-			pn::gui::SetGUI(!pn::gui::IsGUIOn());
+			//pn::gui::SetGUI(!pn::gui::IsGUIOn());
 		}
 
-		if (pn::gui::IsGUIOn()) {
-			ImGui_ImplDX11_NewFrame();
-		}
+		//if (pn::gui::IsGUIOn()) {
+			//ImGui_ImplDX11_NewFrame();
+		//}
 
 		// Update render system
 		// Render system is updated before Update functions are called
 		// so debug draw calls work properly
-		ClearDepthStencilView(DISPLAY_DEPTH_STENCIL, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		ClearRenderTargetView(DISPLAY_RENDER_TARGET, vec4f(0, 0, 0, 1));
-		SetRenderTarget(DISPLAY_RENDER_TARGET, DISPLAY_DEPTH_STENCIL);
 
 		// UPDATE
 		auto current_time = std::chrono::system_clock::now();
@@ -307,11 +296,8 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 		// RENDER
 
-		UpdateGlobalConstantCBuffer();
-		UpdateCameraConstantCBuffer(MAIN_CAMERA);
-
 		// Start new frame
-		if (pn::gui::IsGUIOn()) {
+		/*if (pn::gui::IsGUIOn()) {
 
 			if (show_test_window) {
 				ImGui::ShowTestWindow(nullptr);
@@ -322,16 +308,16 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 			// Draw command line
 			pn::gui::DrawCommandLine();
-		}
+		}*/
 
 		// USER-DEFINED RENDER CALL
 		Render();
 
-		if (pn::gui::IsGUIOn()) {
+		/*if (pn::gui::IsGUIOn()) {
 			ImGui::Render();
-		}
+		}*/
 
-		auto hr = SWAP_CHAIN->Present(1, 0);
+		//auto hr = SWAP_CHAIN->Present(1, 0);
 		if (FAILED(hr)) {
 			LogError("Swap chain present error: ", pn::ErrMsg(hr));
 		}
@@ -342,15 +328,11 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	}
 
 	// Shutdown
-	pn::gui::ShutdownEditorUI();
+	//pn::gui::ShutdownEditorUI();
 	pn::CloseLogger();
 
 #ifndef NDEBUG	
-	ID3D11Debug* DebugDevice = nullptr;
-	HRESULT Result = device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&DebugDevice));
 
-	Result = DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-	DebugDevice->Release();
 #endif
 
 	Close();

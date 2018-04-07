@@ -34,8 +34,4 @@ FUNCTION(CreateExample exampleName)
 	
 ENDFUNCTION(CreateExample)
 
-CreateExample(DetailMapping)
-CreateExample(WaterSim)
-CreateExample(ImageEffect)
-CreateExample(DeferredRendering)
-CreateExample(Deflate)
+CreateExample(TiledDeferred_dx12)

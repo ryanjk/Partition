@@ -228,6 +228,7 @@ void SetVertexBuffersScreen() {
 			vec3f(corners[3].xy(),0)
 		};
 
+		//@TODO: Shouldn't create a buffer here, just re-use one allocated already
 		auto screen_vertex_buffer = CreateVertexBuffer(screen_vertex_data, 4);
 		ID3D11Buffer* buffers[1] = { screen_vertex_buffer.Get() };
 		UINT strides[1] = { sizeof(vec3f) };

@@ -15,10 +15,11 @@
 #include <Graphics\DirectX.h>
 #include <Graphics\RenderSystem.h>
 #include <Graphics\TextureLoadUtil.h>
-#include <Graphics\MeshLoadUtil.h>
 #include <Graphics\CBuffer.h>
 #include <Graphics\DebugDraw.h>
 */
+
+#include <Graphics\MeshLoadUtil.h>
 
 #include <Utilities\Logging.h>
 #include <Utilities\Memory.h>

@@ -19,13 +19,8 @@ namespace pn {
 
 // ----- VARIABLES ---------
 
-dx_device device;
 
 // ------ FUNCTIONS -----------
-
-void			InitMeshLoadUtil(dx_device d) {
-	device = d;
-}
 
 unsigned int	MeshLoadDataToAssimp(const MeshLoadData& mesh_load_data) {
 	unsigned int assimp_post_process = aiProcess_CalcTangentSpace;
@@ -118,56 +113,32 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 			pn::PushBack(result_mesh.indices, face.mIndices[j]);
 		}
 	}
-	result_mesh.topology = D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
 	LogDebug("Finished loading mesh {}", mesh->mName.C_Str());
 	return std::move(result_mesh);
 }
 
-pn::rdb::resource_id_t ProcessAINode(aiNode* node, const aiScene* scene, pn::rdb::resource_id_t parent_id) {
+pn::mesh_t ProcessAINode(aiNode* node, const aiScene* scene, pn::rdb::resource_id_t parent_id) {
 	auto transform = aiMatrixToTransform(node->mTransformation);
-
-	pn::rdb::resource_id_t mesh_id = 0;
-	if (node->mNumMeshes == 0) {
-		pn::mesh_buffer_t empty_mesh{};
-		mesh_id = rdb::AddMeshResource(empty_mesh);
-		rdb::AddMeshTransform(mesh_id, transform);
-		rdb::AddMeshChild(parent_id, mesh_id);
-	}
-	else {
-		for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
-			auto* ai_mesh		= scene->mMeshes[node->mMeshes[i]];
-			
-			//StartProfile("aiMesh to Mesh");
-			auto mesh			= std::move(ConvertAIMeshToMesh(ai_mesh, scene));
-			//EndProfile();
-			
-			//StartProfile("Mesh to MeshBuffer");
-			auto mesh_buffer	= CreateMeshBuffer(mesh);
-			//EndProfile();
-
-			mesh_id				= rdb::AddMeshResource(mesh_buffer);
-			rdb::AddMeshTransform(mesh_id, transform);
-			rdb::AddMeshChild(parent_id, mesh_id);
-		}
-	}
-
-	for (unsigned int i = 0; i < node->mNumChildren; ++i) {
-		ProcessAINode(node->mChildren[i], scene, mesh_id);
-	}
-
-	return mesh_id;
+	
+	// some hacks right now to ensure fbx is in simple format. eventually this needs to change
+	assert(strcmp(node->mName.C_Str(),"RootNode") == 0);
+	node = node->mChildren[0];
+	assert(node->mNumMeshes == 1);
+	auto* ai_mesh = scene->mMeshes[node->mMeshes[0]];
+	return std::move(ConvertAIMeshToMesh(ai_mesh, scene));
 }
 
 auto ConvertAISceneToMeshes(const aiScene* ai_scene) {
 	return ProcessAINode(ai_scene->mRootNode, ai_scene, 0);
 }
 
-pn::rdb::resource_id_t LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data) {
+bool LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data, mesh_t& mesh) {
 	Assimp::Importer importer;
 	auto file_data = pn::ReadResource(filename);
 	if (file_data.empty()) {
 		LogError("MeshLoad: Couldn't load file {}", filename);
-		return 0;
+		return false;
 	}
 	const auto* ai_scene = importer.ReadFileFromMemory(
 		file_data.data(), file_data.size(),
@@ -176,16 +147,18 @@ pn::rdb::resource_id_t LoadMesh(const std::string& filename, const MeshLoadData&
 	);
 	if (!ai_scene) {
 		LogError("Assimp: Couldn't read file: {}", importer.GetErrorString());
-		return 0;
+		return false;
 	}
-	return ConvertAISceneToMeshes(ai_scene);
+	mesh = std::move(ConvertAISceneToMeshes(ai_scene));
+	return true;
 }
 
-pn::rdb::resource_id_t LoadMesh(const std::string& filename) {
+bool LoadMesh(const std::string& filename, mesh_t& mesh) {
 	MeshLoadData default_load_data;
 	default_load_data.convert_left = true;
 	default_load_data.triangulate = true;
-	return LoadMesh(filename, default_load_data);
+	return LoadMesh(filename, default_load_data, mesh);
 }
+
 
 } //namespace pn

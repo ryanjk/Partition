@@ -6,7 +6,13 @@
 
 #include <Utilities\UtilityTypes.h>
 
-#include <Graphics\DirectX.h>
+namespace pn {
+
+struct mesh_buffer_t {
+	rdb::resource_id_t id;
+};
+
+}
 
 namespace pn::rdb {
 

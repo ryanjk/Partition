@@ -1,6 +1,11 @@
 #include "Application\MainLoop.inc"
 
-void Init() {}
+pn::mesh_t mesh;
+
+void Init() {
+	bool success = LoadMesh(pn::GetResourcePath("water.fbx"), mesh);
+	Log("{}", mesh.name);
+}
 void Update() {}      // Called once per frame
 void FixedUpdate() {} // Called at fixed rate independent of frame-rate
 

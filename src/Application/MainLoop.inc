@@ -104,9 +104,6 @@ ComPtr<ID3D12RootSignature> root_signature;
 CD3DX12_VIEWPORT viewport;
 CD3DX12_RECT scissor_rect;
 
-ComPtr<ID3D12Resource>		vertex_buffer;
-D3D12_VERTEX_BUFFER_VIEW	vertex_buffer_view;
-
 unsigned int rtv_descriptor_size;
 
 pn::window_handle h_wnd;
@@ -380,7 +377,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 	D3D12_INPUT_ELEMENT_DESC input_element_descs[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 
 	// === CREATE PIPELINE STATE ===
@@ -407,36 +404,6 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	// === CREATE GRAPHICS COMMAND LIST ===
 	ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, command_allocator.Get(), nullptr, IID_PPV_ARGS(&command_list)));
 	ThrowIfFailed(command_list->Close());
-
-	// === CREATE VERTEX BUFFER ===
-	struct Vertex {
-		vec3f position;
-		vec4f color;
-	};
-	const float aspect_ratio = pn::app::window_desc.width / (float)pn::app::window_desc.height;
-	Vertex vertices[] = {
-		{ { 0.0f, 0.25f * aspect_ratio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-		{ { 0.25f, -0.25f * aspect_ratio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-		{ { -0.25f, -0.25f * aspect_ratio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f} }
-	};
-	const UINT vertex_buffer_size = sizeof(vertices);
-	ThrowIfFailed(device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(vertex_buffer_size),
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&vertex_buffer)
-	));
-
-	UINT8* vertex_data_begin;
-	CD3DX12_RANGE read_range(0, 0);
-	ThrowIfFailed(vertex_buffer->Map(0, &read_range, reinterpret_cast<void**>(&vertex_data_begin)));
-	memcpy(vertex_data_begin, vertices, vertex_buffer_size);
-
-	vertex_buffer_view.BufferLocation = vertex_buffer->GetGPUVirtualAddress();
-	vertex_buffer_view.StrideInBytes = sizeof(Vertex);
-	vertex_buffer_view.SizeInBytes = vertex_buffer_size;
 
 	// === CREATE SYNCHRONIZATION OBJECTS ===
 	ThrowIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));

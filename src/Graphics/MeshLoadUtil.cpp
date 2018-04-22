@@ -118,7 +118,7 @@ pn::mesh_t ConvertAIMeshToMesh(aiMesh* mesh, const aiScene* scene) {
 	return std::move(result_mesh);
 }
 
-pn::mesh_t ProcessAINode(aiNode* node, const aiScene* scene, pn::rdb::resource_id_t parent_id) {
+pn::mesh_t ProcessAINodeFromRoot(aiNode* node, const aiScene* scene, pn::rdb::resource_id_t parent_id) {
 	auto transform = aiMatrixToTransform(node->mTransformation);
 	
 	// some hacks right now to ensure fbx is in simple format. eventually this needs to change
@@ -130,7 +130,7 @@ pn::mesh_t ProcessAINode(aiNode* node, const aiScene* scene, pn::rdb::resource_i
 }
 
 auto ConvertAISceneToMeshes(const aiScene* ai_scene) {
-	return ProcessAINode(ai_scene->mRootNode, ai_scene, 0);
+	return ProcessAINodeFromRoot(ai_scene->mRootNode, ai_scene, 0);
 }
 
 bool LoadMesh(const std::string& filename, const MeshLoadData& mesh_load_data, mesh_t& mesh) {

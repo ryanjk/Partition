@@ -2,9 +2,64 @@
 
 pn::mesh_t mesh;
 
+ComPtr<ID3D12Resource>		vertex_buffer;
+D3D12_VERTEX_BUFFER_VIEW	vertex_buffer_view;
+
+ComPtr<ID3D12Resource>		index_buffer;
+D3D12_INDEX_BUFFER_VIEW		index_buffer_view;
+
 void Init() {
-	bool success = LoadMesh(pn::GetResourcePath("water.fbx"), mesh);
-	Log("{}", mesh.name);
+	bool success = LoadMesh(pn::GetResourcePath("dragon.fbx"), mesh);
+
+	// === CREATE VERTEX BUFFER ===
+	struct Vertex {
+		vec3f position;
+		vec3f normal;
+	};
+	
+	const auto vertex_buffer_size = sizeof(Vertex) * mesh.vertices.size();
+	ThrowIfFailed(device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(vertex_buffer_size),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&vertex_buffer)
+	));
+
+	UINT8* vertex_data_begin;
+	CD3DX12_RANGE read_range(0, 0);
+	ThrowIfFailed(vertex_buffer->Map(0, &read_range, reinterpret_cast<void**>(&vertex_data_begin)));
+
+	for (unsigned long long i = 0; i < mesh.vertices.size(); ++i) {
+		memcpy(vertex_data_begin + i * sizeof(Vertex), mesh.vertices.data() + i, sizeof(pn::vec3f));
+		memcpy(vertex_data_begin + i * sizeof(Vertex) + sizeof(pn::vec3f), mesh.normals.data() + i, sizeof(pn::vec3f));
+	}
+
+	vertex_buffer_view.BufferLocation = vertex_buffer->GetGPUVirtualAddress();
+	vertex_buffer_view.StrideInBytes = sizeof(Vertex);
+	vertex_buffer_view.SizeInBytes = vertex_buffer_size;
+
+	// === CREATE INDEX BUFFER ===
+	const auto index_buffer_size = mesh.indices.size() * sizeof(unsigned int);
+	ThrowIfFailed(device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(index_buffer_size),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&index_buffer)
+	));
+
+	UINT8* index_buffer_begin;
+	CD3DX12_RANGE index_read_range(0, 0);
+	ThrowIfFailed(index_buffer->Map(0, &index_read_range, (void**) &index_buffer_begin));
+	memcpy(index_buffer_begin, mesh.indices.data(), index_buffer_size);
+
+	index_buffer_view.BufferLocation = index_buffer->GetGPUVirtualAddress();
+	index_buffer_view.Format = DXGI_FORMAT::DXGI_FORMAT_R32_UINT;
+	index_buffer_view.SizeInBytes = index_buffer_size;
+
 }
 void Update() {}      // Called once per frame
 void FixedUpdate() {} // Called at fixed rate independent of frame-rate
@@ -28,7 +83,8 @@ void Render() {
 		command_list->ClearRenderTargetView(current_rtv_handle, color, 0, nullptr);
 		command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		command_list->IASetVertexBuffers(0, 1, &vertex_buffer_view);
-		command_list->DrawInstanced(3, 1, 0, 0);
+		command_list->IASetIndexBuffer(&index_buffer_view);
+		command_list->DrawIndexedInstanced(mesh.indices.size(), 1, 0, 0, 0);
 
 		command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(render_targets[frame_index].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 

@@ -38,6 +38,7 @@ struct alignas(16) light_t {
 
 template<>
 void pn::gui::EditStruct(light_t& light) {
+	if (!pn::gui::IsGUIOn()) return;
 	DragFloat3("position##", &light.light_position.x, -10, 10);
 	DragFloat3("color##", &light.light_color.x, 0, 1);
 	DragFloat("intensity##", &light.light_intensity, 0, 100);
@@ -53,6 +54,7 @@ struct alignas(16) environment_lighting_t {
 
 template<>
 void pn::gui::EditStruct(environment_lighting_t& light) {
+	if (!pn::gui::IsGUIOn()) return;
 	DragFloat("intensity##", &light.environment_intensity, 0, 100);
 }
 
@@ -98,7 +100,7 @@ void Init() {
 	dragon_albedo = LoadTexture2D(GetResourcePath("AlbedoMetal.png"));
 	dragon_rough  = LoadTexture2D(GetResourcePath("SomethingRough.png"));
 
-	cubemap_texture = LoadCubemap(GetResourcePath("space-cubemap.dds"));
+	cubemap_texture = LoadCubemap(GetResourcePath("moonlit.dds"));
 	cubemap.mesh = rdb::GetMeshResource("Cubemap");
 
 	sphere_body.mesh = rdb::GetMeshResource("SphereBody");
@@ -179,29 +181,31 @@ void Render() {
 
 	ClearGBufferRenderTargets();
 	
-	ImGui::Begin("Lights");
-	for (int i = 0; i < NUM_LIGHTS; ++i) {
-		ImGui::PushID(i);
-		gui::EditStruct(lights[i]);
-		ImGui::PopID();
+	if (pn::gui::IsGUIOn()) {
+		ImGui::Begin("Lights");
+		for (int i = 0; i < NUM_LIGHTS; ++i) {
+			ImGui::PushID(i);
+			gui::EditStruct(lights[i]);
+			ImGui::PopID();
+		}
+		ImGui::End();
+
+		ImGui::Begin("Environment");
+		gui::EditStruct(environment_lighting.data);
+		ImGui::End();
+
+		ImGui::Begin("Material");
+		gui::EditStruct(material.data);
+		ImGui::End();
+		
+		ImGui::Begin("Camera");
+		gui::EditStruct(MAIN_CAMERA.transform);
+		ImGui::End();
 	}
-	ImGui::End();
-	
-	ImGui::Begin("Environment");
-	gui::EditStruct(environment_lighting.data);
-	ImGui::End();
 
 	UpdateBuffer(environment_lighting);
-
-	ImGui::Begin("Material");
-	gui::EditStruct(material.data);
-	ImGui::End();
-
 	UpdateBuffer(material);
 
-	ImGui::Begin("Camera");
-	gui::EditStruct(MAIN_CAMERA.transform);
-	ImGui::End();
 
 	// ------ BEGIN RENDER
 
@@ -213,18 +217,18 @@ void Render() {
 
 	SetProgramConstant("material", material);
 
-	/*
+	
 	gui::EditStruct(dragon.transform);
-	DrawIndexed(dragon);
-	*/
+	//DrawIndexed(dragon.mesh);
+	Draw(dragon);
 	
 	/*
 	gui::EditStruct(sphere_face.transform);
 	DrawIndexed(sphere_face);
 	*/
 	
-	gui::EditStruct(sphere_body.transform);
-	Draw(sphere_body);
+	//gui::EditStruct(sphere_body.transform);
+	//Draw(sphere_body);
 
 	SetRenderTarget(DISPLAY_RENDER_TARGET, nullptr);
 	SetDepthTest(false);

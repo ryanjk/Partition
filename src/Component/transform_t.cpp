@@ -96,6 +96,7 @@ namespace gui {
 
 template<>
 void EditStruct(pn::transform_t& transform) {
+	if (!pn::gui::IsGUIOn()) return;
 	DragFloat3("position", &transform.position.x, -INFINITY, INFINITY);
 	DragRotation("rotation", &transform.rotation,
 				 TransformDirection(transform, vec3f::UnitX),

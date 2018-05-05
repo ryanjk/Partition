@@ -17,13 +17,12 @@ cbuffer material {
 }
 #endif
 
-#define USE_HEIGHT_MAP
+//#define USE_HEIGHT_MAP
 
 Texture2D height_map : register(t3);
 cbuffer height_map_params {
 	float height_map_scale;
 }
-
 
 // ------- INPUT / OUTPUT ---
 
@@ -48,9 +47,12 @@ VS_OUT VS_main(VS_IN_FULL i) {
 	n_w = mul(MODEL, n_w);
 	n_w = normalize(n_w);
 
+#ifdef USE_HEIGHT_MAP
 	o.world_pos += float4(height_map.SampleLevel(tex_sampler, i.uv, 0).x * n_w.xyz * height_map_scale, 0);
+#endif
 
-	o.n = normalize(float4(i.n, 0));
+	//o.n = normalize(float4(i.n, 0));
+	o.n = n_w;
 	o.t = normalize(float4(i.t,0));
 	o.b = normalize(float4(i.b,0));
 

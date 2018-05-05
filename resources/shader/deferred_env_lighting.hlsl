@@ -97,7 +97,7 @@ float4 PS_main(VS_OUT i) : SV_TARGET{
 		float2 Xi = Hammersley(i, n_samples);
 		float3 H = ImportanceSampleGGX(Xi, roughness, t_normal);
 		float3 L = 2 * dot(s_to_v, H) * H - s_to_v;
-
+		
 		float ndotl = saturate(dot(t_normal, L));
 		if (ndotl > 0) {
 			float ndotv = saturate(dot(t_normal, s_to_v	));

@@ -66,7 +66,7 @@ window_handle CreateWindowHandle(const instance_handle h_instance, const pn::str
 
 	auto hwnd = CreateWindow(
 		window_class.c_str(),
-		"Window Name",
+		"Partition",
 		window_style,
 		x, y,
 		(rect.right - rect.left), (rect.bottom - rect.top),

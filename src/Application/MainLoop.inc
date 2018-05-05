@@ -90,9 +90,23 @@ ComPtr<ID3D12GraphicsCommandList> command_list;
 ComPtr<ID3D12CommandAllocator>	command_allocator;
 ComPtr<IDXGISwapChain3>			swap_chain;
 
-ComPtr<ID3D12DescriptorHeap>	rtv_heap;
+enum GBUFFER {
+	ALBEDO,
+	NORMAL,
+	DEPTH,
+	SPECULAR,
+
+	COUNT
+};
+
+const unsigned int				NUM_TEX = GBUFFER::COUNT;
+ComPtr<ID3D12DescriptorHeap>	srv_heap;
+ComPtr<ID3D12Resource>			shader_resources[NUM_TEX];
+
 const unsigned int				NUM_FRAMES = 2;
+ComPtr<ID3D12DescriptorHeap>	rtv_heap;
 ComPtr<ID3D12Resource>			render_targets[NUM_FRAMES];
+
 
 ComPtr<ID3D12Fence> fence;
 HANDLE			fence_event;
@@ -343,11 +357,27 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 	// === CREATE RENDER TARGET VIEWS ===
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle(rtv_heap->GetCPUDescriptorHandleForHeapStart());
-	for (unsigned int n = 0; n < 2; ++n) {
+	for (unsigned int n = 0; n < NUM_FRAMES; ++n) {
 		ThrowIfFailed(swap_chain->GetBuffer(n, IID_PPV_ARGS(&render_targets[n])));
 		device->CreateRenderTargetView(render_targets[n].Get(), nullptr, rtv_handle);
 		rtv_handle.Offset(1, rtv_descriptor_size);
 	}
+
+	// === CREATE GBUFFER DATA ===
+
+	// === CREATE SRV HEAP FOR GBUFFERS ===
+	D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc = {};
+	srv_heap_desc.NumDescriptors = GBUFFER::COUNT;
+	srv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	srv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	device->CreateDescriptorHeap(&srv_heap_desc, IID_PPV_ARGS(&srv_heap));
+	
+	/*auto& shader_resource = shader_resources[GBUFFER::ALBEDO];
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer()
+	);*/
 
 	ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&command_allocator)));
 

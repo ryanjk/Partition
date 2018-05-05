@@ -61,6 +61,7 @@ void Init() {
 	index_buffer_view.SizeInBytes = index_buffer_size;
 
 }
+
 void Update() {}      // Called once per frame
 void FixedUpdate() {} // Called at fixed rate independent of frame-rate
 

@@ -371,13 +371,58 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	srv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	device->CreateDescriptorHeap(&srv_heap_desc, IID_PPV_ARGS(&srv_heap));
-	
-	/*auto& shader_resource = shader_resources[GBUFFER::ALBEDO];
-	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer()
-	);*/
+
+	{
+		// === CREATE ALBEDO GBUFFER ===
+		const auto back_buffer_desc = render_targets[0]->GetDesc();
+		const auto rt_format = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+		D3D12_CLEAR_VALUE clear_value = {};
+		clear_value.Format = rt_format;
+		auto& shader_resource = shader_resources[GBUFFER::ALBEDO];
+		ThrowIfFailed(device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC(
+				D3D12_RESOURCE_DIMENSION_TEXTURE2D, 
+				0, 
+				back_buffer_desc.Width, back_buffer_desc.Height, 
+				1, 1, 
+				rt_format, 
+				1, 0, 
+				D3D12_TEXTURE_LAYOUT_UNKNOWN, 
+				D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET),
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			&clear_value,
+			IID_PPV_ARGS(&shader_resource)
+		));
+	}
+
+	{
+		// === CREATE NORMAL GBUFFER ===
+		const auto back_buffer_desc = render_targets[1]->GetDesc();
+		const auto rt_format = DXGI_FORMAT_R16G16B16A16_SNORM;
+
+		D3D12_CLEAR_VALUE clear_value = {};
+		clear_value.Format = rt_format;
+		auto& shader_resource = shader_resources[GBUFFER::NORMAL];
+		ThrowIfFailed(device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC(
+				D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+				0,
+				back_buffer_desc.Width, back_buffer_desc.Height,
+				1, 1,
+				rt_format,
+				1, 0,
+				D3D12_TEXTURE_LAYOUT_UNKNOWN,
+				D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET),
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			&clear_value,
+			IID_PPV_ARGS(&shader_resource)
+		));
+	}
 
 	ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&command_allocator)));
 

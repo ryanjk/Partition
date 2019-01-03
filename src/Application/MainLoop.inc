@@ -94,13 +94,14 @@ enum GBUFFER {
 	ALBEDO,
 	NORMAL,
 	DEPTH,
-	SPECULAR,
+//	SPECULAR,
 
 	COUNT
 };
 
 const unsigned int				NUM_TEX = GBUFFER::COUNT;
 ComPtr<ID3D12DescriptorHeap>	srv_heap;
+ComPtr<ID3D12DescriptorHeap>	gbuffer_rtv_heap;
 ComPtr<ID3D12Resource>			shader_resources[NUM_TEX];
 
 const unsigned int				NUM_FRAMES = 2;
@@ -315,8 +316,8 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 #ifndef NDEBUG
 	ComPtr<ID3D12Debug> dbg_controller;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&dbg_controller)))) {
-		dbg_controller->EnableDebugLayer();
-		dxgi_factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
+		//dbg_controller->EnableDebugLayer();
+		//dxgi_factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
 	}
 #endif
 	
@@ -347,12 +348,15 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	tmp_swap_chain.As(&swap_chain);
 
 	frame_index = swap_chain->GetCurrentBackBufferIndex();
+
 	// === CREATE DESCRIPTOR HEAP FOR RENDER TARGET VIEWS ===
-	D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc = {};
-	rtv_heap_desc.NumDescriptors = NUM_FRAMES;
-	rtv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	device->CreateDescriptorHeap(&rtv_heap_desc, IID_PPV_ARGS(&rtv_heap));
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc = {};
+		rtv_heap_desc.NumDescriptors = NUM_FRAMES;
+		rtv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		rtv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		device->CreateDescriptorHeap(&rtv_heap_desc, IID_PPV_ARGS(&rtv_heap));
+	}
 	rtv_descriptor_size = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	// === CREATE RENDER TARGET VIEWS ===
@@ -364,6 +368,15 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 	}
 
 	// === CREATE GBUFFER DATA ===
+
+	// === CREATE RENDER TARGET VIEW HEAP FOR GBUFFERS ===
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc = {};
+		rtv_heap_desc.NumDescriptors = GBUFFER::COUNT;
+		rtv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		rtv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		device->CreateDescriptorHeap(&rtv_heap_desc, IID_PPV_ARGS(&gbuffer_rtv_heap));
+	}
 
 	// === CREATE SRV HEAP FOR GBUFFERS ===
 	D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc = {};
@@ -400,7 +413,7 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 
 	{
 		// === CREATE NORMAL GBUFFER ===
-		const auto back_buffer_desc = render_targets[1]->GetDesc();
+		const auto back_buffer_desc = render_targets[0]->GetDesc();
 		const auto rt_format = DXGI_FORMAT_R16G16B16A16_SNORM;
 
 		D3D12_CLEAR_VALUE clear_value = {};
@@ -423,6 +436,8 @@ int WINAPI					wWinMain(pn::instance_handle hInstance, pn::instance_handle hPrev
 			IID_PPV_ARGS(&shader_resource)
 		));
 	}
+
+	//shader_resource[GBUFFER::DEPTH] = 
 
 	ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&command_allocator)));
 
